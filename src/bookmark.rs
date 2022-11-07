@@ -1,11 +1,15 @@
 use super::token;
-use std::error::Error;
+use lazy_static::lazy_static;
+use regex::Regex;
+use std::{error::Error, ops::Range};
 
 #[derive(Debug, Clone)]
-pub struct Bookmark<'a> {
-    pub url: &'a str,
-    pub description: &'a str,
-    pub tags: Vec<&'a str>,
+pub struct Bookmark {
+    url: Range<usize>,
+    description: Range<usize>,
+    tag: Range<usize>,
+    tags: Vec<Range<usize>>,
+    line: String,
 }
 
 #[derive(Clone, Debug)]
@@ -28,37 +32,84 @@ impl std::fmt::Display for BookmarkErr {
 
 impl Error for BookmarkErr {}
 
-impl<'a> Bookmark<'a> {
-    pub fn with_str(line: &'a str, line_num: Option<usize>) -> Result<Self, BookmarkErr> {
+impl Bookmark {
+    pub fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, BookmarkErr> {
+        lazy_static! {
+            static ref LINE_RE: Regex = Regex::new(
+                &[
+                    r#"^"#,
+                    token::unsorted::URL,
+                    r#"\s*(.*?)\s*"#,
+                    token::unsorted::DESCRIPTION,
+                    r#"\s*(.*?)\s*"#,
+                    token::unsorted::TAG,
+                    r#"\s*(.*?)\s*$"#
+                ]
+                .concat()
+            )
+            .unwrap();
+            static ref TAG_RE: Regex =
+                Regex::new(&[r#"\s"#, token::unsorted::TAG_DELIM, r#"\s|$"#].concat()).unwrap();
+        }
+
         let err = || BookmarkErr::LineParseFailure(line.into(), line_num);
 
-        let url_start = line.find(token::unsorted::URL).ok_or_else(err)?;
-        let description_start = line.find(token::unsorted::DESCRIPTION).ok_or_else(err)?;
-        let tag_start = line.find(token::unsorted::TAG).ok_or_else(err)?;
+        let line: String = line.into();
+
+        let captures = LINE_RE.captures(&line).ok_or_else(err)?;
+
+        let url = captures
+            .get(1)
+            .and_then(|c| Some(c.range()))
+            .ok_or_else(err)?;
+
+        let description = captures
+            .get(2)
+            .and_then(|c| Some(c.range()))
+            .ok_or_else(err)?;
+
+        let tag = captures
+            .get(3)
+            .and_then(|c| Some(c.range()))
+            .ok_or_else(err)?;
+
+        let mut last_start = 0;
+        let tags = TAG_RE
+            .find_iter(&line[tag.clone()])
+            .map(|m| {
+                let r = last_start..m.start();
+                last_start = m.end();
+                r
+            })
+            .filter(|r| !r.is_empty())
+            .collect();
 
         Ok(Bookmark {
-            url: &line[url_start + token::unsorted::URL.len()..description_start].trim(),
-            description: &line[description_start + token::unsorted::DESCRIPTION.len()..tag_start]
-                .trim(),
-            tags: line[tag_start + token::unsorted::TAG.len()..]
-                .split("<,>")
-                .map(str::trim)
-                .collect(),
+            line,
+            url,
+            description,
+            tag,
+            tags,
         })
     }
 }
 
-impl<'a> std::fmt::Display for Bookmark<'a> {
+impl std::fmt::Display for Bookmark {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} | {}", self.url, self.description)?;
+        write!(
+            f,
+            "{} | {}",
+            &self.line[self.url.clone()],
+            &self.line[self.description.clone()],
+        )?;
 
         let mut tag_iter = self.tags.iter();
         if let Some(t) = tag_iter.next() {
-            write!(f, " | {t}")?;
+            write!(f, " | {}", &self.line[self.tag.clone()][t.clone()])?;
         };
 
         for t in tag_iter {
-            write!(f, ", {t}")?
+            write!(f, ", {}", &self.line[self.tag.clone()][t.clone()])?
         }
 
         Ok(())

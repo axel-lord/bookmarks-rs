@@ -5,4 +5,5 @@ pub mod unsorted {
     pub const URL: &str = "<url>";
     pub const DESCRIPTION: &str = "<info>";
     pub const TAG: &str = "<tag>";
+    pub const TAG_DELIM: &str = "<,>";
 }
