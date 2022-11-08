@@ -6,14 +6,14 @@ pub enum CommandErr {
 }
 
 pub trait Command {
-    fn call(&mut self, args: String) -> Result<(), CommandErr>;
+    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr>;
 }
 
 impl<T> Command for T
 where
-    T: FnMut(String) -> Result<(), CommandErr>,
+    T: FnMut(Vec<String>) -> Result<(), CommandErr>,
 {
-    fn call(&mut self, args: String) -> Result<(), CommandErr> {
+    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
         self(args)
     }
 }
@@ -30,7 +30,7 @@ impl<'a> CommandMap<'a> {
         self.0.insert(name, RefCell::new(command));
     }
 
-    pub fn call(&self, name: &str, args: String) -> Result<(), CommandErr> {
+    pub fn call(&self, name: &str, args: Vec<String>) -> Result<(), CommandErr> {
         if let Some(command) = self.0.get(name) {
             command.borrow_mut().call(args)
         } else {

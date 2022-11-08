@@ -93,8 +93,6 @@ impl Bookmark {
                 .concat()
             )
             .unwrap();
-            static ref TAG_RE: Regex =
-                Regex::new(&[r#"\s"#, token::unsorted::TAG_DELIM, r#"\s|$"#].concat()).unwrap();
         }
 
         let err = || BookmarkErr::LineParseFailure(line.clone(), line_num);
@@ -116,16 +114,7 @@ impl Bookmark {
             .and_then(|c| Some(c.range()))
             .ok_or_else(err)?;
 
-        let mut last_start = 0;
-        let tags = TAG_RE
-            .find_iter(&line[tag.clone()])
-            .map(|m| {
-                let r = last_start..m.start();
-                last_start = m.end();
-                r
-            })
-            .filter(|r| !r.is_empty())
-            .collect();
+        let tags = crate::pattern_match::split_by_delim_to_ranges(&line[tag.clone()]);
 
         Ok(Bookmark {
             line: Some(ContentString::UnappendedTo(line)),
