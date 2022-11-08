@@ -78,7 +78,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             .skip_while(|(_, l)| !l.contains(token::UNSORTED_BEGIN))
             .skip(1)
             .take_while(|(_, l)| !l.contains(token::UNSORTED_END))
-            .map(|(i, l)| Bookmark::with_str(l, Some(i)))
+            .map(|(i, l)| Bookmark::with_str(l.into(), Some(i)))
             .collect::<Result<Vec<_>, _>>()?,
     ));
 
