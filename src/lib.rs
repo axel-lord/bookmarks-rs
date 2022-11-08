@@ -24,10 +24,10 @@ fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
 fn get_bookmark_iter<'a>(
     bookmarks: &'a Vec<Bookmark>,
     buffer: &'a Vec<Range<usize>>,
-) -> impl Iterator<Item = &'a Bookmark> {
+) -> impl Iterator<Item = (usize, &'a Bookmark)> {
     buffer
         .iter()
-        .map(|r| bookmarks[r.clone()].into_iter())
+        .map(|r| r.clone().into_iter().map(|i| (i, &bookmarks[i])))
         .flatten()
 }
 
@@ -36,22 +36,27 @@ fn buffer_length(buffer: &Vec<Range<usize>>) -> usize {
 }
 
 fn bookmark_filter_iter<'a, F>(
-    bookmarks: &'a Vec<Bookmark>,
+    bookmarks: impl 'a + Iterator<Item = (usize, &'a Bookmark)>,
     mut condition: F,
 ) -> impl Iterator<Item = Range<usize>> + 'a
 where
     F: 'a + FnMut(&Bookmark) -> bool,
 {
-    bookmarks
-        .iter()
-        .enumerate()
-        .filter_map(move |(i, bookmark)| {
-            if condition(bookmark) {
-                Some(i..i + 1)
-            } else {
-                None
-            }
-        })
+    bookmarks.filter_map(move |(i, bookmark)| {
+        if condition(bookmark) {
+            Some(i..i + 1)
+        } else {
+            None
+        }
+    })
+}
+
+fn get_filtered_bookmarks<'a, I, F>(bookmarks: I, condition: F) -> Vec<Range<usize>>
+where
+    I: 'a + Iterator<Item = (usize, &'a Bookmark)>,
+    F: 'a + FnMut(&Bookmark) -> bool,
+{
+    bookmark_filter_iter(bookmarks, condition).collect()
 }
 
 pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'static> {
@@ -71,7 +76,7 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                 match &args[..] {
                     [] => {
                         println!("listing all bookmarks");
-                        for bookmark in bookmark_iter {
+                        for (_, bookmark) in bookmark_iter {
                             println!("{bookmark}");
                         }
                         Ok(())
@@ -86,7 +91,7 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                                 )))
                             }
                         };
-                        for bookmark in bookmark_iter.take(count) {
+                        for (_, bookmark) in bookmark_iter.take(count) {
                             println!("{bookmark}");
                         }
                         Ok(())
@@ -112,7 +117,7 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
 
                         let from = wrap_if_negative(from, buffer_length(&buffer))?;
 
-                        for bookmark in bookmark_iter.skip(from).take(count) {
+                        for (_, bookmark) in bookmark_iter.skip(from).take(count) {
                             println!("{bookmark}");
                         }
                         Ok(())
@@ -134,12 +139,12 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                     ));
                 }
 
-                let (bookmarks, mut buffer) = (bookmarks.borrow(), buffer.borrow_mut());
+                let filtered = get_filtered_bookmarks(
+                    get_bookmark_iter(&bookmarks.borrow(), &buffer.borrow()),
+                    |bookmark| args.iter().all(|arg| bookmark.url().contains(arg)),
+                );
 
-                buffer.clear();
-                buffer.extend(bookmark_filter_iter(&bookmarks, |bookmark| {
-                    args.iter().all(|arg| bookmark.url().contains(arg))
-                }));
+                buffer.replace(filtered);
 
                 Ok(())
             }),
@@ -157,12 +162,12 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                     ));
                 }
 
-                let (bookmarks, mut buffer) = (bookmarks.borrow(), buffer.borrow_mut());
+                let filtered = get_filtered_bookmarks(
+                    get_bookmark_iter(&bookmarks.borrow(), &buffer.borrow()),
+                    |bookmark| !args.iter().any(|arg| bookmark.url().contains(arg)),
+                );
 
-                buffer.clear();
-                buffer.extend(bookmark_filter_iter(&bookmarks, |bookmark| {
-                    !args.iter().any(|arg| bookmark.url().contains(arg))
-                }));
+                buffer.replace(filtered);
 
                 Ok(())
             }),
@@ -183,12 +188,12 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                     return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
                 };
 
-                let (bookmarks, mut buffer) = (bookmarks.borrow(), buffer.borrow_mut());
+                let filtered = get_filtered_bookmarks(
+                    get_bookmark_iter(&bookmarks.borrow(), &buffer.borrow()),
+                    |bookmark| re.is_match(bookmark.url()),
+                );
 
-                buffer.clear();
-                buffer.extend(bookmark_filter_iter(&bookmarks, |bookmark| {
-                    re.is_match(bookmark.url())
-                }));
+                buffer.replace(filtered);
 
                 Ok(())
             }),
@@ -209,12 +214,12 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                     return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
                 };
 
-                let (bookmarks, mut buffer) = (bookmarks.borrow(), buffer.borrow_mut());
+                let filtered = get_filtered_bookmarks(
+                    get_bookmark_iter(&bookmarks.borrow(), &buffer.borrow()),
+                    |bookmark| !re.is_match(bookmark.url()),
+                );
 
-                buffer.clear();
-                buffer.extend(bookmark_filter_iter(&bookmarks, |bookmark| {
-                    !re.is_match(bookmark.url())
-                }));
+                buffer.replace(filtered);
 
                 Ok(())
             }),
@@ -231,10 +236,9 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                         "count should be used without any arguments".into(),
                     ));
                 }
-                let (bookmarks, buffer) = (bookmarks.borrow(), buffer.borrow());
 
-                let total = bookmarks.len();
-                let in_buffer = buffer_length(&buffer);
+                let total = bookmarks.borrow().len();
+                let in_buffer = buffer_length(&buffer.borrow());
 
                 println!("total: {total}, in buffer: {in_buffer}");
 
@@ -253,10 +257,8 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
                         "reset should be used without any arguments".into(),
                     ));
                 }
-                let (bookmarks, mut buffer) = (bookmarks.borrow(), buffer.borrow_mut());
 
-                buffer.clear();
-                buffer.push(0..bookmarks.len());
+                buffer.replace(vec![(0..bookmarks.borrow().len())]);
 
                 Ok(())
             }),
