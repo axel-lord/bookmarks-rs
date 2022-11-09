@@ -4,6 +4,7 @@ pub mod list;
 pub mod load;
 pub mod regex;
 pub mod reset;
+pub mod save;
 
 pub use self::count::Count;
 pub use self::filter::{Filter, FilterInv};
@@ -11,6 +12,7 @@ pub use self::list::List;
 pub use self::load::Load;
 pub use self::regex::{Regex, RegexInv};
 pub use self::reset::Reset;
+pub use self::save::Save;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
@@ -85,6 +87,8 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
     command_map.push("reset", Reset::build(bookmarks.clone(), buffer.clone()));
 
     command_map.push("load", Load::build(bookmarks.clone()));
+
+    command_map.push("save", Save::build(bookmarks.clone(), buffer.clone()));
 
     command_map.push("debug", Box::new(command_debug));
 

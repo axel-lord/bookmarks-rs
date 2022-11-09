@@ -6,7 +6,7 @@ use std::ops::Range;
 pub fn split_by_delim_to_ranges(list: &str) -> Vec<Range<usize>> {
     lazy_static! {
         static ref SPLIT_RE: Regex =
-            Regex::new(&[r#"\s"#, token::unsorted::TAG_DELIM, r#"\s|$"#].concat()).unwrap();
+            Regex::new(&[r#"\s"#, token::DELIM, r#"\s|$"#].concat()).unwrap();
     }
 
     let mut next_start = 0;
