@@ -3,6 +3,8 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::ops::Range;
 
+pub const WHITESPACE_PADDED_GROUP: &str = r"\s*(.*?)\s*";
+
 pub fn split_by_delim_to_ranges(list: &str) -> Vec<Range<usize>> {
     lazy_static! {
         static ref SPLIT_RE: Regex =
