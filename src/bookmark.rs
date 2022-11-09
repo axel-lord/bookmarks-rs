@@ -1,4 +1,4 @@
-use super::{token, ContentString};
+use crate::{pattern_match, token, ContentString};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{error::Error, ops::Range};
@@ -45,23 +45,27 @@ impl Error for BookmarkErr {}
 
 impl Clone for Bookmark {
     fn clone(&self) -> Self {
-        let line = self.to_line();
-        Self::with_str(line, None).unwrap()
+        Self::with_str(self.to_line(), None).unwrap()
     }
 }
 
 impl Bookmark {
+    pub fn new<'a>(url: &str, description: &str, tags: impl Iterator<Item = &'a str>) -> Self {
+        Self::with_str(Self::create_line(url, description, tags), None).unwrap()
+    }
+
     pub fn with_str(line: String, line_num: Option<usize>) -> Result<Self, BookmarkErr> {
         lazy_static! {
             static ref LINE_RE: Regex = Regex::new(
                 &[
                     r#"^"#,
                     token::unsorted::URL,
-                    r#"\s*(.*?)\s*"#,
+                    pattern_match::WHITESPACE_PADDED_GROUP,
                     token::unsorted::DESCRIPTION,
-                    r#"\s*(.*?)\s*"#,
+                    pattern_match::WHITESPACE_PADDED_GROUP,
                     token::unsorted::TAG,
-                    r#"\s*(.*?)\s*$"#
+                    pattern_match::WHITESPACE_PADDED_GROUP,
+                    r"$"
                 ]
                 .concat()
             )
@@ -120,21 +124,32 @@ impl Bookmark {
     }
 
     pub fn to_line(&self) -> String {
-        format!(
-            "{} {} {} {} {} {}",
-            token::unsorted::URL,
-            self.url(),
-            token::unsorted::DESCRIPTION,
-            self.description(),
-            token::unsorted::TAG,
-            self.tags()
-                .collect::<Vec<&str>>()
-                .join(&[" ", token::DELIM, " "].concat()),
-        )
+        if let Some(ContentString::UnappendedTo(line)) = self.line.as_ref() {
+            line.clone()
+        } else {
+            Self::create_line(self.url(), self.description(), self.tags())
+        }
     }
 
     pub fn is_edited(&self) -> bool {
         self.line.as_ref().unwrap().is_appended_to()
+    }
+
+    fn create_line<'a>(
+        url: &str,
+        description: &str,
+        tags: impl Iterator<Item = &'a str>,
+    ) -> String {
+        format!(
+            "{} {} {} {} {} {}",
+            token::unsorted::URL,
+            url,
+            token::unsorted::DESCRIPTION,
+            description,
+            token::unsorted::TAG,
+            tags.collect::<Vec<&str>>()
+                .join(&[" ", token::DELIM, " "].concat()),
+        )
     }
 
     fn raw_line(&self) -> &str {

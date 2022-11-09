@@ -13,4 +13,5 @@ pub mod category {
     pub const DESCRIPTION: &str = "<desc>";
     pub const NAME: &str = "<name>";
     pub const IDENTIFIER: &str = "<identifier>";
+    pub const SUBCATEGORY: &str = "<sub>";
 }
