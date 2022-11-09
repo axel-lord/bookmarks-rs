@@ -20,7 +20,7 @@ impl Reset {
 }
 
 impl Command for Reset {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if !args.is_empty() {
             return Err(CommandErr::Execution(
                 "reset should be used without any arguments".into(),

@@ -47,41 +47,22 @@ impl ContentString {
     }
 }
 
-fn parse_command(line: &str) -> Option<(&str, Vec<String>)> {
+fn parse_command(line: &str) -> Option<Vec<String>> {
     lazy_static! {
-        static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
         static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
     }
-
-    // make sure line is a command
-    let Some(command_capture) = CMD_RE.captures(line) else {
-        return None;
-    };
-
-    // if line is a command group 1 should always exist
-    let command = command_capture
-        .get(1)
-        .expect("regex matched but required capture group did not (should never happen)");
-    let command = command.as_str();
-
-    // in case there are no arguments
-    let Some(args) = command_capture.get(2) else {
-        return Some((command, Vec::new()));
-    };
-
-    let args = args.as_str();
 
     let mut next_start = 0;
     let mut arg_vec = Vec::new();
 
-    for capture in ARG_RE.captures_iter(&args) {
+    for capture in ARG_RE.captures_iter(&line) {
         // if capture exists so should whole capture
         let whole_capture = capture
             .get(0)
             .expect("could not get whole capture of regex (should never happen)");
 
         // used when parsing no quoted arguments
-        let before = &args[next_start..whole_capture.start()];
+        let before = &line[next_start..whole_capture.start()];
         next_start = whole_capture.end();
 
         // iterate over quoted arguments appearing before captured end or quoted argument
@@ -96,7 +77,7 @@ fn parse_command(line: &str) -> Option<(&str, Vec<String>)> {
         arg_vec.push(quoted_arg.as_str().into());
     }
 
-    Some((command, arg_vec))
+    Some(arg_vec)
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {
@@ -117,19 +98,22 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
         let command = command.trim();
 
-        let Some((cmd, args)) = parse_command(&command) else {
+        // let Some((cmd, args)) = parse_command(&command) else {
+        let Some(args) = parse_command(&command) else {
             println!("could not parse \"{command}\"");
             continue;
         };
 
-        if cmd == "exit" {
+        let command = &args[0];
+
+        if command == "exit" {
             break;
         }
 
-        if let Err(err) = command_map.call(cmd, args) {
+        if let Err(err) = command_map.call(&command, &args[1..]) {
             match err {
-                CommandErr::Lookup => println!("{cmd} is not a valid command"),
-                CommandErr::Execution(s) => println!("failed to execute {cmd}: {s}"),
+                CommandErr::Lookup => println!("{command} is not a valid command"),
+                CommandErr::Execution(s) => println!("failed to execute {command}: {s}"),
             }
         }
     }

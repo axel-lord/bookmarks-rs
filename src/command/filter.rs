@@ -22,7 +22,7 @@ impl Filter {
 }
 
 impl Command for Filter {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution(
                 "filter needs one or more arguments".into(),
@@ -55,7 +55,7 @@ impl FilterInv {
 }
 
 impl Command for FilterInv {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution(
                 "filter needs one or more arguments".into(),

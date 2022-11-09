@@ -22,7 +22,7 @@ impl Regex {
 }
 
 impl Command for Regex {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution("regex needs a pattern".into()));
         }
@@ -58,7 +58,7 @@ impl RegexInv {
 }
 
 impl Command for RegexInv {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution("regex needs a pattern".into()));
         }

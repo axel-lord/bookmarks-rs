@@ -17,7 +17,7 @@ impl Load {
 }
 
 impl Command for Load {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
             return Err(CommandErr::Execution(
                 "load should be called with one argument".into(),
