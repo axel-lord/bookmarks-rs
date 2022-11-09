@@ -2,6 +2,7 @@ use std::{cell::RefCell, fs::File, io, rc::Rc};
 
 use crate::{
     bookmark::{Bookmark, BookmarkErr},
+    category::Category,
     command_map::{Command, CommandErr},
     token,
 };
@@ -31,6 +32,16 @@ impl Command for Load {
         let Ok(content) = io::read_to_string(file) else {
             return Err(CommandErr::Execution(format!("failed to read {}", &args[0])));
         };
+
+        let category_iter = content
+            .lines()
+            .enumerate()
+            .skip_while(|(_, l)| !l.contains(token::CATEGORY_BEGIN))
+            .skip(1)
+            .take_while(|(_, l)| !l.contains(token::CATEGORY_END))
+            .map(|(i, l)| Category::with_str(l.into(), Some(i)));
+
+        category_iter.for_each(|cat| println!("{}", cat.unwrap()));
 
         let bookmark_iter = content
             .lines()
