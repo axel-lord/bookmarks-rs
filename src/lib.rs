@@ -14,39 +14,51 @@ fn parse_command(line: &str) -> Option<(&str, Vec<String>)> {
         static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
         static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
     }
-    let Some(m) = CMD_RE.captures(line) else {
+
+    // make sure line is a command
+    let Some(command_capture) = CMD_RE.captures(line) else {
         return None;
     };
 
-    let Some(cmd) = m.get(1) else {
-        return None;
+    // if line is a command group 1 should always exist
+    let command = command_capture
+        .get(1)
+        .expect("regex matched but required capture group did not (should never happen)");
+    let command = command.as_str();
+
+    // in case there are no arguments
+    let Some(args) = command_capture.get(2) else {
+        return Some((command, Vec::new()));
     };
 
-    let cmd = cmd.as_str();
+    let args = args.as_str();
 
-    let args = if let Some(args) = m.get(2) {
-        let args = args.as_str();
-        let mut next_start = 0;
-        let mut out = Vec::new();
-        for cap in ARG_RE.captures_iter(&args) {
-            let whole = cap.get(0).unwrap();
+    let mut next_start = 0;
+    let mut arg_vec = Vec::new();
 
-            for arg in args[next_start..whole.start()].split_whitespace() {
-                out.push(arg.into());
-            }
+    for capture in ARG_RE.captures_iter(&args) {
+        // if capture exists so should whole capture
+        let whole_capture = capture
+            .get(0)
+            .expect("could not get whole capture of regex (should never happen)");
 
-            next_start = whole.end();
+        // used when parsing no quoted arguments
+        let before = &args[next_start..whole_capture.start()];
+        next_start = whole_capture.end();
 
-            if let Some(quote) = cap.get(1) {
-                out.push(quote.as_str().into())
-            };
-        }
-        out
-    } else {
-        Vec::new()
-    };
+        // iterate over quoted arguments appearing before captured end or quoted argument
+        // and add them to arg vector
+        arg_vec.extend(before.split_whitespace().map(String::from));
 
-    Some((cmd, args))
+        // if a quoted argument was captured add it
+        let Some(quoted_arg) = capture.get(1) else {
+            continue;
+        };
+
+        arg_vec.push(quoted_arg.as_str().into());
+    }
+
+    Some((command, arg_vec))
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {
@@ -65,7 +77,10 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             .read_line(&mut command)
             .expect("failed to read line from stdin");
 
+        let command = command.trim();
+
         let Some((cmd, args)) = parse_command(&command) else {
+            println!("could not parse \"{command}\"");
             continue;
         };
 
