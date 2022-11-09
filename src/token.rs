@@ -1,5 +1,8 @@
 pub const UNSORTED_BEGIN: &str = "#UNSORTED_BEGIN";
 pub const UNSORTED_END: &str = "#UNSORTED_END";
+pub const CATEGORY_BEGIN: &str = "#CATEGORY_BEGIN";
+pub const CATEGORY_END: &str = "#CATEGORY_END";
+
 pub const DELIM: &str = "<,>";
 
 pub mod unsorted {

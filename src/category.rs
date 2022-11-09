@@ -187,6 +187,22 @@ impl std::fmt::Display for Category {
             self.id()
         )?;
 
+        if !self.identifiers.is_empty() {
+            write!(
+                f,
+                "\nidentifiers: {}",
+                &self.identifiers().collect::<Vec<&str>>().join(", ")
+            )?
+        }
+
+        if !self.subcategories.is_empty() {
+            write!(
+                f,
+                "\nsubcategories: {}",
+                &self.subcategories().collect::<Vec<&str>>().join(", ")
+            )?
+        }
+
         Ok(())
     }
 }
