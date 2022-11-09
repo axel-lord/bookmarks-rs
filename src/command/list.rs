@@ -22,7 +22,7 @@ impl List {
 }
 
 impl Command for List {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         let bookmarks = self.bookmarks.borrow();
         let buffer = self.buffer.borrow();
 

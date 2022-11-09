@@ -57,7 +57,7 @@ where
     bookmark_filter_iter(bookmarks, condition).collect()
 }
 
-fn command_debug(args: Vec<String>) -> Result<(), CommandErr> {
+fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
     Ok(())
 }

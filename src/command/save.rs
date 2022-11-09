@@ -28,7 +28,7 @@ impl Save {
 }
 
 impl Command for Save {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
             return Err(CommandErr::Execution(
                 "save should be called with one argument".into(),

@@ -22,7 +22,7 @@ impl Count {
 }
 
 impl Command for Count {
-    fn call(&mut self, args: Vec<String>) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if !args.is_empty() {
             return Err(CommandErr::Execution(
                 "count should be used without any arguments".into(),
