@@ -3,12 +3,6 @@ name = "bookmarks-rs"
 version = "0.1.0"
 edition = "2021"
 
-[profile.release]
-debug = 1
-
-[profile.dev]
-opt-level = 1
-
 [dependencies]
 lazy_static = "1.4"
 regex = "1.7"
