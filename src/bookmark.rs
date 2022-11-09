@@ -1,13 +1,7 @@
-use super::token;
+use super::{token, ContentString};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{error::Error, ops::Range};
-
-#[derive(Debug, Clone)]
-enum ContentString {
-    AppendedTo(String),
-    UnappendedTo(String),
-}
 
 #[macro_export]
 macro_rules! append_chain {
@@ -20,34 +14,13 @@ macro_rules! append_chain {
     };
 }
 
-impl ContentString {
-    fn take_any(self) -> String {
-        match self {
-            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
-        }
-    }
-
-    fn ref_any(&self) -> &str {
-        match self {
-            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
-        }
-    }
-
-    fn is_appended_to(&self) -> bool {
-        match self {
-            Self::UnappendedTo(_) => false,
-            Self::AppendedTo(_) => true,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub struct Bookmark {
+    line: Option<ContentString>,
     url: Range<usize>,
     description: Range<usize>,
     tag: Range<usize>,
     tags: Vec<Range<usize>>,
-    line: Option<ContentString>,
 }
 
 #[derive(Clone, Debug)]
@@ -126,14 +99,10 @@ impl Bookmark {
     }
 
     pub fn add_tag(&mut self, tag: &str) {
-        let mut string = self.line.take().unwrap().take_any();
+        let (content_string, range) = self.line.take().unwrap().append(tag);
 
-        let start = string.len();
-        string += tag;
-        let end = string.len();
-
-        self.line = Some(ContentString::AppendedTo(string));
-        self.tags.push(start..end);
+        self.line = Some(content_string);
+        self.tags.push(range);
     }
 
     pub fn url(&self) -> &str {
@@ -151,25 +120,17 @@ impl Bookmark {
     }
 
     pub fn to_line(&self) -> String {
-        let mut s = format!(
-            "{} {} {} {} {}",
+        format!(
+            "{} {} {} {} {} {}",
             token::unsorted::URL,
             self.url(),
             token::unsorted::DESCRIPTION,
             self.description(),
-            token::unsorted::TAG
-        );
-
-        let mut tag_iter = self.tags();
-        if let Some(t) = tag_iter.next() {
-            append_chain!(s, " ", t);
-        }
-
-        for t in tag_iter {
-            append_chain!(s, " ", token::unsorted::TAG_DELIM, " ", t);
-        }
-
-        s
+            token::unsorted::TAG,
+            self.tags()
+                .collect::<Vec<&str>>()
+                .join(&[" ", token::DELIM, " "].concat()),
+        )
     }
 
     pub fn is_edited(&self) -> bool {

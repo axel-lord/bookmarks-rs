@@ -1,4 +1,5 @@
 pub mod bookmark;
+pub mod category;
 pub mod command;
 pub mod command_map;
 pub mod pattern_match;
@@ -7,7 +8,44 @@ pub mod token;
 use crate::{command::build_command_map, command_map::CommandErr};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{cell::RefCell, error::Error, io, rc::Rc};
+use std::{cell::RefCell, error::Error, io, ops::Range, rc::Rc};
+
+#[derive(Debug, Clone)]
+pub enum ContentString {
+    AppendedTo(String),
+    UnappendedTo(String),
+}
+
+impl ContentString {
+    pub fn take_any(self) -> String {
+        match self {
+            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
+        }
+    }
+
+    pub fn ref_any(&self) -> &str {
+        match self {
+            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
+        }
+    }
+
+    pub fn is_appended_to(&self) -> bool {
+        match self {
+            Self::UnappendedTo(_) => false,
+            Self::AppendedTo(_) => true,
+        }
+    }
+
+    pub fn append(self, content: &str) -> (Self, Range<usize>) {
+        let mut existing = self.take_any();
+
+        let begin = existing.len();
+        existing += content;
+        let end = existing.len();
+
+        (ContentString::AppendedTo(existing), begin..end)
+    }
+}
 
 fn parse_command(line: &str) -> Option<(&str, Vec<String>)> {
     lazy_static! {
