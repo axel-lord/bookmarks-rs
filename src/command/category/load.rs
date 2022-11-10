@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, fs::File, io, rc::Rc};
+use std::{cell::RefCell, fs::File, io, rc::Rc};
 
 use crate::{
     category::{Category, CategoryErr},
@@ -56,24 +56,6 @@ impl Command for Load {
                 )))
             }
         };
-
-        let identifier_count = {
-            let mut map = HashMap::new();
-
-            for identifier in loaded
-                .iter()
-                .map(|c| c.identifiers())
-                .flatten()
-                .filter_map(|ident| ident.chars().next())
-            {
-                let entry = map.entry(identifier).or_insert(0usize);
-                *entry += 1;
-            }
-
-            map
-        };
-
-        println!("{:#?}", identifier_count);
 
         self.categories.borrow_mut().extend_from_slice(&loaded);
 

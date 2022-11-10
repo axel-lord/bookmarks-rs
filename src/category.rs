@@ -1,7 +1,7 @@
 use crate::{pattern_match, token, ContentString};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{error::Error, ops::Range};
+use std::{collections::HashMap, error::Error, ops::Range};
 
 #[derive(Debug)]
 pub struct Category {
@@ -57,6 +57,16 @@ pub struct IdentifierContainer<'a> {
     pub require: Vec<&'a str>,
     pub whole: Vec<&'a str>,
     pub include: Vec<&'a str>,
+}
+
+impl<'a> IdentifierContainer<'a> {
+    pub fn tally(&self) -> HashMap<char, usize> {
+        HashMap::from([
+            ('(', self.include.len()),
+            ('[', self.require.len()),
+            ('<', self.whole.len()),
+        ])
+    }
 }
 
 impl Category {

@@ -1,5 +1,3 @@
-use std::error::Error;
-
-fn main() -> Result<(), Box<dyn Error>> {
-    bookmarks_rs::run()
+fn main() {
+    std::process::exit(bookmarks_rs::run())
 }
