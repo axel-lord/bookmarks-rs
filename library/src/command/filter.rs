@@ -7,19 +7,10 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Filter {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl Filter {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for Filter {
@@ -41,19 +32,10 @@ impl Command for Filter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct FilterInv {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl FilterInv {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for FilterInv {

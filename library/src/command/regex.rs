@@ -7,19 +7,10 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Regex {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl Regex {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for Regex {
@@ -30,8 +21,8 @@ impl Command for Regex {
 
         let pattern = args.join(" ");
         let Ok(re) = regex::Regex::new(&pattern) else {
-                    return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
-                };
+            return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
+        };
 
         let filtered = get_filtered_bookmarks(
             get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),
@@ -44,19 +35,10 @@ impl Command for Regex {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct RegexInv {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl RegexInv {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for RegexInv {
@@ -67,8 +49,8 @@ impl Command for RegexInv {
 
         let pattern = args.join(" ");
         let Ok(re) = regex::Regex::new(&pattern) else {
-                    return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
-                };
+            return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
+        };
 
         let filtered = get_filtered_bookmarks(
             get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),

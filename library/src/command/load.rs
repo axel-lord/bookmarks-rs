@@ -6,15 +6,9 @@ use crate::{
     token,
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-}
-
-impl Load {
-    pub fn build(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> Box<Self> {
-        Box::new(Self { bookmarks })
-    }
 }
 
 impl Command for Load {

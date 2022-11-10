@@ -5,19 +5,10 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Reset {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl Reset {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for Reset {
