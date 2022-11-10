@@ -67,31 +67,49 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
     let mut command_map = CommandMap::new();
     let buffer = Rc::new(RefCell::new(vec![(0..bookmarks.borrow().len())]));
 
-    command_map.push("list", List::build(bookmarks.clone(), buffer.clone()));
+    command_map.push("list", None, List::build(bookmarks.clone(), buffer.clone()));
 
-    command_map.push("filter", Filter::build(bookmarks.clone(), buffer.clone()));
+    command_map.push(
+        "filter",
+        None,
+        Filter::build(bookmarks.clone(), buffer.clone()),
+    );
 
     command_map.push(
         "filter-inv",
+        None,
         FilterInv::build(bookmarks.clone(), buffer.clone()),
     );
 
-    command_map.push("regex", Regex::build(bookmarks.clone(), buffer.clone()));
+    command_map.push(
+        "regex",
+        None,
+        Regex::build(bookmarks.clone(), buffer.clone()),
+    );
 
     command_map.push(
         "regex-inv",
+        None,
         RegexInv::build(bookmarks.clone(), buffer.clone()),
     );
 
-    command_map.push("count", Count::build(bookmarks.clone(), buffer.clone()));
+    command_map.push(
+        "count",
+        None,
+        Count::build(bookmarks.clone(), buffer.clone()),
+    );
 
-    command_map.push("reset", Reset::build(bookmarks.clone(), buffer.clone()));
+    command_map.push(
+        "reset",
+        None,
+        Reset::build(bookmarks.clone(), buffer.clone()),
+    );
 
-    command_map.push("load", Load::build(bookmarks.clone()));
+    command_map.push("load", None, Load::build(bookmarks.clone()));
 
-    command_map.push("save", Save::build(bookmarks.clone(), buffer.clone()));
+    command_map.push("save", None, Save::build(bookmarks.clone(), buffer.clone()));
 
-    command_map.push("debug", Box::new(command_debug));
+    command_map.push("debug", None, Box::new(command_debug));
 
     command_map
 }

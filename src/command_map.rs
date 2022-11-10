@@ -5,11 +5,11 @@ pub enum CommandErr {
     Execution(String),
 }
 
-pub trait Command: Debug {
+pub trait Command {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr>;
 }
 
-impl<T: Debug> Command for T
+impl<T> Command for T
 where
     T: FnMut(&[String]) -> Result<(), CommandErr>,
 {
@@ -18,21 +18,45 @@ where
     }
 }
 
+struct CommandEntry {
+    command: RefCell<Box<dyn Command>>,
+    help: Option<String>,
+}
+
+impl CommandEntry {
+    fn new(command: Box<dyn Command>, help: Option<&str>) -> Self {
+        CommandEntry {
+            command: RefCell::new(command),
+            help: help.map(String::from),
+        }
+    }
+}
+
+impl Debug for CommandEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(help) = self.help.as_ref() {
+            write!(f, "<{}>", help)
+        } else {
+            write!(f, "<>")
+        }
+    }
+}
+
 #[derive(Default, Debug)]
-pub struct CommandMap<'a>(HashMap<&'a str, RefCell<Box<dyn Command>>>);
+pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>);
 
 impl<'a> CommandMap<'a> {
     pub fn new() -> Self {
         Default::default()
     }
 
-    pub fn push(&mut self, name: &'a str, command: Box<dyn Command>) {
-        self.0.insert(name, RefCell::new(command));
+    pub fn push(&mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) {
+        self.0.insert(name, CommandEntry::new(command, help));
     }
 
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
         if let Some(command) = self.0.get(name) {
-            command.borrow_mut().call(args)
+            command.command.borrow_mut().call(args)
         } else {
             Err(CommandErr::Lookup)
         }

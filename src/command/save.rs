@@ -13,6 +13,7 @@ use std::{
 
 use super::get_bookmark_iter;
 
+#[derive(Debug)]
 pub struct Save {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
