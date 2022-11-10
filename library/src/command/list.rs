@@ -7,19 +7,10 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct List {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl List {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for List {

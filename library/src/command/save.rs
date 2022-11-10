@@ -13,19 +13,10 @@ use std::{
 
 use super::get_bookmark_iter;
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
-}
-
-impl Save {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    ) -> Box<Self> {
-        Box::new(Self { bookmarks, buffer })
-    }
 }
 
 impl Command for Save {
