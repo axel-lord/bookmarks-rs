@@ -7,6 +7,7 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
+#[derive(Debug)]
 pub struct Filter {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
@@ -40,6 +41,7 @@ impl Command for Filter {
     }
 }
 
+#[derive(Debug)]
 pub struct FilterInv {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,

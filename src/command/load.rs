@@ -6,6 +6,7 @@ use crate::{
     token,
 };
 
+#[derive(Debug)]
 pub struct Load {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
 }

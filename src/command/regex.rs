@@ -7,6 +7,7 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
+#[derive(Debug)]
 pub struct Regex {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
@@ -43,6 +44,7 @@ impl Command for Regex {
     }
 }
 
+#[derive(Debug)]
 pub struct RegexInv {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
