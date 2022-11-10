@@ -60,7 +60,7 @@ impl Command for List {
         // convert from from a string to an integer
         let Ok(from) = from.parse() else {
             return Err(CommandErr::Execution(format!(
-                "could not parse {count} as a bookmark index"
+                "could not parse {from} as a bookmark index"
             )));
         };
 

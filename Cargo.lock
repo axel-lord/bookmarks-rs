@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "bookmarks-rs"
+name = "bookmark-manager"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
