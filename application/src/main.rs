@@ -1,3 +1,3 @@
 fn main() {
-    std::process::exit(bookmark_library::run());
+    std::process::exit(bookmark_library::run(None));
 }
