@@ -6,15 +6,9 @@ use crate::{
     token,
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load {
     categories: Rc<RefCell<Vec<Category>>>,
-}
-
-impl Load {
-    pub fn build(categories: Rc<RefCell<Vec<Category>>>) -> Box<Self> {
-        Box::new(Self { categories })
-    }
 }
 
 impl Command for Load {
@@ -25,13 +19,13 @@ impl Command for Load {
             ));
         }
 
-        let Ok(file) = File::open(&args[0]) else {
-            return Err(CommandErr::Execution(format!("could not open {}", &args[0])));
-        };
+        let file = File::open(&args[0]).map_err(|err| {
+            CommandErr::Execution(format!("could not open {}: {}", &args[0], err))
+        })?;
 
-        let Ok(content) = io::read_to_string(file) else {
-            return Err(CommandErr::Execution(format!("failed to read {}", &args[0])));
-        };
+        let content = io::read_to_string(file).map_err(|err| {
+            CommandErr::Execution(format!("failed to read {}: {}", &args[0], err))
+        })?;
 
         let category_iter = content
             .lines()

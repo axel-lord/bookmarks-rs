@@ -5,15 +5,9 @@ use crate::{
     command_map::{Command, CommandErr},
 };
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct List {
     categories: Rc<RefCell<Vec<Category>>>,
-}
-
-impl List {
-    pub fn build(categories: Rc<RefCell<Vec<Category>>>) -> Box<Self> {
-        Box::new(Self { categories })
-    }
 }
 
 impl Command for List {
