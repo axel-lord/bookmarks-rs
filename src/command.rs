@@ -17,8 +17,11 @@ use self::save::Save;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
-use crate::command_map::CommandErr;
-use crate::{bookmark::Bookmark, command_map::CommandMap};
+use crate::{
+    bookmark::Bookmark,
+    category::Category,
+    command_map::{CommandErr, CommandMap},
+};
 
 fn get_bookmark_iter<'a>(
     bookmarks: &'a Vec<Bookmark>,
@@ -63,7 +66,10 @@ fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     Ok(())
 }
 
-pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'static> {
+pub fn build_command_map(
+    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
+    categories: Rc<RefCell<Vec<Category>>>,
+) -> CommandMap<'static> {
     let mut command_map = CommandMap::new();
     let buffer = Rc::new(RefCell::new(vec![(0..bookmarks.borrow().len())]));
 
@@ -108,6 +114,12 @@ pub fn build_command_map(bookmarks: Rc<RefCell<Vec<Bookmark>>>) -> CommandMap<'s
     command_map.push("load", None, Load::build(bookmarks.clone()));
 
     command_map.push("save", None, Save::build(bookmarks.clone(), buffer.clone()));
+
+    command_map.push(
+        "category",
+        None,
+        category::Category::build(categories.clone()),
+    );
 
     command_map.push("debug", None, Box::new(command_debug));
 
