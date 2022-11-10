@@ -27,7 +27,7 @@ impl Command for List {
         println!("listing all categories");
 
         for category in self.categories.borrow().iter() {
-            println!("{category}");
+            println!("{}", category.name());
         }
 
         Ok(())
