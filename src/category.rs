@@ -35,10 +35,28 @@ impl std::fmt::Display for CategoryErr {
 
 impl Error for CategoryErr {}
 
+#[derive(Clone, Debug)]
+pub struct IdentifierErr(String);
+
+impl std::fmt::Display for IdentifierErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Error for IdentifierErr {}
+
 impl Clone for Category {
     fn clone(&self) -> Self {
         Self::with_str(self.to_line(), None).unwrap()
     }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct IdentifierContainer<'a> {
+    pub require: Vec<&'a str>,
+    pub whole: Vec<&'a str>,
+    pub include: Vec<&'a str>,
 }
 
 impl Category {
@@ -71,7 +89,7 @@ impl Category {
                     pattern_match::WHITESPACE_PADDED_GROUP,
                     token::category::SUBCATEGORY,
                     pattern_match::WHITESPACE_PADDED_GROUP,
-                    r"&"
+                    r"$"
                 ]
                 .concat()
             )
@@ -144,6 +162,51 @@ impl Category {
         self.subcategories
             .iter()
             .map(|r| &self.raw_line()[self.subcategory.clone()][r.clone()])
+    }
+
+    pub fn identifier_container<'a>(&'a self) -> Result<IdentifierContainer<'a>, IdentifierErr> {
+        let mut identifier_container: IdentifierContainer<'a> = Default::default();
+
+        for identifier in self.identifiers() {
+            let ty = identifier.get(..1).ok_or_else(|| {
+                IdentifierErr(format!(
+                    "identifier \"{}\" does not start with an ascii character",
+                    identifier
+                ))
+            })?;
+
+            // ok since above succeeded
+            let identifier_content = &identifier[1..];
+
+            match ty {
+                "(" => {
+                    identifier_container.include.push(identifier_content);
+                }
+                "<" => {
+                    identifier_container.whole.push(identifier_content);
+                }
+                "[" => {
+                    identifier_container.require.push(identifier_content);
+                }
+                spec => {
+                    return Err(IdentifierErr(format!(
+                        "invalid identifier specifier '{}' in identifier: {}",
+                        spec, identifier
+                    )));
+                }
+            }
+        }
+
+        Ok(identifier_container)
+    }
+
+    pub fn subcategory_vec<'a>(
+        &self,
+        categories: impl Clone + Iterator<Item = &'a Category>,
+    ) -> Vec<&'a Category> {
+        self.subcategories()
+            .filter_map(|subcat| categories.clone().find(|cat| cat.id() == subcat))
+            .collect()
     }
 
     fn create_line<'a>(
