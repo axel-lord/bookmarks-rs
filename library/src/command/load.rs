@@ -19,13 +19,13 @@ impl Command for Load {
             ));
         }
 
-        let Ok(file) = File::open(&args[0]) else {
-            return Err(CommandErr::Execution(format!("could not open {}", &args[0])));
-        };
+        let file = File::open(&args[0]).map_err(|err| {
+            CommandErr::Execution(format!("could not open {}: {}", &args[0], err))
+        })?;
 
-        let Ok(content) = io::read_to_string(file) else {
-            return Err(CommandErr::Execution(format!("failed to read {}", &args[0])));
-        };
+        let content = io::read_to_string(file).map_err(|err| {
+            CommandErr::Execution(format!("failed to read {}: {}", &args[0], err))
+        })?;
 
         let bookmark_iter = content
             .lines()
@@ -48,13 +48,13 @@ impl Command for Load {
             }
             Err(BookmarkErr::LineParseFailure(line, Some(i))) => {
                 return Err(CommandErr::Execution(format!(
-                    "could not parse line {} of {}\n{}",
+                    "could not parse line {} of {}: {}",
                     i, &args[0], line
                 )));
             }
             Err(BookmarkErr::LineParseFailure(line, None)) => {
                 return Err(CommandErr::Execution(format!(
-                    "could not parse a line of {}\n{}",
+                    "could not parse a line of {}: {}",
                     &args[0], line
                 )));
             }

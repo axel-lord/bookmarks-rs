@@ -27,13 +27,14 @@ impl Command for Save {
             ));
         }
 
-        let Ok(file) = File::create(&args[0]) else {
-            return Err(CommandErr::Execution(format!("could not open {} for writing", &args[0])));
-        };
+        let file = File::create(&args[0]).map_err(|err| {
+            CommandErr::Execution(format!("could not open {} for reading: {}", &args[0], err))
+        })?;
 
         let mut writer = BufWriter::new(file);
 
-        let write_err = |_| CommandErr::Execution(format!("write to {} failed", &args[0]));
+        let write_err =
+            |err| CommandErr::Execution(format!("write to {} failed: {}", &args[0], err));
 
         writeln!(writer, "{}", token::UNSORTED_BEGIN).map_err(write_err)?;
 

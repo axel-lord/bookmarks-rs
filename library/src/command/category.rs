@@ -24,6 +24,8 @@ impl Category {
 
         command_map.push("list", None, list::List::build(categories.clone()));
 
+        command_map.push("save", None, save::Save::build(categories.clone()));
+
         subcommand
     }
 }
