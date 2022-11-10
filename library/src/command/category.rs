@@ -32,9 +32,11 @@ impl Category {
 
 impl Command for Category {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        let err = || CommandErr::Execution("category needs to be called with a subcommand".into());
-
-        self.command_map
-            .call(&args.get(0).ok_or_else(err)?, &args[1..])
+        self.command_map.call(
+            &args.get(0).ok_or_else(|| {
+                CommandErr::Execution("category needs to be called with a subcommand".into())
+            })?,
+            &args[1..],
+        )
     }
 }

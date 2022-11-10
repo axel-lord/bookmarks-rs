@@ -1,3 +1,4 @@
+pub mod bookmark;
 pub mod category;
 pub mod count;
 pub mod filter;
@@ -119,6 +120,12 @@ pub fn build_command_map(
         "category",
         None,
         category::Category::build(categories.clone()),
+    );
+
+    command_map.push(
+        "bookmark",
+        None,
+        bookmark::Bookmark::build(bookmarks.clone(), buffer.clone()),
     );
 
     command_map.push("debug", None, Box::new(command_debug));
