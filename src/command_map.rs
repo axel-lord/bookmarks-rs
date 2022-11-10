@@ -1,15 +1,15 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, fmt::Debug};
 
 pub enum CommandErr {
     Lookup,
     Execution(String),
 }
 
-pub trait Command {
+pub trait Command: Debug {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr>;
 }
 
-impl<T> Command for T
+impl<T: Debug> Command for T
 where
     T: FnMut(&[String]) -> Result<(), CommandErr>,
 {
@@ -18,7 +18,7 @@ where
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CommandMap<'a>(HashMap<&'a str, RefCell<Box<dyn Command>>>);
 
 impl<'a> CommandMap<'a> {

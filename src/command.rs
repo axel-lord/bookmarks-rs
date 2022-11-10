@@ -1,3 +1,4 @@
+pub mod category;
 pub mod count;
 pub mod filter;
 pub mod list;
@@ -6,13 +7,13 @@ pub mod regex;
 pub mod reset;
 pub mod save;
 
-pub use self::count::Count;
-pub use self::filter::{Filter, FilterInv};
-pub use self::list::List;
-pub use self::load::Load;
-pub use self::regex::{Regex, RegexInv};
-pub use self::reset::Reset;
-pub use self::save::Save;
+use self::count::Count;
+use self::filter::{Filter, FilterInv};
+use self::list::List;
+use self::load::Load;
+use self::regex::{Regex, RegexInv};
+use self::reset::Reset;
+use self::save::Save;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
