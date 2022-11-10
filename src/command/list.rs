@@ -27,58 +27,58 @@ impl Command for List {
         let bookmarks = self.bookmarks.borrow();
         let buffer = self.buffer.borrow();
 
-        let bookmark_iter = get_bookmark_iter(&bookmarks, &buffer);
-        match &args[..] {
-            [] => {
-                println!("listing all bookmarks");
-                for (_, bookmark) in bookmark_iter {
-                    println!("{bookmark}");
-                }
-                Ok(())
-            }
-            [count] => {
-                println!("listing {count} bookmarks");
-                let count = match count.parse() {
-                    Ok(c) => c,
-                    Err(_) => {
-                        return Err(CommandErr::Execution(format!(
-                            "could not parse {count} as a bookmark count"
-                        )))
-                    }
-                };
-                for (_, bookmark) in bookmark_iter.take(count) {
-                    println!("{bookmark}");
-                }
-                Ok(())
-            }
-            [count, from] => {
-                println!("listing {count} bookmarks starting at index {from}");
-                let count = match count.parse() {
-                    Ok(c) => c,
-                    Err(_) => {
-                        return Err(CommandErr::Execution(format!(
-                            "could not parse {count} as a bookmark count"
-                        )))
-                    }
-                };
-                let from = match from.parse() {
-                    Ok(f) => f,
-                    Err(_) => {
-                        return Err(CommandErr::Execution(format!(
-                            "could not parse {count} as a bookmark index"
-                        )))
-                    }
-                };
+        // procedure to print bookmarks
+        let print_bookmarks = |from, count| {
+            get_bookmark_iter(&bookmarks, &buffer)
+                .skip(from)
+                .take(count)
+                .for_each(|(_, b)| println!("{b}"))
+        };
 
-                let from = wrap_if_negative(from, buffer_length(&buffer))?;
+        // if one or more arguments get count else print all bookmarks and exit
+        let [count, ..] = &args else {
+            println!("listing all bookmarks");
+            print_bookmarks(0, bookmarks.len());
+            return Ok(());
+        };
 
-                for (_, bookmark) in bookmark_iter.skip(from).take(count) {
-                    println!("{bookmark}");
-                }
-                Ok(())
-            }
-            _ => Err(CommandErr::Execution("Usage: list [COUNT] [FROM]".into())),
-        }
+        // convert count from a string to an integer
+        let Ok(count) = count.parse() else {
+            return Err(CommandErr::Execution(format!(
+                "could not parse {count} as a bookmark count"
+            )));
+        };
+
+        // if two or more arguments get from (second argument) else print count bookmarks from
+        // start and exit
+        let [_, from, ..] = &args else {
+            println!("listing {count} bookmarks");
+            print_bookmarks(0, count);
+            return Ok(());
+        };
+
+        // convert from from a string to an integer
+        let Ok(from) = from.parse() else {
+            return Err(CommandErr::Execution(format!(
+                "could not parse {count} as a bookmark index"
+            )));
+        };
+
+        // if from is negative wrap it to a positive based on buffer length
+        let from = wrap_if_negative(from, buffer_length(&buffer))?;
+
+        // if three or more arguments contiune else print count bookmarks from index from
+        let [_, _, _, ..] = &args else {
+            println!("listing {count} bookmarks starting at index {from}");
+            print_bookmarks(from, count);
+            return Ok(());
+        };
+
+        // since three or more arguments are not supported exit with a result indicating this
+        Err(CommandErr::Execution(format!(
+            "too many arguments passed to list ({})",
+            args.len()
+        )))
     }
 }
 
