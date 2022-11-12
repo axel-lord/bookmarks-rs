@@ -7,17 +7,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::ops::Range;
 
-#[macro_export]
-macro_rules! append_chain {
-    ($dst:expr, $($x:expr),*) => {
-        {
-            $(
-                $dst += $x;
-            )+
-        }
-    };
-}
-
 #[derive(Debug)]
 pub struct Bookmark {
     line: Option<ContentString>,
