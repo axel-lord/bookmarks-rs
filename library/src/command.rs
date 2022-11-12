@@ -1,20 +1,7 @@
 pub mod bookmark;
 pub mod category;
-pub mod count;
-pub mod filter;
-pub mod list;
-pub mod load;
-pub mod regex;
-pub mod reset;
-pub mod save;
 
-use self::count::Count;
-use self::filter::{Filter, FilterInv};
-use self::list::List;
-use self::load::Load;
-use self::regex::{Regex, RegexInv};
-use self::reset::Reset;
-use self::save::Save;
+pub mod reset;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
@@ -74,47 +61,11 @@ pub fn build_command_map(
     let mut command_map = CommandMap::new();
     let buffer = Rc::new(RefCell::new(vec![(0..bookmarks.borrow().len())]));
 
-    command_map.push("list", None, List::build(bookmarks.clone(), buffer.clone()));
-
-    command_map.push(
-        "filter",
-        None,
-        Filter::build(bookmarks.clone(), buffer.clone()),
-    );
-
-    command_map.push(
-        "filter-inv",
-        None,
-        FilterInv::build(bookmarks.clone(), buffer.clone()),
-    );
-
-    command_map.push(
-        "regex",
-        None,
-        Regex::build(bookmarks.clone(), buffer.clone()),
-    );
-
-    command_map.push(
-        "regex-inv",
-        None,
-        RegexInv::build(bookmarks.clone(), buffer.clone()),
-    );
-
-    command_map.push(
-        "count",
-        None,
-        Count::build(bookmarks.clone(), buffer.clone()),
-    );
-
     command_map.push(
         "reset",
         None,
-        Reset::build(bookmarks.clone(), buffer.clone()),
+        reset::Reset::build(bookmarks.clone(), buffer.clone()),
     );
-
-    command_map.push("load", None, Load::build(bookmarks.clone()));
-
-    command_map.push("save", None, Save::build(bookmarks.clone(), buffer.clone()));
 
     command_map.push(
         "category",

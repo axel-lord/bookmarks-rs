@@ -1,5 +1,6 @@
 use crate::{
     bookmark::Bookmark,
+    command::get_bookmark_iter,
     command_map::{Command, CommandErr},
     token,
 };
@@ -10,8 +11,6 @@ use std::{
     ops::Range,
     rc::Rc,
 };
-
-use super::get_bookmark_iter;
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
