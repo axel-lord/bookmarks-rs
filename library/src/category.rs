@@ -1,4 +1,4 @@
-use crate::{pattern_match, token, ContentString};
+use crate::{load::ParseErr, pattern_match, token, ContentString};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{collections::HashMap, error::Error, ops::Range};
@@ -16,26 +16,6 @@ pub struct Category {
 }
 
 #[derive(Clone, Debug)]
-pub enum CategoryErr {
-    LineParseFailure(String, Option<usize>),
-}
-
-impl std::fmt::Display for CategoryErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CategoryErr::LineParseFailure(l, None) => {
-                write!(f, "line parse failure on line \"{l}\"")
-            }
-            CategoryErr::LineParseFailure(l, Some(i)) => {
-                write!(f, "line parse failure on line {i} \"{l}\"")
-            }
-        }
-    }
-}
-
-impl Error for CategoryErr {}
-
-#[derive(Clone, Debug)]
 pub struct IdentifierErr(String);
 
 impl std::fmt::Display for IdentifierErr {
@@ -48,7 +28,13 @@ impl Error for IdentifierErr {}
 
 impl Clone for Category {
     fn clone(&self) -> Self {
-        Self::with_str(self.to_line(), None).unwrap()
+        Self::with_string(self.to_line(), None).unwrap()
+    }
+}
+
+impl From<Category> for String {
+    fn from(c: Category) -> Self {
+        c.to_line()
     }
 }
 
@@ -77,14 +63,18 @@ impl Category {
         identifiers: impl Iterator<Item = &'a str>,
         subcategories: impl Iterator<Item = &'a str>,
     ) -> Self {
-        Self::with_str(
+        Self::with_string(
             Self::create_line(id, name, description, identifiers, subcategories),
             None,
         )
         .unwrap()
     }
 
-    pub fn with_str(line: String, line_num: Option<usize>) -> Result<Self, CategoryErr> {
+    pub fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
+        Self::with_string(line.into(), line_num)
+    }
+
+    pub fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr> {
         lazy_static! {
             static ref LINE_RE: Regex = Regex::new(
                 &[
@@ -106,7 +96,7 @@ impl Category {
             .unwrap();
         }
 
-        let err = || CategoryErr::LineParseFailure(line.clone(), line_num);
+        let err = || ParseErr::Line(Some(line.clone()), line_num);
 
         let captures = LINE_RE.captures(&line).ok_or_else(err)?;
 
