@@ -1,9 +1,8 @@
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
-use super::buffer_length;
-
 use crate::{
     bookmark::Bookmark,
+    command::buffer_length,
     command_map::{Command, CommandErr},
 };
 

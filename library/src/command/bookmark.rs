@@ -1,3 +1,10 @@
+pub mod count;
+pub mod filter;
+pub mod list;
+pub mod load;
+pub mod regex;
+pub mod save;
+
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
@@ -12,12 +19,57 @@ pub struct Bookmark {
 
 impl Bookmark {
     pub fn build(
-        _bookmarks: Rc<RefCell<Vec<bookmark::Bookmark>>>,
-        _buffer: Rc<RefCell<Vec<Range<usize>>>>,
+        bookmarks: Rc<RefCell<Vec<bookmark::Bookmark>>>,
+        buffer: Rc<RefCell<Vec<Range<usize>>>>,
     ) -> Box<Self> {
-        let subcommand: Box<Self> = Default::default();
+        let mut subcommand = CommandMap::new();
 
-        subcommand
+        subcommand.push(
+            "list",
+            None,
+            list::List::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "filter",
+            None,
+            filter::Filter::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "filter-inv",
+            None,
+            filter::FilterInv::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "regex",
+            None,
+            regex::Regex::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "regex-inv",
+            None,
+            regex::RegexInv::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "count",
+            None,
+            count::Count::build(bookmarks.clone(), buffer.clone()),
+        );
+        subcommand.push("load", None, load::Load::build(bookmarks.clone()));
+
+        subcommand.push(
+            "save",
+            None,
+            save::Save::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        Box::new(Self {
+            command_map: subcommand,
+        })
     }
 }
 

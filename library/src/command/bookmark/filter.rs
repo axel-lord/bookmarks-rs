@@ -1,9 +1,8 @@
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
-use super::{get_bookmark_iter, get_filtered_bookmarks};
-
 use crate::{
     bookmark::Bookmark,
+    command::{get_bookmark_iter, get_filtered_bookmarks},
     command_map::{Command, CommandErr},
 };
 
