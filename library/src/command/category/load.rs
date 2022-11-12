@@ -1,9 +1,9 @@
-use std::{cell::RefCell, fs::File, io, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    category::{Category, CategoryErr},
+    category::Category,
     command_map::{Command, CommandErr},
-    token,
+    load, token,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
@@ -19,37 +19,20 @@ impl Command for Load {
             ));
         }
 
-        let file = File::open(&args[0]).map_err(|err| {
-            CommandErr::Execution(format!("could not open {}: {}", &args[0], err))
-        })?;
+        let loaded = load::load(
+            &args[0],
+            token::CATEGORY_BEGIN,
+            token::CATEGORY_END,
+            Category::with_str,
+        )
+        .map_err(|err| CommandErr::Execution(format!("in file {}: {}", &args[0], err)))?;
 
-        let content = io::read_to_string(file).map_err(|err| {
-            CommandErr::Execution(format!("failed to read {}: {}", &args[0], err))
-        })?;
-
-        let category_iter = content
-            .lines()
-            .enumerate()
-            .skip_while(|(_, l)| !l.contains(token::CATEGORY_BEGIN))
-            .skip(1)
-            .take_while(|(_, l)| !l.contains(token::CATEGORY_END))
-            .map(|(i, l)| Category::with_str(l.into(), Some(i)));
-
-        let loaded = match category_iter.collect::<Result<Vec<Category>, CategoryErr>>() {
-            Ok(categories) => categories,
-            Err(CategoryErr::LineParseFailure(line, Some(i))) => {
-                return Err(CommandErr::Execution(format!(
-                    "could not parse category on line {}: {}",
-                    i, line
-                )))
-            }
-            Err(CategoryErr::LineParseFailure(line, None)) => {
-                return Err(CommandErr::Execution(format!(
-                    "could not parse category from line: {}",
-                    line
-                )))
-            }
-        };
+        if loaded.is_empty() {
+            return Err(CommandErr::Execution(format!(
+                "no categories parsed from {}",
+                &args[0]
+            )));
+        }
 
         self.categories.borrow_mut().extend_from_slice(&loaded);
 

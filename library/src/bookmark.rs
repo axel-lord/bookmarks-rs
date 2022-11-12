@@ -1,7 +1,11 @@
-use crate::{pattern_match, token, ContentString};
+use crate::{
+    load::ParseErr,
+    pattern_match::{self, split_by_delim_to_ranges},
+    token, ContentString,
+};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{error::Error, ops::Range};
+use std::ops::Range;
 
 #[macro_export]
 macro_rules! append_chain {
@@ -23,38 +27,28 @@ pub struct Bookmark {
     tags: Vec<Range<usize>>,
 }
 
-#[derive(Clone, Debug)]
-pub enum BookmarkErr {
-    LineParseFailure(String, Option<usize>),
-}
-
-impl std::fmt::Display for BookmarkErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BookmarkErr::LineParseFailure(l, None) => {
-                write!(f, "line parse failure on line \"{l}\"")
-            }
-            BookmarkErr::LineParseFailure(l, Some(i)) => {
-                write!(f, "line parse failure on line {i} \"{l}\"")
-            }
-        }
+impl Clone for Bookmark {
+    fn clone(&self) -> Self {
+        Self::with_string(self.to_line(), None).unwrap()
     }
 }
 
-impl Error for BookmarkErr {}
-
-impl Clone for Bookmark {
-    fn clone(&self) -> Self {
-        Self::with_str(self.to_line(), None).unwrap()
+impl From<Bookmark> for String {
+    fn from(b: Bookmark) -> Self {
+        b.to_line()
     }
 }
 
 impl Bookmark {
     pub fn new<'a>(url: &str, description: &str, tags: impl Iterator<Item = &'a str>) -> Self {
-        Self::with_str(Self::create_line(url, description, tags), None).unwrap()
+        Self::with_string(Self::create_line(url, description, tags), None).unwrap()
     }
 
-    pub fn with_str(line: String, line_num: Option<usize>) -> Result<Self, BookmarkErr> {
+    pub fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
+        Self::with_string(line.into(), line_num)
+    }
+
+    pub fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr> {
         lazy_static! {
             static ref LINE_RE: Regex = Regex::new(
                 &[
@@ -72,7 +66,7 @@ impl Bookmark {
             .unwrap();
         }
 
-        let err = || BookmarkErr::LineParseFailure(line.clone(), line_num);
+        let err = || ParseErr::Line(Some(line.clone()), line_num);
 
         let captures = LINE_RE.captures(&line).ok_or_else(err)?;
 
@@ -91,7 +85,7 @@ impl Bookmark {
             .and_then(|c| Some(c.range()))
             .ok_or_else(err)?;
 
-        let tags = crate::pattern_match::split_by_delim_to_ranges(&line[tag.clone()]);
+        let tags = split_by_delim_to_ranges(&line[tag.clone()]);
 
         Ok(Bookmark {
             line: Some(ContentString::UnappendedTo(line)),

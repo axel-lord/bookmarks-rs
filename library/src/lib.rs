@@ -2,6 +2,7 @@ pub mod bookmark;
 pub mod category;
 pub mod command;
 pub mod command_map;
+pub mod load;
 pub mod pattern_match;
 pub mod token;
 
