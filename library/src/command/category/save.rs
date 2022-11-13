@@ -11,6 +11,8 @@ use crate::{
     token,
 };
 
+use bookmark_storage::Storeable;
+
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
     categories: Rc<RefCell<Vec<Category>>>,
