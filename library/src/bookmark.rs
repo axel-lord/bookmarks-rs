@@ -7,25 +7,20 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::ops::Range;
 
-#[derive(Debug)]
+#[derive(Debug, bookmark_derive::Storeable)]
 pub struct Bookmark {
+    #[line]
     line: Option<ContentString>,
+
+    #[string]
     url: Range<usize>,
+
+    #[string]
     description: Range<usize>,
-    tag: Range<usize>,
+
+    #[composite(tag)]
     tags: Vec<Range<usize>>,
-}
-
-impl Clone for Bookmark {
-    fn clone(&self) -> Self {
-        Self::with_string(self.to_line(), None).unwrap()
-    }
-}
-
-impl From<Bookmark> for String {
-    fn from(b: Bookmark) -> Self {
-        b.to_line()
-    }
+    tag: Range<usize>,
 }
 
 impl Bookmark {
@@ -92,30 +87,12 @@ impl Bookmark {
         self.tags.push(range);
     }
 
-    pub fn url(&self) -> &str {
-        &self.raw_line()[self.url.clone()]
-    }
-
-    pub fn description(&self) -> &str {
-        &self.raw_line()[self.description.clone()]
-    }
-
-    pub fn tags(&self) -> impl Iterator<Item = &str> {
-        self.tags
-            .iter()
-            .map(|r| &self.raw_line()[self.tag.clone()][r.clone()])
-    }
-
     pub fn to_line(&self) -> String {
         if let Some(ContentString::UnappendedTo(line)) = self.line.as_ref() {
             line.clone()
         } else {
             Self::create_line(self.url(), self.description(), self.tags())
         }
-    }
-
-    pub fn is_edited(&self) -> bool {
-        self.line.as_ref().unwrap().is_appended_to()
     }
 
     fn create_line<'a>(
@@ -133,10 +110,6 @@ impl Bookmark {
             tags.collect::<Vec<&str>>()
                 .join(&[" ", token::DELIM, " "].concat()),
         )
-    }
-
-    fn raw_line(&self) -> &str {
-        self.line.as_ref().unwrap().ref_any()
     }
 }
 
