@@ -1,5 +1,5 @@
 use crate::{token, ContentString};
-use bookmark_storage::Storeable;
+use bookmark_storage::{Section, Storeable};
 use std::ops::Range;
 
 #[derive(Debug, bookmark_derive::Storeable)]
@@ -19,6 +19,20 @@ pub struct Bookmark {
     #[token(token::unsorted::TAG)]
     tags: Vec<Range<usize>>,
     tag: Range<usize>,
+}
+
+impl Section for Bookmark {
+    fn token_end() -> &'static str {
+        token::UNSORTED_END
+    }
+
+    fn token_begin() -> &'static str {
+        token::CATEGORY_BEGIN
+    }
+
+    fn item_name() -> &'static str {
+        "bookmark"
+    }
 }
 
 impl std::fmt::Display for Bookmark {
