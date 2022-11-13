@@ -1,6 +1,10 @@
 pub mod content_string;
+pub mod load;
 pub mod pattern_match;
 pub mod token;
+
+pub use load::load;
+
 use std::error::Error;
 
 #[derive(Clone, Debug)]
