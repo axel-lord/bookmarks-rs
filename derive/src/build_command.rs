@@ -36,7 +36,7 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
                     eq_token: None,
                     default: None,
                 },
-                _ => panic!("oops"),
+                _ => panic!("todo: implement"),
             };
             simple.push(g);
         }
@@ -51,12 +51,12 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
         )
     };
 
-    println!(
-        "{} {} {}",
-        generic.to_string(),
-        generic_simple.to_string(),
-        where_clause.to_string()
-    );
+    // println!(
+    //     "{} {} {}",
+    //     generic.to_string(),
+    //     generic_simple.to_string(),
+    //     where_clause.to_string()
+    // );
 
     let fields: Vec<_> = data_struct.fields.iter().collect();
     let field_idents: Vec<_> = data_struct

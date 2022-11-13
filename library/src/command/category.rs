@@ -2,12 +2,11 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     category,
-    command::category::load::Load,
+    command::load::Load,
     command_map::{Command, CommandErr, CommandMap},
 };
 
 pub mod list;
-pub mod load;
 pub mod save;
 
 #[derive(Debug, Default)]

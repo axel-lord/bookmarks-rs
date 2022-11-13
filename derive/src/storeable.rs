@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote, ToTokens};
-use syn::{self, Token};
+use syn;
 
 pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;

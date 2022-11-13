@@ -1,7 +1,6 @@
 pub mod count;
 pub mod filter;
 pub mod list;
-pub mod load;
 pub mod regex;
 pub mod save;
 
@@ -9,6 +8,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
     bookmark,
+    command::load::Load,
     command_map::{Command, CommandErr, CommandMap},
 };
 
@@ -59,7 +59,7 @@ impl Bookmark {
             None,
             count::Count::build(bookmarks.clone(), buffer.clone()),
         );
-        subcommand.push("load", None, load::Load::build(bookmarks.clone()));
+        subcommand.push("load", None, Load::build(bookmarks.clone()));
 
         subcommand.push(
             "save",

@@ -47,3 +47,7 @@ pub trait Section {
     fn token_end() -> &'static str;
     fn item_name() -> &'static str;
 }
+
+pub trait Listed: Storeable + Section {}
+
+impl<T> Listed for T where T: Storeable + Section {}
