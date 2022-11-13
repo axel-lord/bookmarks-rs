@@ -37,6 +37,12 @@ impl std::fmt::Display for ParseErr {
 
 impl Error for ParseErr {}
 
+impl From<std::io::Error> for ParseErr {
+    fn from(err: std::io::Error) -> Self {
+        ParseErr::Other(format!("{err}"))
+    }
+}
+
 pub trait Storeable: Sized {
     fn is_edited(&self) -> bool;
     fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr>;

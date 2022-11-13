@@ -3,9 +3,7 @@ use crate::{
     command::get_bookmark_iter,
     command_map::{Command, CommandErr},
 };
-use std::{cell::RefCell, ops::Range, rc::Rc};
-
-// use bookmark_storage::Storeable;
+use std::{cell::RefCell, fs::File, io::BufWriter, ops::Range, rc::Rc};
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
@@ -22,7 +20,7 @@ impl Command for Save {
         }
 
         bookmark_storage::save(
-            &args[0],
+            &mut BufWriter::new(File::create(&args[0])?),
             get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()).map(|(_, b)| b),
         )?;
 

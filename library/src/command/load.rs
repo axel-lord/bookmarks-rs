@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fs::File, rc::Rc};
 
 use crate::command_map::{Command, CommandErr};
 
@@ -23,7 +23,7 @@ where
             ));
         }
 
-        let loaded = bookmark_storage::load(&args[0])?;
+        let loaded = bookmark_storage::load(&mut File::open(&args[0])?)?;
 
         if loaded.is_empty() {
             return Err(CommandErr::Execution(format!(
