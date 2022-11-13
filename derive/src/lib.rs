@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote, ToTokens};
 use syn;
 
 #[proc_macro_derive(BuildCommand)]
@@ -178,6 +178,31 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         })
         .collect();
 
+    let create_line_format = std::iter::repeat("{} {}")
+        .take(all.len())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    let create_line_iter: Vec<_> = all
+        .iter()
+        .map(|(i, t)| {
+            [
+                tokens[i].to_token_stream(),
+                match t {
+                    TString => i.to_token_stream(),
+                    TComp => {
+                        quote! {
+                            #i.collect::<Vec<&str>>()
+                                .join(&[" ", bookmark_storage::token::DELIM, " "].concat())
+                        }
+                    }
+                },
+            ]
+            .into_iter()
+        })
+        .flatten()
+        .collect();
+
     let parse_fields: Vec<_> = all
         .iter()
         .enumerate()
@@ -199,6 +224,20 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         .collect();
 
     let all_simple: Vec<_> = all.iter().map(|(i, _)| i).collect();
+
+    let new_args: Vec<_> = all
+        .iter()
+        .map(|(i, t)| match t {
+            TString => quote! {
+                #i: &str
+            },
+            TComp => quote! {
+                #i: impl Iterator<Item = &'a str>
+            },
+        })
+        .collect();
+
+    let adders: Vec<_> = comp_of.iter().map(|i| format_ident!("add_{}", i)).collect();
 
     let gen = quote! {
         impl Clone for #name {
@@ -261,14 +300,36 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
         impl #name {
+            pub fn new<'a>(#(#new_args),*) -> Self {
+                Self::with_string(Self::create_line(#(#all_simple),*), None).unwrap()
+            }
+
+            pub fn create_line<'a>(#(#new_args),*) -> String {
+                format!(
+                    #create_line_format,
+                    #(
+                    #create_line_iter
+                    ),*
+                )
+            }
+
             fn raw_line(&self) -> &str {
                 self.#line_ident.as_ref().unwrap().ref_any()
             }
 
             #(
-                fn #comp_of(&self) -> &str {
-                    &self.raw_line()[self.#comp_of.clone()]
-                }
+            fn #comp_of(&self) -> &str {
+                &self.raw_line()[self.#comp_of.clone()]
+            }
+            pub fn #comp(&self) -> impl Iterator<Item = &str> {
+                self.tags.iter().map(|r| &self.#comp_of()[r.clone()])
+            }
+            pub fn #adders(&mut self, #comp_of: &str) {
+                let (content_string, range) = self.#line_ident.take().unwrap().append(tag);
+
+                self.#line_ident = Some(content_string);
+                self.#comp.push(range);
+            }
             )*
 
 
@@ -276,12 +337,6 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             pub fn #strings(&self) -> &str {
                 &self.raw_line()[self.#strings.clone()]
             }
-            )*
-
-            #(
-                pub fn #comp(&self) -> impl Iterator<Item = &str> {
-                    self.tags.iter().map(|r| &self.#comp_of()[r.clone()])
-                }
             )*
         }
     };
