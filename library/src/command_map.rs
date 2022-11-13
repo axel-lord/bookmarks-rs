@@ -23,6 +23,12 @@ impl From<bookmark_storage::ParseErr> for CommandErr {
     }
 }
 
+impl From<std::io::Error> for CommandErr {
+    fn from(err: std::io::Error) -> Self {
+        Self::Execution(format!("{err}"))
+    }
+}
+
 pub trait Command {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr>;
 }

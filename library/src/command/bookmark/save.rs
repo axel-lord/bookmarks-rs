@@ -2,17 +2,10 @@ use crate::{
     bookmark::Bookmark,
     command::get_bookmark_iter,
     command_map::{Command, CommandErr},
-    token,
 };
-use std::{
-    cell::RefCell,
-    fs::File,
-    io::{prelude::*, BufWriter},
-    ops::Range,
-    rc::Rc,
-};
+use std::{cell::RefCell, ops::Range, rc::Rc};
 
-use bookmark_storage::Storeable;
+// use bookmark_storage::Storeable;
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
@@ -28,22 +21,10 @@ impl Command for Save {
             ));
         }
 
-        let file = File::create(&args[0]).map_err(|err| {
-            CommandErr::Execution(format!("could not open {} for reading: {}", &args[0], err))
-        })?;
-
-        let mut writer = BufWriter::new(file);
-
-        let write_err =
-            |err| CommandErr::Execution(format!("write to {} failed: {}", &args[0], err));
-
-        writeln!(writer, "{}", token::UNSORTED_BEGIN).map_err(write_err)?;
-
-        for (_, bookmark) in get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()) {
-            writeln!(writer, "{}", bookmark.to_line()).map_err(write_err)?;
-        }
-
-        writeln!(writer, "{}", token::UNSORTED_END).map_err(write_err)?;
+        bookmark_storage::save(
+            &args[0],
+            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()).map(|(_, b)| b),
+        )?;
 
         Ok(())
     }
