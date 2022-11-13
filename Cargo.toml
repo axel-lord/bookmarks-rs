@@ -3,4 +3,5 @@ members = [
 	"library",
 	"application",
 	"derive",
+	"storage",
 ]

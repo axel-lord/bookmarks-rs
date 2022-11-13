@@ -24,6 +24,7 @@ name = "bookmark-library"
 version = "0.1.0"
 dependencies = [
  "bookmark-derive",
+ "bookmark-storage",
  "lazy_static",
  "regex",
 ]
@@ -34,6 +35,10 @@ version = "0.1.0"
 dependencies = [
  "bookmark-library",
 ]
+
+[[package]]
+name = "bookmark-storage"
+version = "0.1.0"
 
 [[package]]
 name = "lazy_static"

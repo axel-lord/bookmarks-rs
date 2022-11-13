@@ -26,18 +26,6 @@ impl std::fmt::Display for IdentifierErr {
 
 impl Error for IdentifierErr {}
 
-impl Clone for Category {
-    fn clone(&self) -> Self {
-        Self::with_string(self.to_line(), None).unwrap()
-    }
-}
-
-impl From<Category> for String {
-    fn from(c: Category) -> Self {
-        c.to_line()
-    }
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct IdentifierContainer<'a> {
     pub require: Vec<&'a str>,
@@ -52,6 +40,17 @@ impl<'a> IdentifierContainer<'a> {
             ('[', self.require.len()),
             ('<', self.whole.len()),
         ])
+    }
+}
+
+impl Clone for Category {
+    fn clone(&self) -> Self {
+        Self::with_string(self.to_line(), None).unwrap()
+    }
+}
+impl From<Category> for String {
+    fn from(c: Category) -> Self {
+        c.to_line()
     }
 }
 
