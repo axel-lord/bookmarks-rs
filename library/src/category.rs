@@ -1,5 +1,5 @@
 use crate::{token, ContentString};
-use bookmark_storage::Storeable;
+use bookmark_storage::{Section, Storeable};
 use std::{collections::HashMap, error::Error, ops::Range};
 
 #[derive(Debug, bookmark_derive::Storeable)]
@@ -93,6 +93,20 @@ impl Category {
         }
 
         Ok(identifier_container)
+    }
+}
+
+impl Section for Category {
+    fn token_end() -> &'static str {
+        token::CATEGORY_END
+    }
+
+    fn token_begin() -> &'static str {
+        token::CATEGORY_BEGIN
+    }
+
+    fn item_name() -> &'static str {
+        "category"
     }
 }
 

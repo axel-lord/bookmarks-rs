@@ -37,3 +37,9 @@ pub trait Storeable: Sized {
     fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr>;
     fn to_line(&self) -> String;
 }
+
+pub trait Section {
+    fn token_begin() -> &'static str;
+    fn token_end() -> &'static str;
+    fn item_name() -> &'static str;
+}
