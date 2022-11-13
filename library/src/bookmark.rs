@@ -1,10 +1,6 @@
-use crate::{
-    load::ParseErr,
-    pattern_match::{self, split_by_delim_to_ranges},
-    token, ContentString,
-};
+use crate::{token, ContentString};
+use bookmark_storage::Storeable;
 use lazy_static::lazy_static;
-use regex::Regex;
 use std::ops::Range;
 
 #[derive(Debug, bookmark_derive::Storeable)]
@@ -13,12 +9,15 @@ pub struct Bookmark {
     line: Option<ContentString>,
 
     #[string]
+    #[token(token::unsorted::URL)]
     url: Range<usize>,
 
     #[string]
+    #[token(token::unsorted::DESCRIPTION)]
     description: Range<usize>,
 
     #[composite(tag)]
+    #[token(token::unsorted::TAG)]
     tags: Vec<Range<usize>>,
     tag: Range<usize>,
 }
@@ -28,71 +27,11 @@ impl Bookmark {
         Self::with_string(Self::create_line(url, description, tags), None).unwrap()
     }
 
-    pub fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
-        Self::with_string(line.into(), line_num)
-    }
-
-    pub fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr> {
-        lazy_static! {
-            static ref LINE_RE: Regex = Regex::new(
-                &[
-                    r#"^"#,
-                    token::unsorted::URL,
-                    pattern_match::WHITESPACE_PADDED_GROUP,
-                    token::unsorted::DESCRIPTION,
-                    pattern_match::WHITESPACE_PADDED_GROUP,
-                    token::unsorted::TAG,
-                    pattern_match::WHITESPACE_PADDED_GROUP,
-                    r"$"
-                ]
-                .concat()
-            )
-            .unwrap();
-        }
-
-        let err = || ParseErr::Line(Some(line.clone()), line_num);
-
-        let captures = LINE_RE.captures(&line).ok_or_else(err)?;
-
-        let url = captures
-            .get(1)
-            .and_then(|c| Some(c.range()))
-            .ok_or_else(err)?;
-
-        let description = captures
-            .get(2)
-            .and_then(|c| Some(c.range()))
-            .ok_or_else(err)?;
-
-        let tag = captures
-            .get(3)
-            .and_then(|c| Some(c.range()))
-            .ok_or_else(err)?;
-
-        let tags = split_by_delim_to_ranges(&line[tag.clone()]);
-
-        Ok(Bookmark {
-            line: Some(ContentString::UnappendedTo(line)),
-            url,
-            description,
-            tag,
-            tags,
-        })
-    }
-
     pub fn add_tag(&mut self, tag: &str) {
         let (content_string, range) = self.line.take().unwrap().append(tag);
 
         self.line = Some(content_string);
         self.tags.push(range);
-    }
-
-    pub fn to_line(&self) -> String {
-        if let Some(ContentString::UnappendedTo(line)) = self.line.as_ref() {
-            line.clone()
-        } else {
-            Self::create_line(self.url(), self.description(), self.tags())
-        }
     }
 
     fn create_line<'a>(

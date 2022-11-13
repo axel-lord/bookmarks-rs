@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;
@@ -9,7 +11,7 @@ pub fn build_command_derive(input: TokenStream) -> TokenStream {
     impl_build_command(&ast)
 }
 
-#[proc_macro_derive(Storeable, attributes(line, string, composite))]
+#[proc_macro_derive(Storeable, attributes(line, string, composite, token))]
 pub fn storeable_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
@@ -46,18 +48,33 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
 
     //panic!("{:#?}", ast);
 
+    #[derive(Clone, Copy, Debug)]
+    enum TokenType {
+        TString,
+        TComp,
+    }
+
+    use TokenType::*;
+
     let syn::Data::Struct(ref data_struct) = ast.data else {
         panic!("Storeable can only be derived on structs");
     };
 
     let mut line = None;
     let mut strings = Vec::new();
-    let mut composites = Vec::new();
+    let mut composites = HashMap::new();
+
+    let mut all = Vec::new();
+    let mut tokens = HashMap::new();
+
+    let mut field_order = Vec::new();
 
     for field in data_struct.fields.iter() {
         if field.ident.is_none() {
-            panic!("macro should be used on structs with bamed fields");
+            panic!("macro should be used on structs with named fields");
         }
+
+        field_order.push(field.ident.clone().unwrap());
 
         for attr in field.attrs.iter() {
             let Ok(meta) = attr.parse_meta() else {
@@ -67,18 +84,24 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             match meta {
                 syn::Meta::Path(ref path) => {
                     let Some(ident) = path.get_ident() else {
-                        panic!("attribute should be a single token");
+                        panic!("attribute should be a single token\n{:#?}", path);
                     };
 
                     match ident.to_string().as_str() {
                         "line" => line = Some(field.clone()),
-                        "string" => strings.push(field.ident.clone().unwrap()),
-                        _ => panic!("only string and list supported in this context"),
+                        "string" => {
+                            strings.push(field.ident.clone().unwrap());
+                            all.push((field.ident.clone().unwrap(), TString));
+                        }
+                        _ => panic!(
+                            "only string and list supported in this context\n{:#?}",
+                            path
+                        ),
                     }
                 }
                 syn::Meta::List(ref list) => {
                     let Some(ident) = list.path.get_ident() else {
-                        panic!("attribute should be a single token"); 
+                        panic!("attribute should be a single token\n{:#?}", list); 
                     };
 
                     match ident.to_string().as_str() {
@@ -96,13 +119,33 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                                 panic!("contents of composite should be a single token");
                             };
 
-                            composites.push((of_ident.clone(), field.ident.clone().unwrap()));
+                            composites.insert(field.ident.clone().unwrap(), of_ident.clone());
+                            all.push((field.ident.clone().unwrap(), TComp));
                         }
-                        _ => panic!("only composite supported in this context"),
+                        "token" => {
+                            let items: Vec<_> = list.nested.iter().collect();
+                            if items.len() != 1 {
+                                panic!("token should contain a single value");
+                            }
+
+                            let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
+                                panic!("contents of token should be a single token");
+                            };
+
+                            tokens.insert(field.ident.clone().unwrap(), path.clone());
+                        }
+                        _ => panic!(
+                            "only composite and token supported in this context\n{:#?}",
+                            list
+                        ),
                     }
                 }
-                _ => panic!("string, list, and composite supported"),
+                _ => panic!("string, list, and composite supported\n{:#?}", meta),
             }
+        }
+
+        if all.len() != tokens.len() {
+            panic!("there should be a token on every field that is storeable")
         }
     }
 
@@ -111,7 +154,51 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let line_ident = line.ident.unwrap();
-    let (comp_of, comp): (Vec<_>, Vec<_>) = composites.into_iter().unzip();
+    let (comp, comp_of): (Vec<_>, Vec<_>) = composites.iter().unzip();
+
+    let re_contents: Vec<_> = all
+        .iter()
+        .map(|(i, _)| {
+            let tok = &tokens[i];
+            quote! {
+                #tok,
+                bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
+            }
+        })
+        .collect();
+
+    let build_fields: Vec<_> = field_order
+        .iter()
+        .map(|i| {
+            if i == &line_ident {
+                quote! {line: Some(bookmark_storage::content_string::ContentString::UnappendedTo(#i))}
+            } else {
+                quote! {#i}
+            }
+        })
+        .collect();
+
+    let parse_fields: Vec<_> = all
+        .iter()
+        .enumerate()
+        .map(|(i, (id, ty))| {
+            let c = i + 1;
+            match ty {
+                TComp => {
+                    let of_id = &composites[id];
+                    quote! {
+                        let #of_id = captures.get(#c).ok_or_else(err)?.range();
+                        let #id = bookmark_storage::pattern_match::split_by_delim_to_ranges(&line[#of_id.clone()]);
+                    }
+                }
+                TString => {
+                    quote! {let #id = captures.get(#c).ok_or_else(err)?.range();}
+                }
+            }
+        })
+        .collect();
+
+    let all_simple: Vec<_> = all.iter().map(|(i, _)| i).collect();
 
     let gen = quote! {
         impl Clone for #name {
@@ -129,6 +216,49 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                 self.#line_ident.as_ref().unwrap().is_appended_to()
             }
 
+            fn with_string(line: String, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
+                use lazy_static::lazy_static;
+                lazy_static! {
+                    static ref LINE_RE: regex::Regex = regex::Regex::new(
+                        &[
+                            r#"^"#,
+                            #(
+                            #re_contents
+                            )*
+                            r"$",
+                        ]
+                        .concat()
+                    )
+                    .unwrap();
+                }
+
+                let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
+
+                let captures = LINE_RE.captures(&line).ok_or_else(err)?;
+
+                #(
+                #parse_fields
+                )*
+
+                Ok(Self{
+                    #(
+                    #build_fields
+                    ),*
+                })
+            }
+            fn with_str(
+                line: &str,
+                line_num: Option<usize>,
+            ) -> Result<Self, bookmark_storage::ParseErr> {
+                Self::with_string(line.into(), line_num)
+            }
+            fn to_line(&self) -> String {
+                if let Some(bookmark_storage::content_string::ContentString::UnappendedTo(line)) = self.line.as_ref() {
+                    line.clone()
+                } else {
+                    Self::create_line(#(self.#all_simple()),*)
+                }
+            }
         }
         impl #name {
             fn raw_line(&self) -> &str {
@@ -140,6 +270,7 @@ fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     &self.raw_line()[self.#comp_of.clone()]
                 }
             )*
+
 
             #(
             pub fn #strings(&self) -> &str {
