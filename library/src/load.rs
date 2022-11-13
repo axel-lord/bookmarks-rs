@@ -1,32 +1,6 @@
-use std::{error::Error, fs::File, io};
+use std::{fs::File, io};
 
-#[derive(Clone, Debug)]
-pub enum ParseErr {
-    Line(Option<String>, Option<usize>),
-    Other(String),
-}
-
-impl std::fmt::Display for ParseErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ParseErr::Line(Some(l), None) => {
-                write!(f, "could not parse line: {l}")
-            }
-            ParseErr::Line(Some(l), Some(i)) => {
-                write!(f, "could not parse line {i}: {l}")
-            }
-            ParseErr::Line(None, None) => {
-                write!(f, "could not parse anything")
-            }
-            ParseErr::Line(None, Some(i)) => {
-                write!(f, "could not parse line {i}")
-            }
-            ParseErr::Other(s) => write!(f, "{s}"),
-        }
-    }
-}
-
-impl Error for ParseErr {}
+pub use bookmark_storage::ParseErr;
 
 pub fn load<T>(
     path: &str,

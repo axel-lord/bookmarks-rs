@@ -6,6 +6,8 @@ use crate::{
     load, token,
 };
 
+use bookmark_storage::Storeable;
+
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,

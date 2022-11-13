@@ -12,6 +12,8 @@ use std::{
     rc::Rc,
 };
 
+use bookmark_storage::Storeable;
+
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
