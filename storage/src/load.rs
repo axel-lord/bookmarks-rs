@@ -1,7 +1,10 @@
-use crate::{ParseErr, Section, Storeable};
+use crate::{Listed, ParseErr};
 use std::{fs::File, io};
 
-pub fn load<T: Storeable + Section>(path: &str) -> Result<Vec<T>, ParseErr> {
+pub fn load<T>(path: &str) -> Result<Vec<T>, ParseErr>
+where
+    T: Listed,
+{
     io::read_to_string(
         File::open(path)
             .map_err(|err| ParseErr::Other(format!("could not open {}: {}", path, err)))?,
