@@ -1,6 +1,6 @@
 pub mod bookmark;
 pub mod category;
-
+pub mod load;
 pub mod reset;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};

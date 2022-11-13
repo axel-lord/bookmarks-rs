@@ -2,7 +2,6 @@ pub mod bookmark;
 pub mod category;
 pub mod command;
 pub mod command_map;
-pub mod load;
 pub mod pattern_match;
 pub mod token;
 
@@ -75,7 +74,7 @@ pub fn run(init_commands: Option<String>) -> i32 {
 
         match io::stdin().read_line(&mut command) {
             Err(err) => {
-                eprintln!("failed to read from stdin: {:#?}", err);
+                eprintln!("failed to read from stdin: {}", err);
                 break 1;
             }
             Ok(0) => break 0,

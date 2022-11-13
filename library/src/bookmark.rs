@@ -27,7 +27,7 @@ impl Section for Bookmark {
     }
 
     fn token_begin() -> &'static str {
-        token::CATEGORY_BEGIN
+        token::UNSORTED_BEGIN
     }
 
     fn item_name() -> &'static str {

@@ -1,8 +1,26 @@
-use std::{cell::RefCell, collections::HashMap, fmt::Debug};
+use std::{cell::RefCell, collections::HashMap, error::Error, fmt::Debug};
 
+#[derive(Debug, Clone)]
 pub enum CommandErr {
     Lookup,
     Execution(String),
+}
+
+impl std::fmt::Display for CommandErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CommandErr::Lookup => write!(f, "command lookup failed"),
+            CommandErr::Execution(ref msg) => write!(f, "command execution failed: {}", msg),
+        }
+    }
+}
+
+impl Error for CommandErr {}
+
+impl From<bookmark_storage::ParseErr> for CommandErr {
+    fn from(err: bookmark_storage::ParseErr) -> Self {
+        Self::Execution(format!("{err}"))
+    }
 }
 
 pub trait Command {

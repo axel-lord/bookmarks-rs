@@ -3,10 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     command_map::{Command, CommandErr},
-    load, token,
 };
-
-use bookmark_storage::Storeable;
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load {
@@ -21,13 +18,7 @@ impl Command for Load {
             ));
         }
 
-        let loaded = load::load(
-            &args[0],
-            token::UNSORTED_BEGIN,
-            token::UNSORTED_END,
-            Bookmark::with_str,
-        )
-        .map_err(|err| CommandErr::Execution(format!("in file {}: {}", &args[0], err)))?;
+        let loaded = bookmark_storage::load::load(&args[0])?;
 
         if loaded.is_empty() {
             return Err(CommandErr::Execution(format!(
