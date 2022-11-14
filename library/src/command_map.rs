@@ -49,6 +49,10 @@ impl<'a> CommandMap<'a> {
             Err(CommandErr::Lookup)
         }
     }
+
+    pub fn help(&self, name: &str) -> Option<String> {
+        self.0.get(name)?.help.clone()
+    }
 }
 
 impl CommandMap<'static> {

@@ -44,8 +44,13 @@ pub fn run(init_commands: Option<String>) -> i32 {
 
         if let Err(err) = command_map.call(&command, &args[1..]) {
             match err {
-                CommandErr::Lookup => println!("{command} is not a valid command"),
-                CommandErr::Execution(s) => println!("failed to execute {command}: {s}"),
+                CommandErr::Usage(ref msg) => {
+                    println!("incorrect usage: {msg}");
+                    if let Some(help) = command_map.help(&command) {
+                        println!("{help}");
+                    };
+                }
+                err => println!("{err}"),
             }
 
             if fatal_errors {
