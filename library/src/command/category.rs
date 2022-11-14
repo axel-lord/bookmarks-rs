@@ -15,9 +15,10 @@ pub struct Category {
 }
 
 impl Category {
-    pub fn build(categories: Rc<RefCell<Vec<category::Category>>>) -> Box<Self> {
+    pub fn build(name: String, categories: Rc<RefCell<Vec<category::Category>>>) -> Box<Self> {
         let mut subcommand: Box<Self> = Default::default();
         let command_map = &mut subcommand.command_map;
+        command_map.set_name(name);
 
         command_map.push("load", None, Load::build(categories.clone()));
 
