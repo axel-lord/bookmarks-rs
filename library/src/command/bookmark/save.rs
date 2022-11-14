@@ -1,7 +1,7 @@
 use crate::{
     bookmark::Bookmark,
     command::get_bookmark_iter,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
 };
 use std::{cell::RefCell, fs::File, io::BufWriter, ops::Range, rc::Rc};
 

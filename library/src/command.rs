@@ -5,13 +5,9 @@ pub mod load;
 pub mod reset;
 pub mod save;
 
-use std::{cell::RefCell, ops::Range, rc::Rc};
+use std::{error::Error, ops::Range};
 
-use crate::{
-    bookmark::Bookmark,
-    category::Category,
-    command_map::{CommandErr, CommandMap},
-};
+use crate::bookmark::Bookmark;
 
 fn get_bookmark_iter<'a>(
     bookmarks: &'a Vec<Bookmark>,
@@ -51,49 +47,49 @@ where
     bookmark_filter_iter(bookmarks, condition).collect()
 }
 
-fn command_debug(args: &[String]) -> Result<(), CommandErr> {
+pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
     Ok(())
 }
 
-pub fn build_command_map(
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    categories: Rc<RefCell<Vec<Category>>>,
-) -> CommandMap<'static> {
-    let mut command_map = CommandMap::new();
-    let buffer = Rc::new(RefCell::new(vec![(0..bookmarks.borrow().len())]));
+#[derive(Debug, Clone)]
+pub enum CommandErr {
+    Lookup,
+    Execution(String),
+}
 
-    command_map.push(
-        "reset",
-        None,
-        reset::Reset::build(bookmarks.clone(), buffer.clone()),
-    );
+impl std::fmt::Display for CommandErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CommandErr::Lookup => write!(f, "command lookup failed"),
+            CommandErr::Execution(ref msg) => write!(f, "command execution failed: {}", msg),
+        }
+    }
+}
 
-    command_map.push(
-        "category",
-        None,
-        category::Category::build(categories.clone()),
-    );
+impl Error for CommandErr {}
 
-    command_map.push(
-        "bookmark",
-        None,
-        bookmark::Bookmark::build(bookmarks.clone(), buffer.clone()),
-    );
+impl From<bookmark_storage::ParseErr> for CommandErr {
+    fn from(err: bookmark_storage::ParseErr) -> Self {
+        Self::Execution(format!("{err}"))
+    }
+}
 
-    command_map.push(
-        "load",
-        None,
-        load::LoadAll::build(categories.clone(), bookmarks.clone(), buffer.clone()),
-    );
+impl From<std::io::Error> for CommandErr {
+    fn from(err: std::io::Error) -> Self {
+        Self::Execution(format!("{err}"))
+    }
+}
 
-    command_map.push(
-        "save",
-        None,
-        save::SaveAll::build(categories.clone(), bookmarks.clone()),
-    );
+pub trait Command {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr>;
+}
 
-    command_map.push("debug", None, Box::new(command_debug));
-
-    command_map
+impl<T> Command for T
+where
+    T: FnMut(&[String]) -> Result<(), CommandErr>,
+{
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+        self(args)
+    }
 }

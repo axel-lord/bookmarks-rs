@@ -1,4 +1,4 @@
-use crate::command_map::CommandErr;
+use crate::command::CommandErr;
 
 pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
     if number.abs() as usize > max {

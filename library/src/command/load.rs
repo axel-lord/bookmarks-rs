@@ -3,7 +3,7 @@ use std::{cell::RefCell, fs::File, ops::Range, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     category::Category,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
     reset,
 };
 

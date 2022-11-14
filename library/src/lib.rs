@@ -11,7 +11,7 @@ mod parse_command;
 
 pub use crate::content_string::ContentString;
 
-use crate::{command::build_command_map, command_map::CommandErr, parse_command::parse_command};
+use crate::{command::CommandErr, command_map::CommandMap, parse_command::parse_command};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{cell::RefCell, io, rc::Rc};
@@ -25,7 +25,7 @@ pub fn run(init_commands: Option<String>) -> i32 {
     let bookmarks = Rc::new(RefCell::new(Vec::new()));
     let categories = Rc::new(RefCell::new(Vec::new()));
 
-    let command_map = build_command_map(bookmarks.clone(), categories.clone());
+    let command_map = CommandMap::build(bookmarks.clone(), categories.clone());
 
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
         let command = command.trim();
