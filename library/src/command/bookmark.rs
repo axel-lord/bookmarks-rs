@@ -1,6 +1,7 @@
 pub mod count;
 pub mod filter;
 pub mod list;
+pub mod print;
 pub mod regex;
 pub mod save;
 pub mod select;
@@ -75,6 +76,12 @@ impl Bookmark {
             "select",
             Some("select a bookmark\nusage: select INDEX"),
             select::Select::build(bookmarks.clone(), selected_bookmark.clone()),
+        );
+
+        subcommand.push(
+            "print",
+            Some("print selected bookmark\nusage: print"),
+            print::Print::build(bookmarks.clone(), selected_bookmark.clone()),
         );
 
         Box::new(Self {

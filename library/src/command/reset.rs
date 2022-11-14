@@ -10,6 +10,7 @@ use crate::{
 pub struct Reset {
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    selected_bookmark: Rc<RefCell<Option<usize>>>,
 }
 
 impl Command for Reset {
@@ -20,7 +21,11 @@ impl Command for Reset {
             ));
         }
 
-        reset::reset(&mut self.buffer.borrow_mut(), &self.bookmarks.borrow());
+        reset::reset(
+            &mut self.buffer.borrow_mut(),
+            &self.bookmarks.borrow(),
+            &mut self.selected_bookmark.borrow_mut(),
+        );
 
         Ok(())
     }
