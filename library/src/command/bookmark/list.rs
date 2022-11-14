@@ -17,57 +17,33 @@ impl Command for List {
         let bookmarks = self.bookmarks.borrow();
         let buffer = self.buffer.borrow();
 
-        // procedure to print bookmarks
-        let print_bookmarks = |from, count| {
-            get_bookmark_iter(&bookmarks, &buffer)
-                .skip(from)
-                .take(count)
-                .for_each(|(_, b)| println!("{b}"))
-        };
+        let count = args
+            .get(0)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(buffer_length(&buffer)))
+            .map_err(|_| {
+                CommandErr::Execution(format!(
+                    "could not parse {} as a positive integer",
+                    &args[0]
+                ))
+            })?;
 
-        // if one or more arguments get count else print all bookmarks and exit
-        let [count, ..] = &args else {
-            println!("listing all bookmarks");
-            print_bookmarks(0, bookmarks.len());
-            return Ok(());
-        };
+        let from = args
+            .get(1)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(0isize))
+            .map_err(|_| {
+                CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
+            })
+            .map(|from| list::wrap_if_negative(from, buffer_length(&buffer)))??;
 
-        // convert count from a string to an integer
-        let Ok(count) = count.parse() else {
-            return Err(CommandErr::Execution(format!(
-                "could not parse {count} as a bookmark count"
-            )));
-        };
+        for (_, bookmark) in get_bookmark_iter(&bookmarks, &buffer)
+            .skip(from)
+            .take(count)
+        {
+            println!("{} {}", bookmark.url(), bookmark.description());
+        }
 
-        // if two or more arguments get from (second argument) else print count bookmarks from
-        // start and exit
-        let [_, from, ..] = &args else {
-            println!("listing {count} bookmarks");
-            print_bookmarks(0, count);
-            return Ok(());
-        };
-
-        // convert from from a string to an integer
-        let Ok(from) = from.parse() else {
-            return Err(CommandErr::Execution(format!(
-                "could not parse {from} as a bookmark index"
-            )));
-        };
-
-        // if from is negative wrap it to a positive based on buffer length
-        let from = list::wrap_if_negative(from, buffer_length(&buffer))?;
-
-        // if three or more arguments contiune else print count bookmarks from index from
-        let [_, _, _, ..] = &args else {
-            println!("listing {count} bookmarks starting at index {from}");
-            print_bookmarks(from, count);
-            return Ok(());
-        };
-
-        // since three or more arguments are not supported exit with a result indicating this
-        Err(CommandErr::Execution(format!(
-            "too many arguments passed to list ({})",
-            args.len()
-        )))
+        Ok(())
     }
 }
