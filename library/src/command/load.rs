@@ -48,6 +48,7 @@ pub struct LoadAll {
     categories: Rc<RefCell<Vec<Category>>>,
     bookmarks: Rc<RefCell<Vec<Bookmark>>>,
     buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    selected_bookmark: Rc<RefCell<Option<usize>>>,
 }
 
 impl Command for LoadAll {
@@ -80,7 +81,11 @@ impl Command for LoadAll {
 
         self.bookmarks.borrow_mut().extend(loaded.into_iter());
 
-        reset::reset(&mut self.buffer.borrow_mut(), &self.bookmarks.borrow());
+        reset::reset(
+            &mut self.buffer.borrow_mut(),
+            &self.bookmarks.borrow(),
+            &mut self.selected_bookmark.borrow_mut(),
+        );
 
         Ok(())
     }

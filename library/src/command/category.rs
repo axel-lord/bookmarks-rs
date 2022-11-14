@@ -8,6 +8,7 @@ use crate::{
 
 pub mod list;
 pub mod save;
+pub mod select;
 
 #[derive(Debug, Default)]
 pub struct Category {

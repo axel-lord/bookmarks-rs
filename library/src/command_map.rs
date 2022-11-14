@@ -100,14 +100,18 @@ impl CommandMap<'static> {
         let mut command_map = Self::new();
         let buffer: Rc<RefCell<_>> = Default::default();
         let selected_bookmark: Rc<RefCell<_>> = Default::default();
-        crate::reset::reset(&mut buffer.borrow_mut(), &bookmarks.borrow());
+        crate::reset::reset(
+            &mut buffer.borrow_mut(),
+            &bookmarks.borrow(),
+            &mut selected_bookmark.borrow_mut(),
+        );
 
         use command::*;
 
         command_map.push(
             "reset",
             None,
-            reset::Reset::build(bookmarks.clone(), buffer.clone()),
+            reset::Reset::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
         );
 
         command_map.push(
@@ -136,7 +140,12 @@ impl CommandMap<'static> {
         command_map.push(
             "load",
             None,
-            load::LoadAll::build(categories.clone(), bookmarks.clone(), buffer.clone()),
+            load::LoadAll::build(
+                categories.clone(),
+                bookmarks.clone(),
+                buffer.clone(),
+                selected_bookmark.clone(),
+            ),
         );
 
         command_map.push(
