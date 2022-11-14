@@ -122,6 +122,12 @@ impl CommandMap<'static> {
         );
 
         command_map.push(
+            "list",
+            Some("shorthand for bookmark list\nusage: list [COUNT [FROM]]"),
+            command::bookmark::list::List::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        command_map.push(
             "load",
             None,
             load::LoadAll::build(categories.clone(), bookmarks.clone(), buffer.clone()),

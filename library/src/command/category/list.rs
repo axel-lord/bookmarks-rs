@@ -37,8 +37,8 @@ impl Command for List {
 
         println!("listing {count} categories starting at index {from}");
 
-        for category in categories.iter().skip(from).take(count) {
-            println!("{}", category.name());
+        for (index, category) in categories.iter().enumerate().skip(from).take(count) {
+            print!("{}. {:#}", index, category);
         }
 
         Ok(())

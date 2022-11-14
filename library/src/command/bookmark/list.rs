@@ -37,11 +37,11 @@ impl Command for List {
             })
             .map(|from| list::wrap_if_negative(from, buffer_length(&buffer)))??;
 
-        for (_, bookmark) in get_bookmark_iter(&bookmarks, &buffer)
+        for (index, bookmark) in get_bookmark_iter(&bookmarks, &buffer)
             .skip(from)
             .take(count)
         {
-            println!("{} {}", bookmark.url(), bookmark.description());
+            print!("{}. {:#}", index, bookmark);
         }
 
         Ok(())
