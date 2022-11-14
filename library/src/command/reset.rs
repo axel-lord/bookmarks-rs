@@ -3,6 +3,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     command_map::{Command, CommandErr},
+    reset,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
@@ -19,8 +20,7 @@ impl Command for Reset {
             ));
         }
 
-        self.buffer
-            .replace(vec![(0..self.bookmarks.borrow().len())]);
+        reset::reset(&mut self.buffer.borrow_mut(), &self.bookmarks.borrow());
 
         Ok(())
     }
