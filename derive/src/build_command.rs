@@ -28,14 +28,24 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
 
         for g in generics.params.iter() {
             let g = match g {
-                syn::GenericParam::Type(syn::TypeParam { ident, .. }) => syn::TypeParam {
-                    ident: ident.clone(),
-                    attrs: Vec::new(),
-                    colon_token: None,
-                    bounds: Punctuated::new(),
-                    eq_token: None,
-                    default: None,
-                },
+                syn::GenericParam::Type(syn::TypeParam { ident, .. }) => {
+                    syn::GenericParam::Type(syn::TypeParam {
+                        ident: ident.clone(),
+                        attrs: Vec::new(),
+                        colon_token: None,
+                        bounds: Punctuated::new(),
+                        eq_token: None,
+                        default: None,
+                    })
+                }
+                syn::GenericParam::Lifetime(syn::LifetimeDef { lifetime, .. }) => {
+                    syn::GenericParam::Lifetime(syn::LifetimeDef {
+                        lifetime: lifetime.clone(),
+                        attrs: Vec::new(),
+                        colon_token: None,
+                        bounds: Punctuated::new(),
+                    })
+                }
                 _ => panic!("todo: implement"),
             };
             simple.push(g);
@@ -50,13 +60,6 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
             w_clause.to_token_stream().into(),
         )
     };
-
-    // println!(
-    //     "{} {} {}",
-    //     generic.to_string(),
-    //     generic_simple.to_string(),
-    //     where_clause.to_string()
-    // );
 
     let fields: Vec<_> = data_struct.fields.iter().collect();
     let field_idents: Vec<_> = data_struct
