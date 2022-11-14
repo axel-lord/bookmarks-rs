@@ -56,6 +56,7 @@ pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
 pub enum CommandErr {
     Lookup,
     Execution(String),
+    Usage(String),
 }
 
 impl std::fmt::Display for CommandErr {
@@ -63,6 +64,7 @@ impl std::fmt::Display for CommandErr {
         match self {
             CommandErr::Lookup => write!(f, "command lookup failed"),
             CommandErr::Execution(ref msg) => write!(f, "command execution failed: {}", msg),
+            CommandErr::Usage(ref msg) => write!(f, "incorrect usage: {}", msg),
         }
     }
 }
