@@ -3,6 +3,7 @@ pub mod filter;
 pub mod list;
 pub mod regex;
 pub mod save;
+pub mod select;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 

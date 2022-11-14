@@ -112,30 +112,50 @@ impl Section for Category {
 
 impl std::fmt::Display for Category {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} | {} | {}",
-            self.name(),
-            self.description(),
-            self.id()
-        )?;
-
-        if !self.identifiers.is_empty() {
+        if !f.alternate() {
             write!(
                 f,
-                "\nidentifiers: {}",
-                &self.identifiers().collect::<Vec<&str>>().join(", ")
-            )?
-        }
+                "{} | {} | {}",
+                self.name(),
+                self.description(),
+                self.id()
+            )?;
 
-        if !self.subcategories.is_empty() {
-            write!(
-                f,
-                "\nsubcategories: {}",
-                &self.subcategories().collect::<Vec<&str>>().join(", ")
-            )?
-        }
+            if !self.identifiers.is_empty() {
+                write!(
+                    f,
+                    "\nidentifiers: {}",
+                    &self.identifiers().collect::<Vec<&str>>().join(", ")
+                )?
+            }
 
+            if !self.subcategories.is_empty() {
+                write!(
+                    f,
+                    "\nsubcategories: {}",
+                    &self.subcategories().collect::<Vec<&str>>().join(", ")
+                )?
+            }
+        } else {
+            writeln!(f, "{}", self.name())?;
+            writeln!(f, "\tdescription: {}", self.description())?;
+            writeln!(f, "\tid: {}", self.id())?;
+
+            if self.identifiers.len() != 0 {
+                writeln!(
+                    f,
+                    "\tidentifiers: [{}]",
+                    self.identifiers().collect::<Vec<_>>().join(", ")
+                )?;
+            }
+            if self.subcategories.len() != 0 {
+                writeln!(
+                    f,
+                    "\tsubcategories: [{}]",
+                    self.subcategories().collect::<Vec<_>>().join(", ")
+                )?;
+            }
+        }
         Ok(())
     }
 }
