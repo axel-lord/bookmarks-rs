@@ -3,6 +3,7 @@ pub mod category;
 pub mod command;
 pub mod command_map;
 pub mod pattern_match;
+pub mod reset;
 pub mod token;
 
 mod content_string;

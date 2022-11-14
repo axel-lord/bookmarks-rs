@@ -14,7 +14,7 @@ impl Command for Save {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
             return Err(CommandErr::Execution(
-                "category save should be called with one argument".into(),
+                "save should be called with one argument".into(),
             ));
         }
 
