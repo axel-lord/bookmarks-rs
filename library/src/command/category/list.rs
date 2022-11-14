@@ -2,6 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     category::Category,
+    command::list,
     command_map::{Command, CommandErr},
 };
 
@@ -12,15 +13,31 @@ pub struct List {
 
 impl Command for List {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        if args.len() != 0 {
-            return Err(CommandErr::Execution(
-                "category list should be called without any arguments".into(),
-            ));
-        }
+        let categories = self.categories.borrow();
 
-        println!("listing all categories");
+        let count = args
+            .get(0)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(categories.len()))
+            .map_err(|_| {
+                CommandErr::Execution(format!(
+                    "could not parse {} as a positive integer",
+                    &args[0]
+                ))
+            })?;
 
-        for category in self.categories.borrow().iter() {
+        let from = args
+            .get(1)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(0isize))
+            .map_err(|_| {
+                CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
+            })
+            .map(|from| list::wrap_if_negative(from, categories.len()))??;
+
+        println!("listing {count} categories starting at index {from}");
+
+        for category in categories.iter().skip(from).take(count) {
             println!("{}", category.name());
         }
 

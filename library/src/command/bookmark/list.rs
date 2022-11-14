@@ -2,7 +2,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
     bookmark::Bookmark,
-    command::{buffer_length, get_bookmark_iter},
+    command::{buffer_length, get_bookmark_iter, list},
     command_map::{Command, CommandErr},
 };
 
@@ -55,7 +55,7 @@ impl Command for List {
         };
 
         // if from is negative wrap it to a positive based on buffer length
-        let from = wrap_if_negative(from, buffer_length(&buffer))?;
+        let from = list::wrap_if_negative(from, buffer_length(&buffer))?;
 
         // if three or more arguments contiune else print count bookmarks from index from
         let [_, _, _, ..] = &args else {
@@ -70,18 +70,4 @@ impl Command for List {
             args.len()
         )))
     }
-}
-
-fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
-    if number.abs() as usize > max {
-        return Err(CommandErr::Execution(format!(
-            "number {number} larger than max value {max}"
-        )));
-    }
-
-    Ok(if number >= 0 {
-        number as usize
-    } else {
-        max - number.abs() as usize
-    })
 }

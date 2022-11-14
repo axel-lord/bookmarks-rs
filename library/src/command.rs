@@ -1,7 +1,9 @@
 pub mod bookmark;
 pub mod category;
+pub mod list;
 pub mod load;
 pub mod reset;
+pub mod save;
 
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
@@ -83,6 +85,12 @@ pub fn build_command_map(
         "load",
         None,
         load::LoadAll::build(categories.clone(), bookmarks.clone(), buffer.clone()),
+    );
+
+    command_map.push(
+        "save",
+        None,
+        save::SaveAll::build(categories.clone(), bookmarks.clone()),
     );
 
     command_map.push("debug", None, Box::new(command_debug));
