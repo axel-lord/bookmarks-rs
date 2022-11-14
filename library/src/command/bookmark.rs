@@ -19,10 +19,12 @@ pub struct Bookmark {
 
 impl Bookmark {
     pub fn build(
+        name: String,
         bookmarks: Rc<RefCell<Vec<bookmark::Bookmark>>>,
         buffer: Rc<RefCell<Vec<Range<usize>>>>,
     ) -> Box<Self> {
         let mut subcommand = CommandMap::new();
+        subcommand.set_name(name);
 
         subcommand.push(
             "list",

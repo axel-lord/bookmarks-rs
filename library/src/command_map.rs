@@ -31,7 +31,7 @@ impl Debug for CommandEntry {
 }
 
 #[derive(Default, Debug)]
-pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>);
+pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String);
 
 impl<'a> CommandMap<'a> {
     pub fn new() -> Self {
@@ -42,16 +42,53 @@ impl<'a> CommandMap<'a> {
         self.0.insert(name, CommandEntry::new(command, help));
     }
 
+    pub fn set_name(&mut self, name: String) {
+        self.1 = name;
+    }
+
+    pub fn name(&self) -> &str {
+        &self.1
+    }
+
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
-        if let Some(command) = self.0.get(name) {
-            command.command.borrow_mut().call(args)
-        } else {
-            Err(CommandErr::Lookup)
+        match name {
+            "help" => {
+                if args.len() != 1 {
+                    Err(CommandErr::Usage(
+                        "help called with incorrect number of arguments".into(),
+                    ))
+                } else {
+                    let command = &args[0];
+                    if let Some(help) = self.help(command) {
+                        println!("{help}");
+                        Ok(())
+                    } else {
+                        Err(CommandErr::Execution(format!(
+                            "found no help for {command}"
+                        )))
+                    }
+                }
+            }
+            _ => {
+                if let Some(command) = self.0.get(name) {
+                    command.command.borrow_mut().call(args)
+                } else {
+                    Err(CommandErr::Lookup)
+                }
+            }
         }
     }
 
     pub fn help(&self, name: &str) -> Option<String> {
-        self.0.get(name)?.help.clone()
+        if name == "help" {
+            Some(if self.1.len() == 0 {
+                "show help for a command\nusage: help COMMAND".into()
+            } else {
+                format!("show help for a command\nusage: {} help COMMAND", self.1)
+            })
+        } else {
+            self.0.get(name)?.help.clone()
+        }
     }
 }
 
@@ -75,13 +112,13 @@ impl CommandMap<'static> {
         command_map.push(
             "category",
             None,
-            category::Category::build(categories.clone()),
+            category::Category::build("category".into(), categories.clone()),
         );
 
         command_map.push(
             "bookmark",
             None,
-            bookmark::Bookmark::build(bookmarks.clone(), buffer.clone()),
+            bookmark::Bookmark::build("bookmark".into(), bookmarks.clone(), buffer.clone()),
         );
 
         command_map.push(
