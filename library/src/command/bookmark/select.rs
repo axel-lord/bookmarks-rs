@@ -34,7 +34,11 @@ impl Command for Select {
 
         self.selected.borrow_mut().replace(index);
 
-        println!("selected bookmark:\n{:#}", self.bookmarks.borrow()[index]);
+        print!(
+            "selected bookmark:\n{}. {:#}",
+            index,
+            self.bookmarks.borrow()[index]
+        );
 
         Ok(())
     }

@@ -23,6 +23,7 @@ impl Bookmark {
         name: String,
         bookmarks: Rc<RefCell<Vec<bookmark::Bookmark>>>,
         buffer: Rc<RefCell<Vec<Range<usize>>>>,
+        selected_bookmark: Rc<RefCell<Option<usize>>>,
     ) -> Box<Self> {
         let mut subcommand = CommandMap::new();
         subcommand.set_name(name);
@@ -68,6 +69,12 @@ impl Bookmark {
             "save",
             None,
             save::Save::build(bookmarks.clone(), buffer.clone()),
+        );
+
+        subcommand.push(
+            "select",
+            Some("select a bookmark\nusage: select INDEX"),
+            select::Select::build(bookmarks.clone(), selected_bookmark.clone()),
         );
 
         Box::new(Self {
