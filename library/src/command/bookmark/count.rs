@@ -3,7 +3,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     command::buffer_length,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
@@ -20,10 +20,11 @@ impl Command for Count {
             ));
         }
 
-        let total = self.bookmarks.borrow().len();
-        let in_buffer = buffer_length(&self.buffer.borrow());
-
-        println!("total: {total}, in buffer: {in_buffer}");
+        println!(
+            "total: {}, in buffer: {}",
+            self.bookmarks.borrow().len(),
+            buffer_length(&self.buffer.borrow())
+        );
 
         Ok(())
     }

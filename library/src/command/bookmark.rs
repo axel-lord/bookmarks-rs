@@ -8,8 +8,8 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
     bookmark,
-    command::load::Load,
-    command_map::{Command, CommandErr, CommandMap},
+    command::{load::Load, Command, CommandErr},
+    command_map::CommandMap,
 };
 
 #[derive(Debug, Default)]

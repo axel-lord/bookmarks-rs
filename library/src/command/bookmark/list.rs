@@ -3,7 +3,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     command::{buffer_length, get_bookmark_iter, list},
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]

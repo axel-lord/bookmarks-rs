@@ -2,8 +2,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     category,
-    command::load::Load,
-    command_map::{Command, CommandErr, CommandMap},
+    command::{load::Load, Command, CommandErr},
+    command_map::CommandMap,
 };
 
 pub mod list;

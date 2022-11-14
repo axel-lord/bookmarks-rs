@@ -2,7 +2,7 @@ use std::{cell::RefCell, fs::File, io::BufWriter, rc::Rc};
 
 use crate::{
     category::Category,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]

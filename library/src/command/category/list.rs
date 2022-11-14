@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     category::Category,
     command::list,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]

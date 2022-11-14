@@ -2,7 +2,7 @@ use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
     bookmark::Bookmark,
-    command_map::{Command, CommandErr},
+    command::{Command, CommandErr},
     reset,
 };
 
