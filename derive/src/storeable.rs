@@ -196,9 +196,20 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         })
         .collect();
 
-    let adders: Vec<_> = comp_of.iter().map(|i| format_ident!("add_{}", i)).collect();
+    let adders: Vec<_> = comp_of
+        .iter()
+        .map(|i| format_ident!("{}_push", i))
+        .collect();
 
-    let get_fields: Vec<_> = strings.iter().map(|s| format!("{s}")).collect();
+    let get_fields: Vec<_> = strings.iter().map(|s| s.to_string()).collect();
+    let get_list_fields: Vec<_> = comp.iter().map(|s| s.to_string()).collect();
+
+    let string_setters: Vec<_> = strings.iter().map(|i| format_ident!("set_{i}")).collect();
+    let comp_setters: Vec<_> = comp.iter().map(|i| format_ident!("set_{i}")).collect();
+
+    // --- //
+    // gen //
+    // --- //
 
     let gen = quote! {
         impl Clone for #name {
@@ -259,6 +270,19 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     Self::create_line(#(self.#all_simple()),*)
                 }
             }
+
+            fn get(&self, property: &str) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
+                match property {
+                #(
+                    #get_fields => Ok(bookmark_storage::Property::Single(self.#strings().into())),
+                )*
+                #(
+                    #get_list_fields => Ok(bookmark_storage::Property::List(self.#comp().map(String::from).collect())),
+                )*
+                    _ => Err(bookmark_storage::PropertyErr::DoesNotExist(property.into()))
+                }
+            }
+
         }
         impl #name {
             pub fn new<'a>(#(#new_args),*) -> Self {
@@ -279,34 +303,43 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             }
 
             #(
-            fn #comp_of(&self) -> &str {
-                &self.raw_line()[self.#comp_of.clone()]
-            }
-            pub fn #comp(&self) -> impl Iterator<Item = &str> {
-                self.#comp.iter().map(|r| &self.#comp_of()[r.clone()])
-            }
-            pub fn #adders(&mut self, #comp_of: &str) {
-                let (content_string, range) = self.#line_ident.take().unwrap().append(#comp_of);
+                fn #comp_of(&self) -> &str {
+                    &self.raw_line()[self.#comp_of.clone()]
+                }
+                pub fn #comp(&self) -> impl Iterator<Item = &str> {
+                    self.#comp.iter().map(|r| &self.#comp_of()[r.clone()])
+                }
+                pub fn #adders(&mut self, #comp_of: &str) {
+                    let (content_string, range) = self.#line_ident.take().unwrap().append(#comp_of);
 
-                self.#line_ident = Some(content_string);
-                self.#comp.push(range);
-            }
+                    self.#line_ident = Some(content_string);
+                    self.#comp.push(range);
+                }
             )*
 
             #(
-            pub fn #strings(&self) -> &str {
-                &self.raw_line()[self.#strings.clone()]
-            }
+                pub fn #strings(&self) -> &str {
+                    &self.raw_line()[self.#strings.clone()]
+                }
             )*
 
-            pub fn get(&self, property: &str) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
-                match property {
-                #(
-                    #get_fields => Ok(bookmark_storage::Property::Single(#get_fields.into())),
-                )*
-                _ => Err(bookmark_storage::PropertyErr::DoesNotExist(property.into()))
+            #(
+                pub fn #string_setters(&mut self, value: &str) {
+                    let (content_string, range) = self.#line_ident.take().unwrap().append(value);
+
+                    self.#line_ident = Some(content_string);
+                    self.#strings = range;
                 }
-            }
+            )*
+
+            #(
+                pub fn #comp_setters<'a>(&mut self, value: impl Iterator<Item = &'a str>) {
+                    self.#comp.clear();
+                    for item in value {
+                        self.#adders(item);
+                    }
+                }
+            )*
         }
     };
 

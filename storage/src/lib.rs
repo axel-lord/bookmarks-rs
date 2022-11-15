@@ -72,7 +72,7 @@ pub trait Storeable: Sized {
     fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr>;
     fn to_line(&self) -> String;
 
-    // fn get(&self, property: &str) -> Result<Property, PropertyErr>;
+    fn get(&self, property: &str) -> Result<Property, PropertyErr>;
     // fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr>;
     // fn append(&mut self, property: &str, value: &str) -> Result<(), PropertyErr>;
 }
