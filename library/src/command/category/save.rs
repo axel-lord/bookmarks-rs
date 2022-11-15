@@ -1,7 +1,6 @@
-use std::{cell::RefCell, fs::File, io::BufWriter, rc::Rc};
+use std::{fs::File, io::BufWriter};
 
 use crate::{
-    category::Category,
     command::{Command, CommandErr},
     shared,
 };

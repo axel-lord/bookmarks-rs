@@ -1,8 +1,6 @@
-use std::{cell::RefCell, collections::HashMap, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fmt::Debug};
 
 use crate::{
-    bookmark::Bookmark,
-    category::Category,
     command::{self, Command, CommandErr},
     shared,
 };

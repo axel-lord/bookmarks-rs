@@ -1,7 +1,6 @@
-use std::{cell::RefCell, ops::Range, rc::Rc};
+
 
 use crate::{
-    bookmark::Bookmark,
     command::{get_bookmark_iter, get_filtered_bookmarks},
     command::{Command, CommandErr},
     shared,

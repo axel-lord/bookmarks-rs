@@ -6,10 +6,9 @@ pub mod regex;
 pub mod save;
 pub mod select;
 
-use std::{cell::RefCell, ops::Range, rc::Rc};
+
 
 use crate::{
-    bookmark,
     command::{load::Load, Command, CommandErr},
     command_map::CommandMap,
     shared,

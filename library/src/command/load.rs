@@ -1,8 +1,6 @@
-use std::{cell::RefCell, fs::File, ops::Range, rc::Rc};
+use std::{fs::File};
 
 use crate::{
-    bookmark::Bookmark,
-    category::Category,
     command::{Command, CommandErr},
     reset, shared,
 };

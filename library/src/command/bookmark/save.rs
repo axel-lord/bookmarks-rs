@@ -1,10 +1,9 @@
 use crate::{
-    bookmark::Bookmark,
     command::get_bookmark_iter,
     command::{Command, CommandErr},
     shared,
 };
-use std::{cell::RefCell, fs::File, io::BufWriter, ops::Range, rc::Rc};
+use std::{fs::File, io::BufWriter};
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
