@@ -43,11 +43,38 @@ impl From<std::io::Error> for ParseErr {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum PropertyErr {
+    DoesNotExist(String),
+}
+
+impl std::fmt::Display for PropertyErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PropertyErr::DoesNotExist(ref prop) => {
+                write!(f, "property {prop} does not exist in used capacity")
+            }
+        }
+    }
+}
+
+impl Error for PropertyErr {}
+
+#[derive(Debug, Clone)]
+pub enum Property {
+    List(Vec<String>),
+    Single(String),
+}
+
 pub trait Storeable: Sized {
     fn is_edited(&self) -> bool;
     fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr>;
     fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr>;
     fn to_line(&self) -> String;
+
+    fn get(&self, property: &str) -> Result<Property, PropertyErr>;
+    fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr>;
+    fn append(&mut self, property: &str, value: &str) -> Result<(), PropertyErr>;
 }
 
 pub trait Section {
