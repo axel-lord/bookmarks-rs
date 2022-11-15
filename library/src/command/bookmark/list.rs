@@ -4,12 +4,13 @@ use crate::{
     bookmark::Bookmark,
     command::{buffer_length, get_bookmark_iter, list},
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct List {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for List {

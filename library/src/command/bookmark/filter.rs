@@ -4,12 +4,13 @@ use crate::{
     bookmark::Bookmark,
     command::{get_bookmark_iter, get_filtered_bookmarks},
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Filter {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for Filter {
@@ -33,8 +34,8 @@ impl Command for Filter {
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct FilterInv {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for FilterInv {

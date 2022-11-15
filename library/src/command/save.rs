@@ -4,12 +4,13 @@ use crate::{
     bookmark::Bookmark,
     category::Category,
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct SaveAll {
-    categories: Rc<RefCell<Vec<Category>>>,
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
+    categories: shared::Categroies,
+    bookmarks: shared::Bookmarks,
 }
 
 impl Command for SaveAll {

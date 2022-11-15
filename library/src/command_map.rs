@@ -4,6 +4,7 @@ use crate::{
     bookmark::Bookmark,
     category::Category,
     command::{self, Command, CommandErr},
+    shared,
 };
 
 struct CommandEntry {
@@ -93,13 +94,11 @@ impl<'a> CommandMap<'a> {
 }
 
 impl CommandMap<'static> {
-    pub fn build(
-        bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-        categories: Rc<RefCell<Vec<Category>>>,
-    ) -> Self {
+    pub fn build(bookmarks: shared::Bookmarks, categories: shared::Categroies) -> Self {
         let mut command_map = Self::new();
-        let buffer: Rc<RefCell<_>> = Default::default();
-        let selected_bookmark: Rc<RefCell<_>> = Default::default();
+        let buffer = shared::Buffer::default();
+        let selected_bookmark = shared::Selected::default();
+
         crate::reset::reset(
             &mut buffer.borrow_mut(),
             &bookmarks.borrow(),

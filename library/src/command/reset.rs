@@ -1,16 +1,15 @@
 use std::{cell::RefCell, ops::Range, rc::Rc};
 
 use crate::{
-    bookmark::Bookmark,
     command::{Command, CommandErr},
-    reset,
+    reset, shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Reset {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    selected_bookmark: Rc<RefCell<Option<usize>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
+    selected_bookmark: shared::Selected,
 }
 
 impl Command for Reset {

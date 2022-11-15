@@ -3,11 +3,12 @@ use std::{cell::RefCell, fs::File, io::BufWriter, rc::Rc};
 use crate::{
     category::Category,
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
-    categories: Rc<RefCell<Vec<Category>>>,
+    categories: shared::Categroies,
 }
 
 impl Command for Save {

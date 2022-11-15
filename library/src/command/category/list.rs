@@ -4,11 +4,12 @@ use crate::{
     category::Category,
     command::list,
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct List {
-    categories: Rc<RefCell<Vec<Category>>>,
+    categories: shared::Categroies,
 }
 
 impl Command for List {

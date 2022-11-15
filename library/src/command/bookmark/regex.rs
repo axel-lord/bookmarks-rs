@@ -4,12 +4,13 @@ use crate::{
     bookmark::Bookmark,
     command::{get_bookmark_iter, get_filtered_bookmarks},
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Regex {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for Regex {
@@ -36,8 +37,8 @@ impl Command for Regex {
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct RegexInv {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for RegexInv {

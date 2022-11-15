@@ -2,13 +2,14 @@ use crate::{
     bookmark::Bookmark,
     command::get_bookmark_iter,
     command::{Command, CommandErr},
+    shared,
 };
 use std::{cell::RefCell, fs::File, io::BufWriter, ops::Range, rc::Rc};
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
 }
 
 impl Command for Save {

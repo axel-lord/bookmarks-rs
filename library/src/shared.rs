@@ -6,6 +6,31 @@ use std::{
 
 use crate::{bookmark::Bookmark, category::Category};
 
+#[derive(Debug)]
+pub struct Storage<T>(Rc<RefCell<Vec<T>>>);
+
+impl<T> Deref for Storage<T> {
+    type Target = RefCell<Vec<T>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> Clone for Storage<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T> Default for Storage<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+pub type Bookmarks = Storage<Bookmark>;
+pub type Categroies = Storage<Category>;
+
 macro_rules! shared {
     ($name:ident, $content:ty) => {
         #[derive(Debug, Default)]
@@ -24,7 +49,5 @@ macro_rules! shared {
     };
 }
 
-shared!(Bookmarks, Vec<Bookmark>);
-shared!(Categroies, Vec<Category>);
 shared!(Buffer, Vec<Range<usize>>);
 shared!(Selected, Option<usize>);
