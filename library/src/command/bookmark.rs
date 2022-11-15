@@ -1,12 +1,11 @@
 pub mod count;
 pub mod filter;
 pub mod list;
+pub mod new;
 pub mod print;
 pub mod regex;
 pub mod save;
 pub mod select;
-
-
 
 use crate::{
     command::{load::Load, Command, CommandErr},
@@ -82,6 +81,12 @@ impl Bookmark {
             "print",
             Some("print selected bookmark\nusage: print"),
             print::Print::build(bookmarks.clone(), selected_bookmark.clone()),
+        );
+
+        subcommand.push(
+            "new",
+            Some("add a new empt bookmark"),
+            new::New::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
         );
 
         Box::new(Self {
