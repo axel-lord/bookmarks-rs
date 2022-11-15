@@ -15,7 +15,7 @@ pub use crate::content_string::ContentString;
 use crate::{command::CommandErr, command_map::CommandMap, parse_command::parse_command};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{cell::RefCell, io, rc::Rc};
+use std::io;
 
 pub fn run(init_commands: Option<String>) -> i32 {
     lazy_static! {
@@ -23,8 +23,8 @@ pub fn run(init_commands: Option<String>) -> i32 {
         static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
     }
 
-    let bookmarks = Rc::new(RefCell::new(Vec::new()));
-    let categories = Rc::new(RefCell::new(Vec::new()));
+    let bookmarks = shared::Bookmarks::default();
+    let categories = shared::Categroies::default();
 
     let command_map = CommandMap::build(bookmarks.clone(), categories.clone());
 

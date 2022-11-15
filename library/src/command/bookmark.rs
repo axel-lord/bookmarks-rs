@@ -12,6 +12,7 @@ use crate::{
     bookmark,
     command::{load::Load, Command, CommandErr},
     command_map::CommandMap,
+    shared,
 };
 
 #[derive(Debug, Default)]
@@ -22,9 +23,9 @@ pub struct Bookmark {
 impl Bookmark {
     pub fn build(
         name: String,
-        bookmarks: Rc<RefCell<Vec<bookmark::Bookmark>>>,
-        buffer: Rc<RefCell<Vec<Range<usize>>>>,
-        selected_bookmark: Rc<RefCell<Option<usize>>>,
+        bookmarks: shared::Bookmarks,
+        buffer: shared::Buffer,
+        selected_bookmark: shared::Selected,
     ) -> Box<Self> {
         let mut subcommand = CommandMap::new();
         subcommand.set_name(name);

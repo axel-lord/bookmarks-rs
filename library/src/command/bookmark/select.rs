@@ -3,12 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     bookmark::Bookmark,
     command::{Command, CommandErr},
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Select {
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    selected: Rc<RefCell<Option<usize>>>,
+    bookmarks: shared::Bookmarks,
+    selected: shared::Selected,
 }
 
 impl Command for Select {

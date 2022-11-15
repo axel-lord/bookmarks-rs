@@ -4,7 +4,7 @@ use crate::{
     bookmark::Bookmark,
     category::Category,
     command::{Command, CommandErr},
-    reset,
+    reset, shared,
 };
 
 use bookmark_storage::Listed;
@@ -14,7 +14,7 @@ pub struct Load<T>
 where
     T: Listed + Clone,
 {
-    destination: Rc<RefCell<Vec<T>>>,
+    destination: shared::Storage<T>,
 }
 
 impl<T> Command for Load<T>
@@ -45,10 +45,10 @@ where
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct LoadAll {
-    categories: Rc<RefCell<Vec<Category>>>,
-    bookmarks: Rc<RefCell<Vec<Bookmark>>>,
-    buffer: Rc<RefCell<Vec<Range<usize>>>>,
-    selected_bookmark: Rc<RefCell<Option<usize>>>,
+    categories: shared::Categroies,
+    bookmarks: shared::Bookmarks,
+    buffer: shared::Buffer,
+    selected_bookmark: shared::Selected,
 }
 
 impl Command for LoadAll {
