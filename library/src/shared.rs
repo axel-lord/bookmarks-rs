@@ -8,12 +8,17 @@ use crate::{bookmark::Bookmark, category::Category};
 
 macro_rules! shared {
     ($name:ident, $content:ty) => {
-        #[derive(Clone, Debug, Default)]
+        #[derive(Debug, Default)]
         pub struct $name(Rc<RefCell<$content>>);
         impl Deref for $name {
             type Target = RefCell<$content>;
             fn deref(&self) -> &Self::Target {
                 &self.0
+            }
+        }
+        impl Clone for $name {
+            fn clone(&self) -> Self {
+                Self(self.0.clone())
             }
         }
     };
