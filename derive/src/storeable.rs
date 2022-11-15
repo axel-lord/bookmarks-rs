@@ -198,6 +198,8 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
 
     let adders: Vec<_> = comp_of.iter().map(|i| format_ident!("add_{}", i)).collect();
 
+    let get_fields: Vec<_> = strings.iter().map(|s| format!("{s}")).collect();
+
     let gen = quote! {
         impl Clone for #name {
             fn clone(&self) -> Self {
@@ -291,12 +293,20 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             }
             )*
 
-
             #(
             pub fn #strings(&self) -> &str {
                 &self.raw_line()[self.#strings.clone()]
             }
             )*
+
+            pub fn get(&self, property: &str) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
+                match property {
+                #(
+                    #get_fields => Ok(bookmark_storage::Property::Single(#get_fields.into())),
+                )*
+                _ => Err(bookmark_storage::PropertyErr::DoesNotExist(property.into()))
+                }
+            }
         }
     };
 
