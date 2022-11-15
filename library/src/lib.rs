@@ -4,6 +4,7 @@ pub mod command;
 pub mod command_map;
 pub mod pattern_match;
 pub mod reset;
+pub mod shared;
 pub mod token;
 
 mod content_string;
