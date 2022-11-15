@@ -29,13 +29,34 @@ impl<T> Default for Storage<T> {
 }
 
 pub type Bookmarks = Storage<Bookmark>;
-pub type Categroies = Storage<Category>;
 
 impl Bookmarks {
     pub fn len(&self) -> usize {
         self.0.borrow().len()
     }
 }
+
+pub type Categroies = Storage<Category>;
+
+macro_rules! shared {
+    ($name:ident, $content:ty) => {
+        #[derive(Debug, Default)]
+        pub struct $name(Rc<RefCell<$content>>);
+        impl Deref for $name {
+            type Target = RefCell<$content>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+        impl Clone for $name {
+            fn clone(&self) -> Self {
+                Self(self.0.clone())
+            }
+        }
+    };
+}
+
+shared!(Buffer, Vec<Range<usize>>);
 
 impl Buffer {
     pub fn bookmark_count(&self) -> usize {
@@ -84,23 +105,22 @@ impl Buffer {
     }
 }
 
-macro_rules! shared {
-    ($name:ident, $content:ty) => {
-        #[derive(Debug, Default)]
-        pub struct $name(Rc<RefCell<$content>>);
-        impl Deref for $name {
-            type Target = RefCell<$content>;
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-        impl Clone for $name {
-            fn clone(&self) -> Self {
-                Self(self.0.clone())
-            }
-        }
-    };
-}
-
-shared!(Buffer, Vec<Range<usize>>);
 shared!(Selected, Option<usize>);
+
+impl Selected {
+    pub fn get<'a, T>(&self, container: &'a Vec<T>) -> Option<&'a T> {
+        container.get(self.borrow().clone()?)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.borrow().is_none()
+    }
+
+    pub fn clear(&self) {
+        self.borrow_mut().take();
+    }
+
+    pub fn replace(&self, value: usize) {
+        self.borrow_mut().replace(value);
+    }
+}
