@@ -1,7 +1,5 @@
-
-
 use crate::{
-    command::{buffer_length, get_bookmark_iter, list},
+    command::list,
     command::{Command, CommandErr},
     shared,
 };
@@ -15,12 +13,11 @@ pub struct List {
 impl Command for List {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         let bookmarks = self.bookmarks.borrow();
-        let buffer = self.buffer.borrow();
 
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or(Ok(buffer_length(&buffer)))
+            .unwrap_or(Ok(self.buffer.bookmark_count()))
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -35,9 +32,9 @@ impl Command for List {
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
-            .map(|from| list::wrap_if_negative(from, buffer_length(&buffer)))??;
+            .map(|from| list::wrap_if_negative(from, self.buffer.bookmark_count()))??;
 
-        for (index, bookmark) in get_bookmark_iter(&bookmarks, &buffer)
+        for (index, bookmark) in shared::Buffer::bookmark_iter(&self.buffer.borrow(), &bookmarks)
             .skip(from)
             .take(count)
         {

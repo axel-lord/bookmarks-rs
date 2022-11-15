@@ -1,5 +1,4 @@
 use crate::{
-    command::get_bookmark_iter,
     command::{Command, CommandErr},
     shared,
 };
@@ -21,7 +20,10 @@ impl Command for Save {
 
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
-            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()).map(|(_, b)| b),
+            shared::Buffer::unenumerated_bookmark_iter(
+                &self.buffer.borrow(),
+                &self.bookmarks.borrow(),
+            ),
         )?;
 
         Ok(())

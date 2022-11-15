@@ -1,7 +1,4 @@
-
-
 use crate::{
-    command::buffer_length,
     command::{Command, CommandErr},
     shared,
 };
@@ -22,8 +19,8 @@ impl Command for Count {
 
         println!(
             "total: {}, in buffer: {}",
-            self.bookmarks.borrow().len(),
-            buffer_length(&self.buffer.borrow())
+            self.bookmarks.len(),
+            self.buffer.bookmark_count(),
         );
 
         Ok(())
