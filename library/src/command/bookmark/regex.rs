@@ -1,7 +1,4 @@
-
-
 use crate::{
-    command::{get_bookmark_iter, get_filtered_bookmarks},
     command::{Command, CommandErr},
     shared,
 };
@@ -23,10 +20,9 @@ impl Command for Regex {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = get_filtered_bookmarks(
-            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),
-            |bookmark| re.is_match(bookmark.url()),
-        );
+        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
+            re.is_match(bookmark.url())
+        });
 
         self.buffer.replace(filtered);
 
@@ -51,10 +47,9 @@ impl Command for RegexInv {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = get_filtered_bookmarks(
-            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),
-            |bookmark| !re.is_match(bookmark.url()),
-        );
+        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
+            !re.is_match(bookmark.url())
+        });
 
         self.buffer.replace(filtered);
 

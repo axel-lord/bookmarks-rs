@@ -1,7 +1,4 @@
-
-
 use crate::{
-    command::{get_bookmark_iter, get_filtered_bookmarks},
     command::{Command, CommandErr},
     shared,
 };
@@ -20,10 +17,9 @@ impl Command for Filter {
             ));
         }
 
-        let filtered = get_filtered_bookmarks(
-            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),
-            |bookmark| args.iter().all(|arg| bookmark.url().contains(arg)),
-        );
+        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
+            args.iter().all(|arg| bookmark.url().contains(arg))
+        });
 
         self.buffer.replace(filtered);
 
@@ -45,10 +41,9 @@ impl Command for FilterInv {
             ));
         }
 
-        let filtered = get_filtered_bookmarks(
-            get_bookmark_iter(&self.bookmarks.borrow(), &self.buffer.borrow()),
-            |bookmark| !args.iter().any(|arg| bookmark.url().contains(arg)),
-        );
+        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
+            !args.iter().any(|arg| bookmark.url().contains(arg))
+        });
 
         self.buffer.replace(filtered);
 
