@@ -264,7 +264,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                 Self::with_string(line.into(), line_num)
             }
             fn to_line(&self) -> String {
-                if !self.#line_ident.is_appended_to()
+                if !self.#line_ident.is_appended_to() {
                     self.#line_ident.ref_any().into()
                 } else {
                     Self::create_line(#(self.#all_simple()),*)
