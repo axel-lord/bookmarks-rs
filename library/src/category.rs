@@ -1,33 +1,31 @@
 use crate::{token, ContentString};
-use bookmark_storage::{Section, Storeable};
+use bookmark_storage::{Field, ListField, Section, Storeable};
 use std::{collections::HashMap, error::Error, ops::Range};
 
 #[derive(Debug, bookmark_derive::Storeable)]
 pub struct Category {
     #[line]
-    line: Option<ContentString>,
+    line: ContentString,
 
     #[string]
     #[token(token::category::ID)]
-    id: Range<usize>,
+    id: Field,
 
     #[string]
     #[token(token::category::NAME)]
-    name: Range<usize>,
+    name: Field,
 
     #[string]
     #[token(token::category::DESCRIPTION)]
-    description: Range<usize>,
+    description: Field,
 
     #[composite(identifier)]
     #[token(token::category::IDENTIFIER)]
-    identifiers: Vec<Range<usize>>,
-    identifier: Range<usize>,
+    identifiers: ListField,
 
     #[composite(subcategory)]
     #[token(token::category::SUBCATEGORY)]
-    subcategories: Vec<Range<usize>>,
-    subcategory: Range<usize>,
+    subcategories: ListField,
 }
 
 #[derive(Clone, Debug)]

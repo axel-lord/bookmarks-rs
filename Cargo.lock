@@ -76,6 +76,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "reference"
+version = "0.1.0"
+dependencies = [
+ "bookmark-storage",
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "regex"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

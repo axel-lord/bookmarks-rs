@@ -1,24 +1,23 @@
 use crate::{token, ContentString};
-use bookmark_storage::{Section, Storeable};
+use bookmark_storage::{Field, ListField, Section, Storeable};
 use std::ops::Range;
 
 #[derive(Debug, bookmark_derive::Storeable)]
 pub struct Bookmark {
     #[line]
-    line: Option<ContentString>,
+    line: ContentString,
 
     #[string]
     #[token(token::unsorted::URL)]
-    url: Range<usize>,
+    url: Field,
 
     #[string]
     #[token(token::unsorted::DESCRIPTION)]
-    description: Range<usize>,
+    description: Field,
 
     #[composite(tag)]
     #[token(token::unsorted::TAG)]
-    tags: Vec<Range<usize>>,
-    tag: Range<usize>,
+    tags: Field,
 }
 
 impl Section for Bookmark {

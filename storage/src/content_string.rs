@@ -1,43 +1,59 @@
 use std::ops::Range;
 
 #[derive(Debug, Clone)]
-pub enum ContentString {
-    AppendedTo(String),
-    UnappendedTo(String),
+pub struct ContentString {
+    is_appended_to: bool,
+    string: String,
+}
+
+impl Default for ContentString {
+    fn default() -> Self {
+        ContentString {
+            is_appended_to: false,
+            string: Default::default(),
+        }
+    }
+}
+
+impl From<&str> for ContentString {
+    fn from(content: &str) -> Self {
+        ContentString::from(String::from(content))
+    }
+}
+
+impl From<String> for ContentString {
+    fn from(content: String) -> Self {
+        ContentString {
+            is_appended_to: false,
+            string: content,
+        }
+    }
 }
 
 impl ContentString {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn take_any(self) -> String {
-        dbg!("take");
-        match self {
-            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
-        }
+        self.string
     }
 
     pub fn ref_any(&self) -> &str {
-        dbg!("ref");
-        dbg!(self);
-        match self {
-            Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
-        }
+        &self.string
     }
 
     pub fn is_appended_to(&self) -> bool {
-        match self {
-            Self::UnappendedTo(_) => false,
-            Self::AppendedTo(_) => true,
-        }
+        self.is_appended_to
     }
 
-    pub fn append(self, content: &str) -> (Self, Range<usize>) {
-        dbg!("append init");
-        dbg!(content);
-        let mut existing = self.take_any();
+    pub fn append(&mut self, content: &str) -> Range<usize> {
+        let begin = self.string.len();
+        self.string += content;
+        let end = self.string.len();
 
-        let begin = existing.len();
-        existing += content;
-        let end = existing.len();
+        self.is_appended_to = true;
 
-        dbg!((ContentString::AppendedTo(existing), begin..end))
+        begin..end
     }
 }
