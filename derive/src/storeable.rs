@@ -283,6 +283,33 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                 }
             }
 
+            fn set(&mut self, property: &str, value: bookmark_storage::Property) -> Result<(), bookmark_storage::PropertyErr> {
+                match (property, value) {
+                    #(
+                    (#get_fields, bookmark_storage::Property::Single(value)) => {
+                        self.#string_setters(&value);
+                    }
+                    )*
+                    #(
+                    (#get_list_fields, bookmark_storage::Property::List(value)) => {
+                        self.#comp_setters(value.iter().map(String::as_str));
+                    }
+                    )*
+                    _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+                }
+                Ok(())
+            }
+
+            fn push(&mut self, property: &str, value: &str) -> Result<(), bookmark_storage::PropertyErr> {
+                match property {
+                    #(
+                    #get_list_fields => self.#adders(value),
+                    )*
+                    _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+                }
+                Ok(())
+            }
+
         }
         impl #name {
             pub fn new<'a>(#(#new_args),*) -> Self {
@@ -335,9 +362,15 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             #(
                 pub fn #comp_setters<'a>(&mut self, value: impl Iterator<Item = &'a str>) {
                     self.#comp.clear();
+                    let mut content_string = self.#line_ident.take().unwrap();
+
                     for item in value {
-                        self.#adders(item);
+                        let range;
+                        (content_string, range)  = content_string.append(item);
+                        self.#comp.push(range);
                     }
+
+                    self.#line_ident = Some(content_string);
                 }
             )*
         }
