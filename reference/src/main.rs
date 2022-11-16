@@ -1,20 +1,23 @@
-use bookmark_storage::{
-    content_string::ContentString, Field, ListField, ParseErr, Property, PropertyErr, Storeable,
-};
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Reference {
-    line: ContentString,
+    line: bookmark_storage::content_string::ContentString,
 
-    name: Field,
+    name: bookmark_storage::Field,
 
-    children: ListField,
+    children: bookmark_storage::ListField,
+
+    info: bookmark_storage::Field,
+
+    tags: bookmark_storage::ListField,
 }
 
 impl Reference {}
 
-impl Storeable for Reference {
-    fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr> {
+impl bookmark_storage::Storeable for Reference {
+    fn with_string(
+        line: String,
+        line_num: Option<usize>,
+    ) -> Result<Self, bookmark_storage::ParseErr> {
         use lazy_static::lazy_static;
         lazy_static! {
             static ref LINE_RE: regex::Regex = regex::Regex::new(
@@ -23,6 +26,10 @@ impl Storeable for Reference {
                     "<name>",
                     bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
                     "<children>",
+                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
+                    "<info>",
+                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
+                    "<tags>",
                     bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
                     "$",
                 ]
@@ -37,78 +44,242 @@ impl Storeable for Reference {
         let name = captures.get(1).ok_or_else(err)?.range().into();
 
         let group = captures.get(2).ok_or_else(err)?.range();
-        let mut children: ListField = bookmark_storage::pattern_match::split_by_delim_to_ranges(
-            line.get(group.clone()).unwrap(),
-        )
-        .into();
-        children.iter_mut().for_each(|item| {
-            *item += group.start;
-        });
+        let children =
+            bookmark_storage::pattern_match::split_list_field(line.get(group.clone()).unwrap())
+                .map(|f| f + group.start)
+                .collect();
+
+        let info = captures.get(3).ok_or_else(err)?.range().into();
+
+        let group = captures.get(4).ok_or_else(err)?.range();
+        let tags =
+            bookmark_storage::pattern_match::split_list_field(line.get(group.clone()).unwrap())
+                .map(|f| f + group.start)
+                .collect();
 
         Ok(Self {
             line: line.into(),
             name,
             children,
+            info,
+            tags,
         })
     }
 
-    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
+    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
         Self::with_string(line.into(), line_num)
     }
 
     fn to_line(&self) -> String {
-        std::unimplemented!()
+        Self::create_line(&self.name(), self.children(), &self.info(), self.tags())
     }
 
     fn is_edited(&self) -> bool {
         self.line.is_appended_to()
     }
 
-    fn get(&self, property: &str) -> Result<Property, PropertyErr> {
-        std::unimplemented!()
+    fn get(
+        &self,
+        property: &str,
+    ) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
+        Ok(match property {
+            "name" => bookmark_storage::Property::Single(self.name().into()),
+            "info" => bookmark_storage::Property::Single(self.info().into()),
+            "children" => {
+                bookmark_storage::Property::List(self.children().map(String::from).collect())
+            }
+            "tags" => bookmark_storage::Property::List(self.tags().map(String::from).collect()),
+            _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+        })
     }
 
-    fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr> {
-        std::unimplemented!()
+    fn set(
+        &mut self,
+        property: &str,
+        value: bookmark_storage::Property,
+    ) -> Result<&mut Self, bookmark_storage::PropertyErr> {
+        match (property, value) {
+            ("name", bookmark_storage::Property::Single(value)) => self.set_name(&value),
+            ("info", bookmark_storage::Property::Single(value)) => self.set_info(&value),
+            ("children", bookmark_storage::Property::List(values)) => {
+                self.set_children(values.iter())
+            }
+            ("tags", bookmark_storage::Property::List(values)) => self.set_tags(values.iter()),
+            _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+        };
+        Ok(self)
     }
-    fn push(&mut self, property: &str, value: &str) -> Result<(), PropertyErr> {
-        std::unimplemented!()
+    fn push(
+        &mut self,
+        property: &str,
+        value: &str,
+    ) -> Result<&mut Self, bookmark_storage::PropertyErr> {
+        match property {
+            "children" => self.push_child(value),
+            "tags" => self.push_tag(value),
+            _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+        };
+        Ok(self)
     }
 }
 
 impl Reference {
     pub fn create_line<'a>(
         name: &str,
-        children: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
+        children: impl Iterator<Item = &'a str>,
+        info: &str,
+        tags: impl Iterator<Item = &'a str>,
     ) -> String {
         format!(
-            "<name> {} <children> {}",
+            "{} {} {} {} {} {} {} {}",
+            "<name>",
             name,
-            bookmark_storage::join_with_delim(children)
+            "<children>",
+            bookmark_storage::join_with_delim(children),
+            "<info>",
+            info,
+            "<tags>",
+            bookmark_storage::join_with_delim(tags),
         )
     }
+
+    pub fn new<'a>(
+        name: &str,
+        children: impl 'a + Iterator<Item = &'a str>,
+        info: &str,
+        tags: impl 'a + Iterator<Item = &'a str>,
+    ) -> Self {
+        let mut line = bookmark_storage::content_string::ContentString::new();
+        Self {
+            name: line.push(name).into(),
+            children: line.extend(children).into(),
+            info: line.push(info).into(),
+            tags: line.extend(tags).into(),
+            line: Default::default(),
+        }
+    }
+
+    //
+    // Name
+    //
 
     pub fn name(&self) -> &str {
         self.name.get(&self.line)
     }
 
-    pub fn set_name(&mut self, name: &str) {
+    pub fn set_name(&mut self, name: &str) -> &mut Self {
         self.name = self.line.push(name).into();
+
+        self
     }
+
+    //
+    // Info
+    //
+
+    pub fn info(&self) -> &str {
+        self.info.get(&self.line)
+    }
+
+    pub fn set_info(&mut self, info: &str) -> &mut Self {
+        self.info = self.line.push(info).into();
+
+        self
+    }
+
+    //
+    // Children
+    //
 
     pub fn children(&self) -> impl Iterator<Item = &str> {
         self.children.get(&self.line)
     }
 
-    pub fn push_child(&mut self, child: &str) {
-        self.children.push(self.line.push(child).into())
+    pub fn set_children<'a>(
+        &mut self,
+        children: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
+    ) -> &mut Self {
+        self.children.clear();
+
+        for item in children {
+            self.children.push(self.line.push(&item).into());
+        }
+
+        self
+    }
+
+    pub fn push_child(&mut self, child: &str) -> &mut Self {
+        self.children.push(self.line.push(child).into());
+
+        self
+    }
+
+    //
+    // Tags
+    //
+
+    pub fn tags(&self) -> impl Iterator<Item = &str> {
+        self.tags.get(&self.line)
+    }
+
+    pub fn set_tags<'a>(
+        &mut self,
+        tags: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
+    ) -> &mut Self {
+        self.tags.clear();
+
+        for item in tags {
+            self.tags.push(self.line.push(&item).into());
+        }
+
+        self
+    }
+
+    pub fn push_tag(&mut self, tag: &str) -> &mut Self {
+        self.tags.push(self.line.push(tag).into());
+
+        self
+    }
+}
+
+impl From<Reference> for String {
+    fn from(refr: Reference) -> Self {
+        use bookmark_storage::Storeable;
+        refr.to_line()
+    }
+}
+
+impl std::convert::TryFrom<String> for Reference {
+    type Error = bookmark_storage::ParseErr;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        use bookmark_storage::Storeable;
+        Self::with_string(value, None)
+    }
+}
+
+impl std::convert::TryFrom<&str> for Reference {
+    type Error = bookmark_storage::ParseErr;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        use bookmark_storage::Storeable;
+        Self::with_str(value, None)
     }
 }
 
 fn main() {
-    let item =
-        Reference::with_str("<name> hello there <children> general <,> kenobi", None).unwrap();
+    use bookmark_storage::Storeable;
+    let item = Reference::with_str(
+        "<name> hello there <children> general <,> kenobi <info> blast them <tags> wow <,> nice",
+        None,
+    )
+    .unwrap();
     dbg!(item);
-    dbg!(bookmark_storage::join_with_delim(["hello", "there"].iter()));
-    dbg!(Reference::create_line("Kenobi", ["hello", "there"].iter()));
+    dbg!(bookmark_storage::join_with_delim(
+        ["hello", "there"].into_iter()
+    ));
+    dbg!(Reference::create_line(
+        "Kenobi",
+        ["hello", "there"].into_iter(),
+        "general",
+        ["nice"].into_iter()
+    ));
 }
