@@ -6,6 +6,7 @@ pub mod print;
 pub mod regex;
 pub mod save;
 pub mod select;
+pub mod set;
 
 use crate::{
     command::{load::Load, Command, CommandErr},
@@ -85,8 +86,14 @@ impl Bookmark {
 
         subcommand.push(
             "new",
-            Some("add a new empt bookmark"),
+            Some("add a new empty bookmark"),
             new::New::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
+        );
+
+        subcommand.push(
+            "set",
+            Some("set a value on a bookmark\nusage: set VALUE [VALUES, [...]]"),
+            set::Set::build(bookmarks.clone(), selected_bookmark.clone()),
         );
 
         Box::new(Self {

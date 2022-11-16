@@ -8,12 +8,15 @@ pub enum ContentString {
 
 impl ContentString {
     pub fn take_any(self) -> String {
+        dbg!("take");
         match self {
             Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
         }
     }
 
     pub fn ref_any(&self) -> &str {
+        dbg!("ref");
+        dbg!(self);
         match self {
             Self::AppendedTo(s) | Self::UnappendedTo(s) => s,
         }
@@ -27,12 +30,14 @@ impl ContentString {
     }
 
     pub fn append(self, content: &str) -> (Self, Range<usize>) {
+        dbg!("append init");
+        dbg!(content);
         let mut existing = self.take_any();
 
         let begin = existing.len();
         existing += content;
         let end = existing.len();
 
-        (ContentString::AppendedTo(existing), begin..end)
+        dbg!((ContentString::AppendedTo(existing), begin..end))
     }
 }

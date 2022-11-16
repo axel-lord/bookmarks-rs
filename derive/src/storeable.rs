@@ -292,7 +292,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     )*
                     #(
                     (#get_list_fields, bookmark_storage::Property::List(value)) => {
-                        self.#comp_setters(value.iter().map(String::as_str));
+                       self.#comp_setters(value.iter());
                     }
                     )*
                     _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
@@ -360,17 +360,15 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             )*
 
             #(
-                pub fn #comp_setters<'a>(&mut self, value: impl Iterator<Item = &'a str>) {
+                pub fn #comp_setters<'a, I>(&mut self, value: impl Iterator<Item = &'a I>)
+                where
+                    I: 'a + std::ops::Deref<Target = str> + std::fmt::Debug,
+                {
                     self.#comp.clear();
-                    let mut content_string = self.#line_ident.take().unwrap();
 
                     for item in value {
-                        let range;
-                        (content_string, range)  = content_string.append(item);
-                        self.#comp.push(range);
+                        self.#adders(item);
                     }
-
-                    self.#line_ident = Some(content_string);
                 }
             )*
         }

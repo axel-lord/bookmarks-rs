@@ -112,6 +112,10 @@ impl Selected {
         container.get(self.borrow().clone()?)
     }
 
+    pub fn get_mut<'a, T>(&self, container: &'a mut Vec<T>) -> Option<&'a mut T> {
+        container.get_mut(self.borrow().clone()?)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.borrow().is_none()
     }
