@@ -73,8 +73,8 @@ pub trait Storeable: Sized {
     fn to_line(&self) -> String;
 
     fn get(&self, property: &str) -> Result<Property, PropertyErr>;
-    // fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr>;
-    // fn append(&mut self, property: &str, value: &str) -> Result<(), PropertyErr>;
+    fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr>;
+    fn push(&mut self, property: &str, value: &str) -> Result<(), PropertyErr>;
 }
 
 pub trait Section {
