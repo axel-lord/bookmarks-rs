@@ -9,6 +9,7 @@ pub use save::save;
 
 use std::{
     error::Error,
+    iter::FromIterator,
     ops::{Add, AddAssign, Deref, DerefMut, Range},
 };
 
@@ -116,6 +117,11 @@ impl From<Vec<Range<usize>>> for ListField {
         Self(r.into_iter().map(Field::from).collect())
     }
 }
+impl From<Vec<Field>> for ListField {
+    fn from(r: Vec<Field>) -> Self {
+        Self(r)
+    }
+}
 
 impl From<ListField> for Vec<Range<usize>> {
     fn from(f: ListField) -> Self {
@@ -137,6 +143,18 @@ impl DerefMut for ListField {
     }
 }
 
+impl FromIterator<Field> for ListField {
+    fn from_iter<T: IntoIterator<Item = Field>>(iter: T) -> Self {
+        Self(iter.into_iter().collect())
+    }
+}
+
+impl FromIterator<Range<usize>> for ListField {
+    fn from_iter<T: IntoIterator<Item = Range<usize>>>(iter: T) -> Self {
+        Self(iter.into_iter().map(Field::from).collect())
+    }
+}
+
 impl ListField {
     pub fn new() -> Self {
         Self(Default::default())
@@ -147,15 +165,13 @@ impl ListField {
     }
 }
 
-pub fn join_with_delim<'a>(
-    fields: impl Iterator<Item = &'a (impl 'a + Deref<Target = str>)>,
-) -> String {
+pub fn join_with_delim<'a>(fields: impl Iterator<Item = &'a str>) -> String {
     use lazy_static::lazy_static;
     lazy_static! {
         static ref DELIM: String = format!(" {} ", token::DELIM);
     }
 
-    fields.map(Deref::deref).collect::<Vec<&str>>().join(&DELIM)
+    fields.collect::<Vec<_>>().join(&DELIM)
 }
 
 pub trait Storeable: Sized {
@@ -165,8 +181,8 @@ pub trait Storeable: Sized {
     fn to_line(&self) -> String;
 
     fn get(&self, property: &str) -> Result<Property, PropertyErr>;
-    fn set(&mut self, property: &str, value: Property) -> Result<(), PropertyErr>;
-    fn push(&mut self, property: &str, value: &str) -> Result<(), PropertyErr>;
+    fn set(&mut self, property: &str, value: Property) -> Result<&mut Self, PropertyErr>;
+    fn push(&mut self, property: &str, value: &str) -> Result<&mut Self, PropertyErr>;
 }
 
 pub trait Section {

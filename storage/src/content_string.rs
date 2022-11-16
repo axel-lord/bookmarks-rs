@@ -1,3 +1,4 @@
+use crate::Field;
 use std::ops::Range;
 
 #[derive(Debug, Clone)]
@@ -58,5 +59,9 @@ impl ContentString {
         self.is_appended_to = true;
 
         begin..end
+    }
+
+    pub fn extend<'a>(&mut self, content: impl 'a + Iterator<Item = &'a str>) -> Vec<Field> {
+        content.map(|content| self.push(&content).into()).collect()
     }
 }
