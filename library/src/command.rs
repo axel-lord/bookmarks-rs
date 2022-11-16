@@ -37,6 +37,12 @@ impl From<bookmark_storage::ParseErr> for CommandErr {
     }
 }
 
+impl From<bookmark_storage::PropertyErr> for CommandErr {
+    fn from(err: bookmark_storage::PropertyErr) -> Self {
+        Self::Execution(format!("{err}"))
+    }
+}
+
 impl From<std::io::Error> for CommandErr {
     fn from(err: std::io::Error) -> Self {
         Self::Execution(format!("{err}"))
