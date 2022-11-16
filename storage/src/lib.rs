@@ -76,6 +76,10 @@ impl Field {
     pub fn new(from: usize, to: usize) -> Self {
         Self(from..to)
     }
+
+    pub fn get<'a>(&self, from: &'a str) -> &'a str {
+        &from[self.0.clone()]
+    }
 }
 
 impl Add<usize> for Field {
@@ -137,6 +141,21 @@ impl ListField {
     pub fn new() -> Self {
         Self(Default::default())
     }
+
+    pub fn get<'a>(&'a self, from: &'a str) -> impl Iterator<Item = &'a str> {
+        self.0.iter().map(|f| f.get(from))
+    }
+}
+
+pub fn join_with_delim<'a>(
+    fields: impl Iterator<Item = &'a (impl 'a + Deref<Target = str>)>,
+) -> String {
+    use lazy_static::lazy_static;
+    lazy_static! {
+        static ref DELIM: String = format!(" {} ", token::DELIM);
+    }
+
+    fields.map(Deref::deref).collect::<Vec<&str>>().join(&DELIM)
 }
 
 pub trait Storeable: Sized {

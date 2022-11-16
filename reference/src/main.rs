@@ -76,8 +76,39 @@ impl Storeable for Reference {
     }
 }
 
+impl Reference {
+    pub fn create_line<'a>(
+        name: &str,
+        children: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
+    ) -> String {
+        format!(
+            "<name> {} <children> {}",
+            name,
+            bookmark_storage::join_with_delim(children)
+        )
+    }
+
+    pub fn name(&self) -> &str {
+        self.name.get(&self.line)
+    }
+
+    pub fn set_name(&mut self, name: &str) {
+        self.name = self.line.push(name).into();
+    }
+
+    pub fn children(&self) -> impl Iterator<Item = &str> {
+        self.children.get(&self.line)
+    }
+
+    pub fn push_child(&mut self, child: &str) {
+        self.children.push(self.line.push(child).into())
+    }
+}
+
 fn main() {
     let item =
         Reference::with_str("<name> hello there <children> general <,> kenobi", None).unwrap();
     dbg!(item);
+    dbg!(bookmark_storage::join_with_delim(["hello", "there"].iter()));
+    dbg!(Reference::create_line("Kenobi", ["hello", "there"].iter()));
 }

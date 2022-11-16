@@ -30,24 +30,27 @@ impl From<String> for ContentString {
     }
 }
 
+impl std::ops::Deref for ContentString {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.string
+    }
+}
+
 impl ContentString {
     pub fn new() -> Self {
         Default::default()
     }
 
-    pub fn take_any(self) -> String {
+    pub fn take(self) -> String {
         self.string
-    }
-
-    pub fn ref_any(&self) -> &str {
-        &self.string
     }
 
     pub fn is_appended_to(&self) -> bool {
         self.is_appended_to
     }
 
-    pub fn append(&mut self, content: &str) -> Range<usize> {
+    pub fn push(&mut self, content: &str) -> Range<usize> {
         let begin = self.string.len();
         self.string += content;
         let end = self.string.len();
