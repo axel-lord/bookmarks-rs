@@ -224,7 +224,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         }
         impl bookmark_storage::Storeable for #name {
             fn is_edited(&self) -> bool {
-                self.#line_ident.as_ref().unwrap().is_appended_to()
+                self.#line_ident.is_appended_to()
             }
 
             fn with_string(line: String, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
@@ -264,8 +264,8 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                 Self::with_string(line.into(), line_num)
             }
             fn to_line(&self) -> String {
-                if let Some(bookmark_storage::content_string::ContentString::UnappendedTo(line)) = self.line.as_ref() {
-                    line.clone()
+                if !self.#line_ident.is_appended_to()
+                    self.#line_ident.ref_any().into()
                 } else {
                     Self::create_line(#(self.#all_simple()),*)
                 }
@@ -326,7 +326,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
             }
 
             fn raw_line(&self) -> &str {
-                self.#line_ident.as_ref().unwrap().ref_any()
+                self.#line_ident.ref_any()
             }
 
             #(
@@ -337,10 +337,9 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     self.#comp.iter().map(|r| &self.#comp_of()[r.clone()])
                 }
                 pub fn #adders(&mut self, #comp_of: &str) {
-                    let (content_string, range) = self.#line_ident.take().unwrap().append(#comp_of);
-
-                    self.#line_ident = Some(content_string);
-                    self.#comp.push(range);
+                    self.#comp.push(
+                        self.#line_ident.append(#comp_of)
+                    );
                 }
             )*
 
@@ -352,9 +351,8 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
 
             #(
                 pub fn #string_setters(&mut self, value: &str) {
-                    let (content_string, range) = self.#line_ident.take().unwrap().append(value);
+                    let range = self.#line_ident.append(value);
 
-                    self.#line_ident = Some(content_string);
                     self.#strings = range;
                 }
             )*
