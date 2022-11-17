@@ -266,24 +266,26 @@ impl std::fmt::Display for Reference {
             write!(f, " {} ", self.name())?;
 
             write!(f, "{}", "<children>")?;
-            let mut i = self.children();
-            for i in i.by_ref().take(1) {
-                write!(f, " {} ", i)?;
-            }
-            for i in i {
-                write!(f, "{} {} ", bookmark_storage::token::DELIM, i)?;
-            }
+            bookmark_storage::write_delim_list(f, self.children())?;
 
             write!(f, "{}", "<info>")?;
             write!(f, " {} ", self.info())?;
 
             write!(f, "{}", "<tags>")?;
-            let mut i = self.tags();
-            for i in i.by_ref().take(1) {
-                write!(f, " {} ", i)?;
+            bookmark_storage::write_delim_list(f, self.children())?;
+        } else {
+            write!(f, "{}:", self.name())?;
+
+            if !self.children.is_empty() {
+                write!(f, "\n\tchildren: ")?;
+                bookmark_storage::write_list_field(f, self.children())?;
             }
-            for i in i {
-                write!(f, "{} {} ", bookmark_storage::token::DELIM, i)?;
+
+            write!(f, "\n\tinfo: {}", self.info())?;
+
+            if !self.tags.is_empty() {
+                write!(f, "\n\ttags: ")?;
+                bookmark_storage::write_list_field(f, self.tags())?;
             }
         }
         Ok(())
@@ -297,7 +299,7 @@ fn main() {
         None,
     )
     .unwrap();
-    dbg!(item);
+    dbg!(&item);
     dbg!(bookmark_storage::join_with_delim(
         ["hello", "there"].into_iter()
     ));
@@ -307,4 +309,7 @@ fn main() {
         "general",
         ["nice"].into_iter()
     ));
+
+    println!("{item}");
+    println!("{:#}", item);
 }
