@@ -1,5 +1,3 @@
-
-
 use crate::{
     command::{Command, CommandErr},
     shared,
@@ -34,7 +32,7 @@ impl Command for Select {
 
         self.selected.borrow_mut().replace(index);
 
-        print!(
+        println!(
             "selected bookmark:\n{}. {:#}",
             index,
             self.bookmarks.borrow()[index]

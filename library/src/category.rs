@@ -12,6 +12,7 @@ pub struct Category {
     id: Field,
 
     #[string]
+    #[title]
     #[token(token::category::NAME)]
     name: Field,
 

@@ -1,5 +1,3 @@
-
-
 use crate::{
     command::list,
     command::{Command, CommandErr},
@@ -38,7 +36,7 @@ impl Command for List {
         println!("listing {count} categories starting at index {from}");
 
         for (index, category) in categories.iter().enumerate().skip(from).take(count) {
-            print!("{}. {:#}", index, category);
+            println!("{}. {:#}", index, category);
         }
 
         Ok(())

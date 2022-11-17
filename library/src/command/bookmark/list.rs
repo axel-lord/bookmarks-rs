@@ -38,7 +38,7 @@ impl Command for List {
             .skip(from)
             .take(count)
         {
-            print!("{}. {:#}", index, bookmark);
+            println!("{}. {:#}", index, bookmark);
         }
 
         Ok(())

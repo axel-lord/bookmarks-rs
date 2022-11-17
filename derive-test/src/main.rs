@@ -10,6 +10,7 @@ struct Test {
     ln: ContentString,
 
     #[string]
+    #[title]
     #[token(INFO_TOKEN)]
     info: Field,
 
