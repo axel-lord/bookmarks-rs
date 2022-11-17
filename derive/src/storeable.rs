@@ -15,6 +15,8 @@ trait AnyField {
     fn get_get_match(&self) -> TokenStream2;
     fn get_to_line_call(&self) -> TokenStream2;
     fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2;
+    fn get_fancy_display(&self) -> TokenStream2;
+    fn get_simple_display(&self) -> TokenStream2;
 
     fn get_ident_string(&self) -> String {
         self.get_ident().to_string()
@@ -29,6 +31,12 @@ trait AnyField {
 struct FieldSingle {
     ident: syn::Ident,
     key: TokenStream2,
+}
+
+impl FieldSingle {
+    fn get_title_display(&self) -> TokenStream2 {
+        std::unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -110,6 +118,26 @@ impl AnyField for FieldList {
                 bookmark_storage::pattern_match::split_list_field(#line.get(group.clone()).unwrap())
                     .map(|f| f + group.start)
                     .collect();
+        }
+    }
+
+    fn get_fancy_display(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        let format_string = format!("\n\t{}: ", ident);
+        quote! {
+            if !self.#ident.is_empty() {
+                write!(f, #format_string)?;
+                bookmark_storage::write_list_field(f, self.#ident())?;
+            }
+        }
+    }
+
+    fn get_simple_display(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        let key = self.get_key();
+        quote! {
+            write!(f, "{}", #key)?;
+            bookmark_storage::write_delim_list(f, self.#ident())?;
         }
     }
 
@@ -209,6 +237,14 @@ impl AnyField for FieldSingle {
         }
     }
 
+    fn get_fancy_display(&self) -> TokenStream2 {
+        std::unimplemented!()
+    }
+
+    fn get_simple_display(&self) -> TokenStream2 {
+        quote! {}
+    }
+
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = self.get_ident();
         let set_ident = self.get_set_ident();
@@ -229,7 +265,7 @@ impl AnyField for FieldSingle {
 
 #[derive(Clone, Debug)]
 enum FieldType {
-    Single(FieldSingle),
+    Single(FieldSingle, bool),
     List(FieldList),
     Content(syn::Ident),
     Other,
@@ -240,6 +276,7 @@ enum AttrType {
     List { singular: syn::Ident },
     Content,
     Key(TokenStream2),
+    Title,
     Other,
 }
 
@@ -256,6 +293,7 @@ fn parse_attr(attr: &syn::Attribute) -> AttrType {
         match ident.to_string().as_str() {
             "line" => return AttrType::Content,
             "string" => return AttrType::Single,
+            "title" => return AttrType::Title,
             _ => return AttrType::Other,
         }
     }
@@ -292,10 +330,6 @@ fn parse_attr(attr: &syn::Attribute) -> AttrType {
                      panic!("contents of token should be a single token\n{:#?}", items[0]);
                  };
 
-                // let Some(key) = path.get_ident() else {
-                //      panic!("contents of token should be a single token\n{:#?}", path);
-                // };
-
                 return AttrType::Key(path.clone().to_token_stream());
             }
             _ => return AttrType::Other,
@@ -313,6 +347,7 @@ fn parse_field(field: &syn::Field) -> FieldType {
 
     let mut attr_type = AttrType::Other;
     let mut key = None;
+    let mut is_title = false;
 
     for attr in field.attrs.iter() {
         match parse_attr(&attr) {
@@ -323,6 +358,9 @@ fn parse_field(field: &syn::Field) -> FieldType {
                 } else {
                     panic!("a field may only have one token attribute")
                 }
+            }
+            AttrType::Title => {
+                is_title = true;
             }
             AttrType::Single => {
                 if matches!(attr_type, AttrType::Other) {
@@ -342,6 +380,10 @@ fn parse_field(field: &syn::Field) -> FieldType {
         }
     }
 
+    if is_title && !matches!(attr_type, AttrType::Single) {
+        panic!("title may only be specified on a field marked as string");
+    }
+
     if matches!(attr_type, AttrType::Other) {
         return FieldType::Other;
     }
@@ -355,7 +397,7 @@ fn parse_field(field: &syn::Field) -> FieldType {
     };
 
     match attr_type {
-        AttrType::Single => FieldType::Single(FieldSingle { ident, key }),
+        AttrType::Single => FieldType::Single(FieldSingle { ident, key }, is_title),
         AttrType::List { singular } => FieldType::List(FieldList {
             ident,
             key,
@@ -369,9 +411,10 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
 
     let mut line = None;
-    let mut single_fields = Vec::new();
-    let mut list_fields = Vec::new();
     let mut store_fields: Vec<Box<dyn AnyField>> = Vec::new();
+
+    let mut display_fields = Vec::new();
+    let mut title_field = None;
 
     let syn::Data::Struct(ref data) = ast.data else {
         panic!("Storeable should only be derived on structs");
@@ -387,12 +430,18 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     panic!("only one line can be marked as line")
                 }
             }
-            FieldType::Single(field) => {
-                single_fields.push(field.clone());
+            FieldType::Single(field, is_title) => {
+                if is_title {
+                    if title_field.is_some() {
+                        panic!("only one field may be marked as title");
+                    }
+                    title_field = Some(field.clone());
+                } else {
+                    display_fields.push(field.clone());
+                }
                 store_fields.push(Box::new(field));
             }
             FieldType::List(field) => {
-                list_fields.push(field.clone());
                 store_fields.push(Box::new(field));
             }
             FieldType::Other => continue,
@@ -474,8 +523,40 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         .map(|(i, f)| f.get_capture_extract(i + 1, &line))
         .collect::<Vec<_>>();
 
+    let display_implementation = if let Some(title_field) = title_field {
+        let simple_displays = store_fields
+            .iter()
+            .map(|f| f.get_simple_display())
+            .collect::<Vec<_>>();
+
+        let fancy_displays = display_fields
+            .iter()
+            .map(|f| f.get_fancy_display())
+            .collect::<Vec<_>>();
+
+        let title_display = title_field.get_title_display();
+
+        quote! {
+            impl std::fmt::Display for #name {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    if !f.alternate() {
+                        #(#simple_displays)*
+                    } else {
+                        #title_display
+
+                        #(#fancy_displays)*
+                    }
+                    Ok(())
+                }
+            }
+        }
+    } else {
+        Default::default()
+    };
+
     quote! {
         #conversions
+        #display_implementation
 
         impl bookmark_storage::Storeable for #name {
             fn with_string(

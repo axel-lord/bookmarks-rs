@@ -204,3 +204,31 @@ pub trait Section {
 pub trait Listed: Storeable + Section {}
 
 impl<T> Listed for T where T: Storeable + Section {}
+
+pub fn write_delim_list(
+    f: &mut std::fmt::Formatter<'_>,
+    mut iter: impl Iterator<Item = impl AsRef<str>>,
+) -> std::fmt::Result {
+    for i in iter.by_ref().take(1) {
+        write!(f, " {} ", i.as_ref())?;
+    }
+    for i in iter {
+        write!(f, "{} {} ", token::DELIM, i.as_ref())?;
+    }
+    Ok(())
+}
+
+pub fn write_list_field(
+    f: &mut std::fmt::Formatter<'_>,
+    mut iter: impl Iterator<Item = impl AsRef<str>>,
+) -> std::fmt::Result {
+    write!(f, "[")?;
+    for i in iter.by_ref().take(1) {
+        write!(f, "{}", i.as_ref())?;
+    }
+    for i in iter {
+        write!(f, ", {}", i.as_ref())?;
+    }
+    write!(f, "]")?;
+    Ok(())
+}

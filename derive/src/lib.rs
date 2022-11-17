@@ -11,7 +11,7 @@ pub fn build_command_derive(input: TokenStream) -> TokenStream {
     build_command::impl_build_command(&ast)
 }
 
-#[proc_macro_derive(Storeable, attributes(line, string, composite, token))]
+#[proc_macro_derive(Storeable, attributes(line, string, composite, token, title))]
 pub fn storeable_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
