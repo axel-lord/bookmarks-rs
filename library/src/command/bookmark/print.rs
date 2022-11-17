@@ -1,5 +1,3 @@
-
-
 use crate::{
     command::{Command, CommandErr},
     shared,
@@ -29,7 +27,7 @@ impl Command for Print {
             return Err(CommandErr::Execution("selected bookmark does not exist".into()));
         };
 
-        print!("{}. {:#}", index, selected);
+        println!("{}. {:#}", index, selected);
 
         Ok(())
     }

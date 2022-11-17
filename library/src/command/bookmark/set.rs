@@ -41,7 +41,7 @@ impl Command for Set {
             }
         }
 
-        print!("{}. {:#}", self.selected.borrow().unwrap(), bookmark);
+        println!("{}. {:#}", self.selected.borrow().unwrap(), bookmark);
 
         Ok(())
     }

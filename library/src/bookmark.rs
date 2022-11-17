@@ -11,6 +11,7 @@ pub struct Bookmark {
     url: Field,
 
     #[string]
+    #[title]
     #[token(token::unsorted::DESCRIPTION)]
     description: Field,
 

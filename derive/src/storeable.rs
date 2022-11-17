@@ -15,8 +15,8 @@ trait AnyField {
     fn get_get_match(&self) -> TokenStream2;
     fn get_to_line_call(&self) -> TokenStream2;
     fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2;
-    fn get_fancy_display(&self) -> TokenStream2;
-    fn get_simple_display(&self) -> TokenStream2;
+    fn get_fancy_display(&self, index: usize) -> TokenStream2;
+    fn get_simple_display(&self, index: usize) -> TokenStream2;
 
     fn get_ident_string(&self) -> String {
         self.get_ident().to_string()
@@ -35,7 +35,10 @@ struct FieldSingle {
 
 impl FieldSingle {
     fn get_title_display(&self) -> TokenStream2 {
-        std::unimplemented!()
+        let ident = self.get_ident();
+        quote! {
+            write!(f, "{}: ", self.#ident())?;
+        }
     }
 }
 
@@ -69,7 +72,7 @@ impl AnyField for FieldList {
 
     fn get_create_line_param(&self) -> TokenStream2 {
         let ident = self.get_ident();
-        quote! {#ident: impl Iterator<Item = &'a str>,}
+        quote! {#ident: impl Iterator<Item = impl AsRef<str>>,}
     }
 
     fn get_create_line_format_param(&self) -> TokenStream2 {
@@ -121,7 +124,7 @@ impl AnyField for FieldList {
         }
     }
 
-    fn get_fancy_display(&self) -> TokenStream2 {
+    fn get_fancy_display(&self, _: usize) -> TokenStream2 {
         let ident = self.get_ident();
         let format_string = format!("\n\t{}: ", ident);
         quote! {
@@ -132,12 +135,20 @@ impl AnyField for FieldList {
         }
     }
 
-    fn get_simple_display(&self) -> TokenStream2 {
+    fn get_simple_display(&self, index: usize) -> TokenStream2 {
         let ident = self.get_ident();
         let key = self.get_key();
-        quote! {
-            write!(f, "{}", #key)?;
-            bookmark_storage::write_delim_list(f, self.#ident())?;
+
+        if index == 0 {
+            quote! {
+                write!(f, "{} ", #key)?;
+                bookmark_storage::write_delim_list(f, self.#ident())?;
+            }
+        } else {
+            quote! {
+                write!(f, " {} ", #key)?;
+                bookmark_storage::write_delim_list(f, self.#ident())?;
+            }
         }
     }
 
@@ -237,12 +248,27 @@ impl AnyField for FieldSingle {
         }
     }
 
-    fn get_fancy_display(&self) -> TokenStream2 {
-        std::unimplemented!()
+    fn get_fancy_display(&self, _: usize) -> TokenStream2 {
+        let ident = self.get_ident();
+        let format_string = format!("\n\t{}: {{}}", ident);
+        quote! {
+            write!(f, #format_string, self.#ident())?;
+        }
     }
 
-    fn get_simple_display(&self) -> TokenStream2 {
-        quote! {}
+    fn get_simple_display(&self, index: usize) -> TokenStream2 {
+        let ident = self.get_ident();
+        let key = self.get_key();
+
+        if index == 0 {
+            quote! {
+                write!(f, "{} {}", #key, self.#ident())?;
+            }
+        } else {
+            quote! {
+                write!(f, " {} {}", #key, self.#ident())?;
+            }
+        }
     }
 
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
@@ -413,7 +439,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
     let mut line = None;
     let mut store_fields: Vec<Box<dyn AnyField>> = Vec::new();
 
-    let mut display_fields = Vec::new();
+    let mut display_fields: Vec<Box<dyn AnyField>> = Vec::new();
     let mut title_field = None;
 
     let syn::Data::Struct(ref data) = ast.data else {
@@ -437,12 +463,13 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                     }
                     title_field = Some(field.clone());
                 } else {
-                    display_fields.push(field.clone());
+                    display_fields.push(Box::new(field.clone()));
                 }
                 store_fields.push(Box::new(field));
             }
             FieldType::List(field) => {
-                store_fields.push(Box::new(field));
+                store_fields.push(Box::new(field.clone()));
+                display_fields.push(Box::new(field.clone()));
             }
             FieldType::Other => continue,
         }
@@ -526,12 +553,14 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
     let display_implementation = if let Some(title_field) = title_field {
         let simple_displays = store_fields
             .iter()
-            .map(|f| f.get_simple_display())
+            .enumerate()
+            .map(|(i, f)| f.get_simple_display(i))
             .collect::<Vec<_>>();
 
         let fancy_displays = display_fields
             .iter()
-            .map(|f| f.get_fancy_display())
+            .enumerate()
+            .map(|(i, f)| f.get_fancy_display(i))
             .collect::<Vec<_>>();
 
         let title_display = title_field.get_title_display();
