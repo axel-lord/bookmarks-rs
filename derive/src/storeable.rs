@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
 use proc_macro::TokenStream;
-use quote::{format_ident, quote, ToTokens};
-use syn::{self, token::At};
+use proc_macro2::TokenStream as TokenStream2;
+use quote::quote;
+use syn;
 
 // pub fn impl_storeable_old(ast: &syn::DeriveInput) -> TokenStream {
 //     let name = &ast.ident;
@@ -375,6 +374,24 @@ use syn::{self, token::At};
 //     gen.into()
 // }
 
+trait AnyField {
+    fn get_ident(&self) -> &syn::Ident;
+    fn get_key(&self) -> &syn::Ident;
+    fn get_push_match(&self) -> TokenStream2;
+    fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2;
+    fn get_create_line_param(&self) -> TokenStream2;
+    fn get_create_line_format_param(&self) -> TokenStream2;
+    fn get_new_init(&self, line: &syn::Ident) -> TokenStream2;
+
+    fn get_ident_string(&self) -> String {
+        self.get_ident().to_string()
+    }
+
+    fn get_set_ident(&self) -> syn::Ident {
+        quote::format_ident!("set_{}", self.get_ident())
+    }
+}
+
 #[derive(Debug, Clone)]
 struct FieldSingle {
     ident: syn::Ident,
@@ -386,6 +403,129 @@ struct FieldList {
     ident: syn::Ident,
     key: syn::Ident,
     singular: syn::Ident,
+}
+
+impl FieldList {
+    fn get_push_ident(&self) -> syn::Ident {
+        quote::format_ident!("push_{}", self.singular)
+    }
+}
+
+impl AnyField for FieldList {
+    fn get_key(&self) -> &syn::Ident {
+        &self.key
+    }
+
+    fn get_ident(&self) -> &syn::Ident {
+        &self.ident
+    }
+
+    fn get_push_match(&self) -> TokenStream2 {
+        let match_str = self.get_ident_string();
+        let push_ident = self.get_push_ident();
+        quote! {#match_str => self.#push_ident(value),}
+    }
+
+    fn get_create_line_param(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {#ident: impl Iterator<Item = &'a str>,}
+    }
+
+    fn get_create_line_format_param(&self) -> TokenStream2 {
+        let token = self.get_key();
+        let ident = self.get_ident();
+        quote! {
+            #token,
+            bookmark_storage::join_with_delim(#ident),
+        }
+    }
+
+    fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {#ident: #line.extend(#ident).into(),}
+    }
+
+    fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        let push_ident = self.get_push_ident();
+        let set_ident = self.get_set_ident();
+        let single_ident = &self.singular;
+
+        quote! {
+            pub fn #ident(&self) -> impl Iterator<Item = &str> {
+                self.#ident.get(&self.#line)
+            }
+
+            pub fn #set_ident<'a>(
+                &mut self,
+                #ident: impl Iterator<Item = &'a str>,
+            ) -> &mut Self {
+                self.#ident.clear();
+
+                for item in tags {
+                    self.#ident.push(self.#line.push(&item).into());
+                }
+
+                self
+            }
+
+            pub fn #push_ident(&mut self, #single_ident: &str) -> &mut Self {
+                self.#ident.push(self.#line.push(#single_ident).into());
+
+                self
+            }
+        }
+    }
+}
+
+impl AnyField for FieldSingle {
+    fn get_key(&self) -> &syn::Ident {
+        &self.key
+    }
+
+    fn get_ident(&self) -> &syn::Ident {
+        &self.ident
+    }
+
+    fn get_push_match(&self) -> TokenStream2 {
+        Default::default()
+    }
+
+    fn get_create_line_param(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {#ident: &str,}
+    }
+
+    fn get_create_line_format_param(&self) -> TokenStream2 {
+        let token = self.get_key();
+        let ident = self.get_ident();
+        quote! {
+            #token,
+            #ident,
+        }
+    }
+
+    fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {#ident: #line.push(#ident).into(),}
+    }
+
+    fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        let set_ident = self.get_set_ident();
+
+        quote! {
+            pub fn #ident(&self) -> &str {
+                self.#ident.get(&self.#line)
+            }
+
+            pub fn #set_ident(&mut self, #ident: &str) -> &mut Self {
+                self.#ident = self.#line.push(#ident).into();
+
+                self
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -402,31 +542,6 @@ enum AttrType {
     Content,
     Key(syn::Ident),
     Other,
-}
-
-trait AnyField {
-    fn get_ident(&self) -> &syn::Ident;
-    fn get_key(&self) -> &syn::Ident;
-}
-
-impl AnyField for FieldList {
-    fn get_key(&self) -> &syn::Ident {
-        &self.key
-    }
-
-    fn get_ident(&self) -> &syn::Ident {
-        &self.ident
-    }
-}
-
-impl AnyField for FieldSingle {
-    fn get_key(&self) -> &syn::Ident {
-        &self.key
-    }
-
-    fn get_ident(&self) -> &syn::Ident {
-        &self.ident
-    }
 }
 
 fn parse_attr(attr: &syn::Attribute) -> AttrType {
@@ -589,13 +704,73 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         panic!("no field tagged line present");
     }
 
-    let conversions = conversion_boilerplate(name);
+    let line = line.unwrap();
+
+    //let conversions = conversion_boilerplate(name);
+
+    let push_matches = store_fields
+        .iter()
+        .map(|f| f.get_push_match())
+        .collect::<Vec<_>>();
+
+    let field_access = store_fields
+        .iter()
+        .map(|f| f.get_field_methods(&line))
+        .collect::<Vec<_>>();
+
+    let create_line_params = store_fields
+        .iter()
+        .map(|f| f.get_create_line_param())
+        .collect::<Vec<_>>();
+
+    let create_line_format_params = store_fields
+        .iter()
+        .map(|f| f.get_create_line_format_param())
+        .collect::<Vec<_>>();
+
+    let create_line_format_string = std::iter::repeat("{}")
+        .take(store_fields.len() * 2)
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    let new_fields = store_fields
+        .iter()
+        .map(|f| f.get_new_init(&line))
+        .collect::<Vec<_>>();
 
     quote! {
-        #conversions
+        // #conversions
 
         impl #name {
+            fn push(
+                &mut self,
+                property: &str,
+                value: &str,
+            ) -> Result<&mut Self, bookmark_storage::PropertyErr> {
+                match property {
+                    #(
+                        #push_matches
+                    )*
+                    _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+                };
+                Ok(self)
+            }
 
+            pub fn create_line<'a>(#(#create_line_params)*) -> String {
+                format!(#create_line_format_string, #(#create_line_format_params)*)
+            }
+
+            pub fn new<'a>(#(#create_line_params)*) -> Self {
+                let mut #line = bookmark_storage::content_string::ContentString::new();
+                Self {
+                    #(#new_fields)*
+                    #line,
+                }
+            }
+
+            #(
+                #field_access
+            )*
         }
 
     }
