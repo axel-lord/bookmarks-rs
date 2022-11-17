@@ -155,7 +155,7 @@ impl Reference {
             children: line.extend(children).into(),
             info: line.push(info).into(),
             tags: line.extend(tags).into(),
-            line: Default::default(),
+            line,
         }
     }
 
