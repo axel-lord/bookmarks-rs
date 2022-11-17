@@ -46,6 +46,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-test"
+version = "0.1.0"
+dependencies = [
+ "bookmark-derive",
+ "bookmark-storage",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -3,6 +3,7 @@ members = [
 	"library",
 	"application",
 	"derive",
+	"derive-test",
 	"storage",
 	"reference",
 ]
