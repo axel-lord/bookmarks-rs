@@ -1,4 +1,4 @@
-use std::{fs::File};
+use std::fs::File;
 
 use crate::{
     command::{Command, CommandErr},
@@ -10,14 +10,14 @@ use bookmark_storage::Listed;
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load<T>
 where
-    T: Listed + Clone,
+    T: Listed,
 {
     destination: shared::Storage<T>,
 }
 
 impl<T> Command for Load<T>
 where
-    T: Listed + Clone,
+    T: Listed,
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
@@ -35,7 +35,11 @@ where
             )));
         }
 
-        self.destination.borrow_mut().extend_from_slice(&loaded);
+        // self.destination.borrow_mut().extend_from_slice(&loaded);
+        let mut destination = self.destination.borrow_mut();
+        for loaded in loaded.into_iter() {
+            destination.push(loaded);
+        }
 
         Ok(())
     }

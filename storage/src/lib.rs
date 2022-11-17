@@ -165,13 +165,23 @@ impl ListField {
     }
 }
 
-pub fn join_with_delim<'a>(fields: impl Iterator<Item = &'a str>) -> String {
+pub fn join_with_delim<'a>(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
     use lazy_static::lazy_static;
     lazy_static! {
         static ref DELIM: String = format!(" {} ", token::DELIM);
     }
 
-    fields.collect::<Vec<_>>().join(&DELIM)
+    let mut out = String::new();
+
+    for i in fields.by_ref().take(1) {
+        out += i.as_ref();
+    }
+
+    for i in fields {
+        out += i.as_ref();
+    }
+
+    out
 }
 
 pub trait Storeable: Sized {

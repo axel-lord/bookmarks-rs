@@ -1,387 +1,20 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn;
-
-// pub fn impl_storeable_old(ast: &syn::DeriveInput) -> TokenStream {
-//     let name = &ast.ident;
-//
-//     #[derive(Clone, Copy, Debug)]
-//     enum TokenType {
-//         TString,
-//         TComp,
-//     }
-//
-//     use TokenType::*;
-//
-//     let syn::Data::Struct(ref data_struct) = ast.data else {
-//         panic!("Storeable can only be derived on structs");
-//     };
-//
-//     let mut line = None;
-//     let mut strings = Vec::new();
-//     let mut composites = HashMap::new();
-//
-//     let mut all = Vec::new();
-//     let mut tokens = HashMap::new();
-//
-//     let mut field_order = Vec::new();
-//
-//     for field in data_struct.fields.iter() {
-//         if field.ident.is_none() {
-//             panic!("macro should be used on structs with named fields");
-//         }
-//
-//         field_order.push(field.ident.clone().unwrap());
-//
-//         for attr in field.attrs.iter() {
-//             let Ok(meta) = attr.parse_meta() else {
-//                 panic!("{:#?}", attr);
-//             };
-//
-//             match meta {
-//                 syn::Meta::Path(ref path) => {
-//                     let Some(ident) = path.get_ident() else {
-//                         panic!("attribute should be a single token\n{:#?}", path);
-//                     };
-//
-//                     match ident.to_string().as_str() {
-//                         "line" => line = Some(field.clone()),
-//                         "string" => {
-//                             strings.push(field.ident.clone().unwrap());
-//                             all.push((field.ident.clone().unwrap(), TString));
-//                         }
-//                         _ => panic!(
-//                             "only string and list supported in this context\n{:#?}",
-//                             path
-//                         ),
-//                     }
-//                 }
-//                 syn::Meta::List(ref list) => {
-//                     let Some(ident) = list.path.get_ident() else {
-//                         panic!("attribute should be a single token\n{:#?}", list);
-//                     };
-//
-//                     match ident.to_string().as_str() {
-//                         "composite" => {
-//                             let items: Vec<_> = list.nested.iter().collect();
-//                             if items.len() != 1 {
-//                                 panic!("composite should contain a single value");
-//                             }
-//
-//                             let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
-//                                 panic!("contents of composite should be a single token");
-//                             };
-//
-//                             let Some(of_ident) = path.get_ident() else {
-//                                 panic!("contents of composite should be a single token");
-//                             };
-//
-//                             composites.insert(field.ident.clone().unwrap(), of_ident.clone());
-//                             all.push((field.ident.clone().unwrap(), TComp));
-//                         }
-//                         "token" => {
-//                             let items: Vec<_> = list.nested.iter().collect();
-//                             if items.len() != 1 {
-//                                 panic!("token should contain a single value");
-//                             }
-//
-//                             let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
-//                                 panic!("contents of token should be a single token");
-//                             };
-//
-//                             tokens.insert(field.ident.clone().unwrap(), path.clone());
-//                         }
-//                         _ => panic!(
-//                             "only composite and token supported in this context\n{:#?}",
-//                             list
-//                         ),
-//                     }
-//                 }
-//                 _ => panic!("string, list, and composite supported\n{:#?}", meta),
-//             }
-//         }
-//
-//         if all.len() != tokens.len() {
-//             panic!("there should be a token on every field that is storeable")
-//         }
-//     }
-//
-//     let Some(line) = line else {
-//         panic!("could not find member annotated with line");
-//     };
-//
-//     let line_ident = line.ident.unwrap();
-//     let (comp, comp_of): (Vec<_>, Vec<_>) = composites.iter().unzip();
-//
-//     let re_contents: Vec<_> = all
-//         .iter()
-//         .map(|(i, _)| {
-//             let tok = &tokens[i];
-//             quote! {
-//                 #tok,
-//                 bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-//             }
-//         })
-//         .collect();
-//
-//     let build_fields: Vec<_> = field_order
-//         .iter()
-//         .map(|i| {
-//             if i == &line_ident {
-//                 quote! {line: Some(bookmark_storage::content_string::ContentString::UnappendedTo(#i))}
-//             } else {
-//                 quote! {#i}
-//             }
-//         })
-//         .collect();
-//
-//     let create_line_format = std::iter::repeat("{} {}")
-//         .take(all.len())
-//         .collect::<Vec<_>>()
-//         .join(" ");
-//
-//     let create_line_iter: Vec<_> = all
-//         .iter()
-//         .map(|(i, t)| {
-//             [
-//                 tokens[i].to_token_stream(),
-//                 match t {
-//                     TString => i.to_token_stream(),
-//                     TComp => {
-//                         quote! {
-//                             #i.collect::<Vec<&str>>()
-//                                 .join(&[" ", bookmark_storage::token::DELIM, " "].concat())
-//                         }
-//                     }
-//                 },
-//             ]
-//             .into_iter()
-//         })
-//         .flatten()
-//         .collect();
-//
-//     let parse_fields: Vec<_> = all
-//         .iter()
-//         .enumerate()
-//         .map(|(i, (id, ty))| {
-//             let c = i + 1;
-//             match ty {
-//                 TComp => {
-//                     let of_id = &composites[id];
-//                     quote! {
-//                         let #of_id = captures.get(#c).ok_or_else(err)?.range();
-//                         let #id = bookmark_storage::pattern_match::split_by_delim_to_ranges(&line[#of_id.clone()]);
-//                     }
-//                 }
-//                 TString => {
-//                     quote! {let #id = captures.get(#c).ok_or_else(err)?.range();}
-//                 }
-//             }
-//         })
-//         .collect();
-//
-//     let all_simple: Vec<_> = all.iter().map(|(i, _)| i).collect();
-//
-//     let new_args: Vec<_> = all
-//         .iter()
-//         .map(|(i, t)| match t {
-//             TString => quote! {
-//                 #i: &str
-//             },
-//             TComp => quote! {
-//                 #i: impl Iterator<Item = &'a str>
-//             },
-//         })
-//         .collect();
-//
-//     let adders: Vec<_> = comp_of
-//         .iter()
-//         .map(|i| format_ident!("{}_push", i))
-//         .collect();
-//
-//     let get_fields: Vec<_> = strings.iter().map(|s| s.to_string()).collect();
-//     let get_list_fields: Vec<_> = comp.iter().map(|s| s.to_string()).collect();
-//
-//     let string_setters: Vec<_> = strings.iter().map(|i| format_ident!("set_{i}")).collect();
-//     let comp_setters: Vec<_> = comp.iter().map(|i| format_ident!("set_{i}")).collect();
-//
-//     // --- //
-//     // gen //
-//     // --- //
-//
-//     let gen = quote! {
-//         impl Clone for #name {
-//             fn clone(&self) -> Self {
-//                 Self::with_string(self.to_line(), None).unwrap()
-//             }
-//         }
-//         impl From<#name> for String {
-//             fn from(c: #name) -> Self {
-//                 c.to_line()
-//             }
-//         }
-//         impl bookmark_storage::Storeable for #name {
-//             fn is_edited(&self) -> bool {
-//                 self.#line_ident.is_appended_to()
-//             }
-//
-//             fn with_string(line: String, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
-//                 use lazy_static::lazy_static;
-//                 lazy_static! {
-//                     static ref LINE_RE: regex::Regex = regex::Regex::new(
-//                         &[
-//                             r#"^"#,
-//                             #(
-//                             #re_contents
-//                             )*
-//                             r"$",
-//                         ]
-//                         .concat()
-//                     )
-//                     .unwrap();
-//                 }
-//
-//                 let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
-//
-//                 let captures = LINE_RE.captures(&line).ok_or_else(err)?;
-//
-//                 #(
-//                 #parse_fields
-//                 )*
-//
-//                 Ok(Self{
-//                     #(
-//                     #build_fields
-//                     ),*
-//                 })
-//             }
-//             fn with_str(
-//                 line: &str,
-//                 line_num: Option<usize>,
-//             ) -> Result<Self, bookmark_storage::ParseErr> {
-//                 Self::with_string(line.into(), line_num)
-//             }
-//             fn to_line(&self) -> String {
-//                 if !self.#line_ident.is_appended_to() {
-//                     self.#line_ident.ref_any().into()
-//                 } else {
-//                     Self::create_line(#(self.#all_simple()),*)
-//                 }
-//             }
-//
-//             fn get(&self, property: &str) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
-//                 match property {
-//                 #(
-//                     #get_fields => Ok(bookmark_storage::Property::Single(self.#strings().into())),
-//                 )*
-//                 #(
-//                     #get_list_fields => Ok(bookmark_storage::Property::List(self.#comp().map(String::from).collect())),
-//                 )*
-//                     _ => Err(bookmark_storage::PropertyErr::DoesNotExist(property.into()))
-//                 }
-//             }
-//
-//             fn set(&mut self, property: &str, value: bookmark_storage::Property) -> Result<(), bookmark_storage::PropertyErr> {
-//                 match (property, value) {
-//                     #(
-//                     (#get_fields, bookmark_storage::Property::Single(value)) => {
-//                         self.#string_setters(&value);
-//                     }
-//                     )*
-//                     #(
-//                     (#get_list_fields, bookmark_storage::Property::List(value)) => {
-//                        self.#comp_setters(value.iter());
-//                     }
-//                     )*
-//                     _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
-//                 }
-//                 Ok(())
-//             }
-//
-//             fn push(&mut self, property: &str, value: &str) -> Result<(), bookmark_storage::PropertyErr> {
-//                 match property {
-//                     #(
-//                     #get_list_fields => self.#adders(value),
-//                     )*
-//                     _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
-//                 }
-//                 Ok(())
-//             }
-//
-//         }
-//         impl #name {
-//             pub fn new<'a>(#(#new_args),*) -> Self {
-//                 Self::with_string(Self::create_line(#(#all_simple),*), None).unwrap()
-//             }
-//
-//             pub fn create_line<'a>(#(#new_args),*) -> String {
-//                 format!(
-//                     #create_line_format,
-//                     #(
-//                     #create_line_iter
-//                     ),*
-//                 )
-//             }
-//
-//             fn raw_line(&self) -> &str {
-//                 self.#line_ident.ref_any()
-//             }
-//
-//             #(
-//                 fn #comp_of(&self) -> &str {
-//                     &self.raw_line()[self.#comp_of.clone()]
-//                 }
-//                 pub fn #comp(&self) -> impl Iterator<Item = &str> {
-//                     self.#comp.iter().map(|r| &self.#comp_of()[r.clone()])
-//                 }
-//                 pub fn #adders(&mut self, #comp_of: &str) {
-//                     self.#comp.push(
-//                         self.#line_ident.append(#comp_of)
-//                     );
-//                 }
-//             )*
-//
-//             #(
-//                 pub fn #strings(&self) -> &str {
-//                     &self.raw_line()[self.#strings.clone()]
-//                 }
-//             )*
-//
-//             #(
-//                 pub fn #string_setters(&mut self, value: &str) {
-//                     let range = self.#line_ident.append(value);
-//
-//                     self.#strings = range;
-//                 }
-//             )*
-//
-//             #(
-//                 pub fn #comp_setters<'a, I>(&mut self, value: impl Iterator<Item = &'a I>)
-//                 where
-//                     I: 'a + std::ops::Deref<Target = str> + std::fmt::Debug,
-//                 {
-//                     self.#comp.clear();
-//
-//                     for item in value {
-//                         self.#adders(item);
-//                     }
-//                 }
-//             )*
-//         }
-//     };
-//
-//     gen.into()
-// }
 
 trait AnyField {
     fn get_ident(&self) -> &syn::Ident;
-    fn get_key(&self) -> &syn::Ident;
+    fn get_key(&self) -> TokenStream2;
     fn get_push_match(&self) -> TokenStream2;
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2;
     fn get_create_line_param(&self) -> TokenStream2;
     fn get_create_line_format_param(&self) -> TokenStream2;
     fn get_new_init(&self, line: &syn::Ident) -> TokenStream2;
+    fn get_set_match(&self) -> TokenStream2;
+    fn get_get_match(&self) -> TokenStream2;
+    fn get_to_line_call(&self) -> TokenStream2;
+    fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2;
 
     fn get_ident_string(&self) -> String {
         self.get_ident().to_string()
@@ -395,13 +28,13 @@ trait AnyField {
 #[derive(Debug, Clone)]
 struct FieldSingle {
     ident: syn::Ident,
-    key: syn::Ident,
+    key: TokenStream2,
 }
 
 #[derive(Debug, Clone)]
 struct FieldList {
     ident: syn::Ident,
-    key: syn::Ident,
+    key: TokenStream2,
     singular: syn::Ident,
 }
 
@@ -412,8 +45,8 @@ impl FieldList {
 }
 
 impl AnyField for FieldList {
-    fn get_key(&self) -> &syn::Ident {
-        &self.key
+    fn get_key(&self) -> TokenStream2 {
+        self.key.clone()
     }
 
     fn get_ident(&self) -> &syn::Ident {
@@ -445,6 +78,41 @@ impl AnyField for FieldList {
         quote! {#ident: #line.extend(#ident).into(),}
     }
 
+    fn get_set_match(&self) -> TokenStream2 {
+        let set_ident = self.get_set_ident();
+        let ident_string = self.get_ident_string();
+
+        quote! {(#ident_string, bookmark_storage::Property::List(values)) => {
+            self.#set_ident(values.iter());
+        }}
+    }
+
+    fn get_get_match(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        let ident_string = self.get_ident_string();
+        quote! {
+            #ident_string => {
+                bookmark_storage::Property::List(self.#ident().map(String::from).collect())
+            }
+        }
+    }
+
+    fn get_to_line_call(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {self.#ident()}
+    }
+
+    fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {
+            let group = captures.get(#number).ok_or_else(err)?.range();
+            let #ident =
+                bookmark_storage::pattern_match::split_list_field(#line.get(group.clone()).unwrap())
+                    .map(|f| f + group.start)
+                    .collect();
+        }
+    }
+
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = self.get_ident();
         let push_ident = self.get_push_ident();
@@ -458,12 +126,12 @@ impl AnyField for FieldList {
 
             pub fn #set_ident<'a>(
                 &mut self,
-                #ident: impl Iterator<Item = &'a str>,
+                #ident: impl Iterator<Item = impl AsRef<str>>,
             ) -> &mut Self {
                 self.#ident.clear();
 
-                for item in tags {
-                    self.#ident.push(self.#line.push(&item).into());
+                for item in #ident {
+                    self.#ident.push(self.#line.push(item.as_ref()).into());
                 }
 
                 self
@@ -479,8 +147,8 @@ impl AnyField for FieldList {
 }
 
 impl AnyField for FieldSingle {
-    fn get_key(&self) -> &syn::Ident {
-        &self.key
+    fn get_key(&self) -> TokenStream2 {
+        self.key.clone()
     }
 
     fn get_ident(&self) -> &syn::Ident {
@@ -508,6 +176,37 @@ impl AnyField for FieldSingle {
     fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = self.get_ident();
         quote! {#ident: #line.push(#ident).into(),}
+    }
+
+    fn get_set_match(&self) -> TokenStream2 {
+        let set_ident = self.get_set_ident();
+        let ident_string = self.get_ident_string();
+
+        quote! {(#ident_string, bookmark_storage::Property::Single(value)) => {
+            self.#set_ident(&value);
+        }}
+    }
+
+    fn get_get_match(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        let ident_string = self.get_ident_string();
+        quote! {
+            #ident_string => {
+                bookmark_storage::Property::Single(self.#ident().into())
+            }
+        }
+    }
+
+    fn get_to_line_call(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {&self.#ident()}
+    }
+
+    fn get_capture_extract(&self, number: usize, _line: &syn::Ident) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote! {
+            let #ident = captures.get(#number).ok_or_else(err)?.range().into();
+        }
     }
 
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
@@ -540,7 +239,7 @@ enum AttrType {
     Single,
     List { singular: syn::Ident },
     Content,
-    Key(syn::Ident),
+    Key(TokenStream2),
     Other,
 }
 
@@ -590,14 +289,14 @@ fn parse_attr(attr: &syn::Attribute) -> AttrType {
                 }
 
                 let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
-                     panic!("contents of token should be a single token");
+                     panic!("contents of token should be a single token\n{:#?}", items[0]);
                  };
 
-                let Some(key) = path.get_ident() else {
-                     panic!("contents of token should be a single token");
-                };
+                // let Some(key) = path.get_ident() else {
+                //      panic!("contents of token should be a single token\n{:#?}", path);
+                // };
 
-                return AttrType::Key(key.clone());
+                return AttrType::Key(path.clone().to_token_stream());
             }
             _ => return AttrType::Other,
         }
@@ -706,7 +405,7 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
 
     let line = line.unwrap();
 
-    //let conversions = conversion_boilerplate(name);
+    let conversions = conversion_boilerplate(name);
 
     let push_matches = store_fields
         .iter()
@@ -738,10 +437,115 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
         .map(|f| f.get_new_init(&line))
         .collect::<Vec<_>>();
 
-    quote! {
-        // #conversions
+    let set_matches = store_fields
+        .iter()
+        .map(|f| f.get_set_match())
+        .collect::<Vec<_>>();
 
-        impl #name {
+    let get_matches = store_fields
+        .iter()
+        .map(|f| f.get_get_match())
+        .collect::<Vec<_>>();
+
+    let to_line_calls = store_fields
+        .iter()
+        .map(|f| f.get_to_line_call())
+        .collect::<Vec<_>>();
+
+    let field_names = store_fields
+        .iter()
+        .map(|f| f.get_ident())
+        .collect::<Vec<_>>();
+
+    let keys = store_fields
+        .iter()
+        .map(|f| {
+            let key = f.get_key();
+            quote! {
+                #key,
+                bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let capture_extracts = store_fields
+        .iter()
+        .enumerate()
+        .map(|(i, f)| f.get_capture_extract(i + 1, &line))
+        .collect::<Vec<_>>();
+
+    quote! {
+        #conversions
+
+        impl bookmark_storage::Storeable for #name {
+            fn with_string(
+                #line: String,
+                line_num: Option<usize>,
+            ) -> Result<Self, bookmark_storage::ParseErr> {
+                use lazy_static::lazy_static;
+                lazy_static! {
+                    static ref LINE_RE: regex::Regex = regex::Regex::new(
+                        &[
+                            "^",
+                            #(
+                                #keys
+                            )*
+                            "$",
+                        ]
+                        .concat()
+                    )
+                    .unwrap();
+                }
+
+                let err = || bookmark_storage::ParseErr::Line(Some(#line.clone()), line_num);
+                let captures = LINE_RE.captures(&#line).ok_or_else(err)?;
+
+                #(
+                    #capture_extracts
+                )*
+
+                Ok(Self {
+                    #line: #line.into(),
+                    #(#field_names,)*
+                })
+            }
+            fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
+                Self::with_string(line.into(), line_num)
+            }
+
+            fn to_line(&self) -> String {
+                Self::create_line(#(#to_line_calls),*)
+            }
+
+            fn is_edited(&self) -> bool {
+                self.#line.is_appended_to()
+            }
+
+            fn get(
+                &self,
+                property: &str,
+            ) -> Result<bookmark_storage::Property, bookmark_storage::PropertyErr> {
+                Ok(match property {
+                    #(
+                        #get_matches
+                    )*
+                    _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+                })
+            }
+            fn set(
+                &mut self,
+                property: &str,
+                value: bookmark_storage::Property,
+            ) -> Result<&mut Self, bookmark_storage::PropertyErr> {
+                match (property, value) {
+                    #(
+                        #set_matches
+                    )*
+                    _ => return Err(bookmark_storage::PropertyErr::DoesNotExist(property.into())),
+                };
+                Ok(self)
+            }
+
             fn push(
                 &mut self,
                 property: &str,
@@ -755,6 +559,9 @@ pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
                 };
                 Ok(self)
             }
+        }
+
+        impl #name {
 
             pub fn create_line<'a>(#(#create_line_params)*) -> String {
                 format!(#create_line_format_string, #(#create_line_format_params)*)

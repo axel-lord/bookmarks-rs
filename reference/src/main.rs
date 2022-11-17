@@ -124,11 +124,11 @@ impl bookmark_storage::Storeable for Reference {
 }
 
 impl Reference {
-    pub fn create_line<'a>(
+    pub fn create_line(
         name: &str,
-        children: impl Iterator<Item = &'a str>,
+        children: impl Iterator<Item = impl AsRef<str>>,
         info: &str,
-        tags: impl Iterator<Item = &'a str>,
+        tags: impl Iterator<Item = impl AsRef<str>>,
     ) -> String {
         format!(
             "{} {} {} {} {} {} {} {}",
@@ -145,9 +145,9 @@ impl Reference {
 
     pub fn new<'a>(
         name: &str,
-        children: impl 'a + Iterator<Item = &'a str>,
+        children: impl 'a + Iterator<Item = impl AsRef<str>>,
         info: &str,
-        tags: impl 'a + Iterator<Item = &'a str>,
+        tags: impl 'a + Iterator<Item = impl AsRef<str>>,
     ) -> Self {
         let mut line = bookmark_storage::content_string::ContentString::new();
         Self {
@@ -195,14 +195,11 @@ impl Reference {
         self.children.get(&self.line)
     }
 
-    pub fn set_children<'a>(
-        &mut self,
-        children: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
-    ) -> &mut Self {
+    pub fn set_children(&mut self, children: impl Iterator<Item = impl AsRef<str>>) -> &mut Self {
         self.children.clear();
 
         for item in children {
-            self.children.push(self.line.push(&item).into());
+            self.children.push(self.line.push(item.as_ref()).into());
         }
 
         self
@@ -222,14 +219,11 @@ impl Reference {
         self.tags.get(&self.line)
     }
 
-    pub fn set_tags<'a>(
-        &mut self,
-        tags: impl Iterator<Item = &'a (impl 'a + std::ops::Deref<Target = str>)>,
-    ) -> &mut Self {
+    pub fn set_tags(&mut self, tags: impl Iterator<Item = impl AsRef<str>>) -> &mut Self {
         self.tags.clear();
 
         for item in tags {
-            self.tags.push(self.line.push(&item).into());
+            self.tags.push(self.line.push(item.as_ref()).into());
         }
 
         self

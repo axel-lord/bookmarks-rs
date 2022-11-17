@@ -1,6 +1,6 @@
 use crate::{token, ContentString};
-use bookmark_storage::{Field, ListField, Section, Storeable};
-use std::{collections::HashMap, error::Error, ops::Range};
+use bookmark_storage::{Field, ListField, Section};
+use std::{collections::HashMap, error::Error};
 
 #[derive(Debug, bookmark_derive::Storeable)]
 pub struct Category {
