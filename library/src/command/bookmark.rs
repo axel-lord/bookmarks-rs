@@ -26,78 +26,65 @@ impl Bookmark {
         buffer: shared::Buffer,
         selected_bookmark: shared::Selected,
     ) -> Box<Self> {
-        let mut subcommand = CommandMap::new();
-        subcommand.set_name(name);
-
-        subcommand.push(
-            "list",
-            None,
-            list::List::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "filter",
-            None,
-            filter::Filter::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "filter-inv",
-            None,
-            filter::FilterInv::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "regex",
-            None,
-            regex::Regex::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "regex-inv",
-            None,
-            regex::RegexInv::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "count",
-            None,
-            count::Count::build(bookmarks.clone(), buffer.clone()),
-        );
-        subcommand.push("load", None, Load::build(bookmarks.clone()));
-
-        subcommand.push(
-            "save",
-            None,
-            save::Save::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        subcommand.push(
-            "select",
-            Some("select a bookmark\nusage: select INDEX"),
-            select::Select::build(bookmarks.clone(), selected_bookmark.clone()),
-        );
-
-        subcommand.push(
-            "print",
-            Some("print selected bookmark\nusage: print"),
-            print::Print::build(bookmarks.clone(), selected_bookmark.clone()),
-        );
-
-        subcommand.push(
-            "new",
-            Some("add a new empty bookmark"),
-            new::New::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
-        );
-
-        subcommand.push(
-            "set",
-            Some("set a value on a bookmark\nusage: set VALUE [VALUES, [...]]"),
-            set::Set::build(bookmarks.clone(), selected_bookmark.clone()),
-        );
-
         Box::new(Self {
-            command_map: subcommand,
+            command_map: CommandMap::new()
+                .set_name(name)
+                .push(
+                    "list",
+                    None,
+                    list::List::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "filter",
+                    None,
+                    filter::Filter::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "filter-inv",
+                    None,
+                    filter::FilterInv::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "regex",
+                    None,
+                    regex::Regex::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "regex-inv",
+                    None,
+                    regex::RegexInv::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "count",
+                    None,
+                    count::Count::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push("load", None, Load::build(bookmarks.clone()))
+                .push(
+                    "save",
+                    None,
+                    save::Save::build(bookmarks.clone(), buffer.clone()),
+                )
+                .push(
+                    "select",
+                    Some("select a bookmark\nusage: select INDEX"),
+                    select::Select::build(bookmarks.clone(), selected_bookmark.clone()),
+                )
+                .push(
+                    "print",
+                    Some("print selected bookmark\nusage: print"),
+                    print::Print::build(bookmarks.clone(), selected_bookmark.clone()),
+                )
+                .push(
+                    "new",
+                    Some("add a new empty bookmark"),
+                    new::New::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
+                )
+                .push(
+                    "set",
+                    Some("set a value on a bookmark\nusage: set VALUE [VALUES, [...]]"),
+                    set::Set::build(bookmarks.clone(), selected_bookmark.clone()),
+                ),
         })
     }
 }

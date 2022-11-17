@@ -30,23 +30,30 @@ impl Debug for CommandEntry {
 }
 
 #[derive(Default, Debug)]
-pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String);
+pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String, Option<String>);
 
 impl<'a> CommandMap<'a> {
     pub fn new() -> Self {
         Default::default()
     }
 
-    pub fn push(&mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) {
+    pub fn push(mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) -> Self {
         self.0.insert(name, CommandEntry::new(command, help));
+        self
     }
 
-    pub fn set_name(&mut self, name: String) {
+    pub fn set_name(mut self, name: String) -> Self {
         self.1 = name;
+        self
     }
 
     pub fn name(&self) -> &str {
         &self.1
+    }
+
+    pub fn set_lookup_backup(mut self, backup: Option<String>) -> Self {
+        self.2 = backup;
+        self
     }
 
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
@@ -71,6 +78,15 @@ impl<'a> CommandMap<'a> {
             _ => {
                 if let Some(command) = self.0.get(name) {
                     command.command.borrow_mut().call(args)
+                } else if let Some(ref lookup_backup) = self.2 {
+                    let Some(command) = self.0.get(lookup_backup.as_str()) else {
+                        return Err(CommandErr::Lookup);
+                    };
+
+                    let mut forward_args = vec![name.into()];
+                    forward_args.extend(args.iter().cloned());
+
+                    command.command.borrow_mut().call(&forward_args)
                 } else {
                     Err(CommandErr::Lookup)
                 }
@@ -93,7 +109,6 @@ impl<'a> CommandMap<'a> {
 
 impl CommandMap<'static> {
     pub fn build(bookmarks: shared::Bookmarks, categories: shared::Categroies) -> Self {
-        let mut command_map = Self::new();
         let buffer = shared::Buffer::default();
         let selected_bookmark = shared::Selected::default();
 
@@ -105,54 +120,43 @@ impl CommandMap<'static> {
 
         use command::*;
 
-        command_map.push(
-            "reset",
-            None,
-            reset::Reset::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
-        );
-
-        command_map.push(
-            "category",
-            None,
-            category::Category::build("category".into(), categories.clone()),
-        );
-
-        command_map.push(
-            "bookmark",
-            None,
-            bookmark::Bookmark::build(
-                "bookmark".into(),
-                bookmarks.clone(),
-                buffer.clone(),
-                selected_bookmark.clone(),
-            ),
-        );
-
-        command_map.push(
-            "list",
-            Some("shorthand for bookmark list\nusage: list [COUNT [FROM]]"),
-            command::bookmark::list::List::build(bookmarks.clone(), buffer.clone()),
-        );
-
-        command_map.push(
-            "load",
-            None,
-            load::LoadAll::build(
-                categories.clone(),
-                bookmarks.clone(),
-                buffer.clone(),
-                selected_bookmark.clone(),
-            ),
-        );
-
-        command_map.push(
-            "save",
-            None,
-            save::SaveAll::build(categories.clone(), bookmarks.clone()),
-        );
-
-        command_map.push("debug", None, Box::new(command_debug));
-
-        command_map
+        Self::new()
+            .push(
+                "reset",
+                None,
+                reset::Reset::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
+            )
+            .push(
+                "category",
+                None,
+                category::Category::build("category".into(), categories.clone()),
+            )
+            .push(
+                "bookmark",
+                None,
+                bookmark::Bookmark::build(
+                    "bookmark".into(),
+                    bookmarks.clone(),
+                    buffer.clone(),
+                    selected_bookmark.clone(),
+                ),
+            )
+            .push(
+                "load",
+                None,
+                load::LoadAll::build(
+                    categories.clone(),
+                    bookmarks.clone(),
+                    buffer.clone(),
+                    selected_bookmark.clone(),
+                ),
+            )
+            .push(
+                "save",
+                None,
+                save::SaveAll::build(categories.clone(), bookmarks.clone()),
+            )
+            .push("debug", None, Box::new(command_debug))
+            .set_lookup_backup(Some("bookmark".into()))
     }
 }

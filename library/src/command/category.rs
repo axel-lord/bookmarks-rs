@@ -1,5 +1,3 @@
-
-
 use crate::{
     command::{load::Load, Command, CommandErr},
     command_map::CommandMap,
@@ -17,17 +15,13 @@ pub struct Category {
 
 impl Category {
     pub fn build(name: String, categories: shared::Categroies) -> Box<Self> {
-        let mut subcommand: Box<Self> = Default::default();
-        let command_map = &mut subcommand.command_map;
-        command_map.set_name(name);
-
-        command_map.push("load", None, Load::build(categories.clone()));
-
-        command_map.push("list", None, list::List::build(categories.clone()));
-
-        command_map.push("save", None, save::Save::build(categories.clone()));
-
-        subcommand
+        Box::new(Self {
+            command_map: CommandMap::new()
+                .set_name(name)
+                .push("load", None, Load::build(categories.clone()))
+                .push("list", None, list::List::build(categories.clone()))
+                .push("save", None, save::Save::build(categories.clone())),
+        })
     }
 }
 
