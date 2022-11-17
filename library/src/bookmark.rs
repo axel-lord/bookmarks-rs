@@ -33,32 +33,32 @@ impl Section for Bookmark {
     }
 }
 
-impl std::fmt::Display for Bookmark {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if !f.alternate() {
-            write!(f, "{} | {}", self.url(), self.description())?;
-
-            let mut tag_iter = self.tags();
-            if let Some(t) = tag_iter.next() {
-                write!(f, " | {}", t)?;
-            };
-
-            for t in tag_iter {
-                write!(f, ", {}", t)?
-            }
-        } else {
-            writeln!(f, "{}", self.description())?;
-            writeln!(f, "\turl: {}", self.url())?;
-
-            if self.tags.len() != 0 {
-                writeln!(
-                    f,
-                    "\ttags: [{}]",
-                    self.tags().collect::<Vec<_>>().join(", ")
-                )?;
-            }
-        }
-
-        Ok(())
-    }
-}
+// impl std::fmt::Display for Bookmark {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         if !f.alternate() {
+//             write!(f, "{} | {}", self.url(), self.description())?;
+//
+//             let mut tag_iter = self.tags();
+//             if let Some(t) = tag_iter.next() {
+//                 write!(f, " | {}", t)?;
+//             };
+//
+//             for t in tag_iter {
+//                 write!(f, ", {}", t)?
+//             }
+//         } else {
+//             writeln!(f, "{}", self.description())?;
+//             writeln!(f, "\turl: {}", self.url())?;
+//
+//             if self.tags.len() != 0 {
+//                 writeln!(
+//                     f,
+//                     "\ttags: [{}]",
+//                     self.tags().collect::<Vec<_>>().join(", ")
+//                 )?;
+//             }
+//         }
+//
+//         Ok(())
+//     }
+// }

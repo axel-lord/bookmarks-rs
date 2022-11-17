@@ -259,6 +259,37 @@ impl std::convert::TryFrom<&str> for Reference {
     }
 }
 
+impl std::fmt::Display for Reference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if !f.alternate() {
+            write!(f, "{}", "<name>")?;
+            write!(f, " {} ", self.name())?;
+
+            write!(f, "{}", "<children>")?;
+            let mut i = self.children();
+            for i in i.by_ref().take(1) {
+                write!(f, " {} ", i)?;
+            }
+            for i in i {
+                write!(f, "{} {} ", bookmark_storage::token::DELIM, i)?;
+            }
+
+            write!(f, "{}", "<info>")?;
+            write!(f, " {} ", self.info())?;
+
+            write!(f, "{}", "<tags>")?;
+            let mut i = self.tags();
+            for i in i.by_ref().take(1) {
+                write!(f, " {} ", i)?;
+            }
+            for i in i {
+                write!(f, "{} {} ", bookmark_storage::token::DELIM, i)?;
+            }
+        }
+        Ok(())
+    }
+}
+
 fn main() {
     use bookmark_storage::Storeable;
     let item = Reference::with_str(
