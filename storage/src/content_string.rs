@@ -61,7 +61,12 @@ impl ContentString {
         begin..end
     }
 
-    pub fn extend<'a>(&mut self, content: impl 'a + Iterator<Item = &'a str>) -> Vec<Field> {
-        content.map(|content| self.push(&content).into()).collect()
+    pub fn extend<'a>(
+        &mut self,
+        content: impl 'a + Iterator<Item = impl AsRef<str>>,
+    ) -> Vec<Field> {
+        content
+            .map(|content| self.push(content.as_ref()).into())
+            .collect()
     }
 }

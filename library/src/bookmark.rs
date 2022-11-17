@@ -1,8 +1,5 @@
-
-else {panic!"a field may only have one 
-else {panic!"a field may only have one kkuse crate::{token, ContentString};
-use bookmark_storage::{Field, ListField, Section, Storeable};
-use std::ops::Range;
+use crate::{token, ContentString};
+use bookmark_storage::{Field, ListField, Section};
 
 #[derive(Debug, bookmark_derive::Storeable)]
 pub struct Bookmark {
@@ -19,7 +16,7 @@ pub struct Bookmark {
 
     #[composite(tag)]
     #[token(token::unsorted::TAG)]
-    tags: Field,
+    tags: ListField,
 }
 
 impl Section for Bookmark {

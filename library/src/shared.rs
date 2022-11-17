@@ -63,12 +63,6 @@ impl Buffer {
         self.borrow().iter().map(Range::len).sum()
     }
 
-    pub fn bookmarks(&self, bookmarks: &Vec<Bookmark>) -> Vec<Bookmark> {
-        Self::bookmark_iter(&self.borrow(), bookmarks)
-            .map(|(_, bookmark)| bookmark.clone())
-            .collect()
-    }
-
     pub fn bookmark_iter<'a>(
         buffer: &'a Vec<Range<usize>>,
         bookmarks: &'a Vec<Bookmark>,

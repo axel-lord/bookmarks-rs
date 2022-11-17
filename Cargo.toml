@@ -7,3 +7,7 @@ members = [
 	"storage",
 	"reference",
 ]
+
+default-members = [
+	"application"
+]

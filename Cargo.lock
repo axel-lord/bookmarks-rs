@@ -51,6 +51,8 @@ version = "0.1.0"
 dependencies = [
  "bookmark-derive",
  "bookmark-storage",
+ "lazy_static",
+ "regex",
 ]
 
 [[package]]
