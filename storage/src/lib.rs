@@ -196,9 +196,6 @@ pub trait Storeable: Sized {
 }
 
 pub trait Section {
-    // fn token_begin() -> &'static str;
-    // fn token_end() -> &'static str;
-    // fn item_name() -> &'static str;
     const ITEM_NAME: &'static str;
     const TOKEN_BEGIN: &'static str;
     const TOKEN_END: &'static str;

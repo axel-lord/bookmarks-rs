@@ -4,6 +4,7 @@ pub mod list;
 pub mod load;
 pub mod reset;
 pub mod save;
+pub mod select;
 
 use std::error::Error;
 

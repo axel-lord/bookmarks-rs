@@ -6,7 +6,7 @@ use crate::{
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Count {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for Count {
@@ -20,7 +20,7 @@ impl Command for Count {
         println!(
             "total: {}, in buffer: {}",
             self.bookmarks.len(),
-            self.buffer.bookmark_count(),
+            self.bookmark_buffer.bookmark_count(),
         );
 
         Ok(())

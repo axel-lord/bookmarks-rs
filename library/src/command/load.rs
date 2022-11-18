@@ -2,7 +2,8 @@ use std::fs::File;
 
 use crate::{
     command::{Command, CommandErr},
-    reset, shared,
+    reset::ResetValues,
+    shared,
 };
 
 use bookmark_storage::Listed;
@@ -13,6 +14,7 @@ where
     T: Listed,
 {
     destination: shared::Storage<T>,
+    reset_values: ResetValues,
 }
 
 impl<T> Command for Load<T>
@@ -41,6 +43,8 @@ where
             destination.push(loaded);
         }
 
+        self.reset_values.reset();
+
         Ok(())
     }
 }
@@ -49,8 +53,7 @@ where
 pub struct LoadAll {
     categories: shared::Categroies,
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
-    selected_bookmark: shared::Selected,
+    reset_values: ResetValues,
 }
 
 impl Command for LoadAll {
@@ -83,11 +86,7 @@ impl Command for LoadAll {
 
         self.bookmarks.borrow_mut().extend(loaded.into_iter());
 
-        reset::reset(
-            &mut self.buffer.borrow_mut(),
-            &self.bookmarks.borrow(),
-            &mut self.selected_bookmark.borrow_mut(),
-        );
+        self.reset_values.reset();
 
         Ok(())
     }

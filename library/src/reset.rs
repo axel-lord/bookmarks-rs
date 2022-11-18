@@ -1,13 +1,17 @@
-use std::ops::Range;
+use crate::shared;
 
-use crate::bookmark::Bookmark;
+#[derive(Debug, Clone)]
+pub struct ResetValues {
+    pub bookmark_buffer: shared::Buffer,
+    pub bookmarks: shared::Bookmarks,
+    pub selected_bookmark: shared::Selected,
+    pub selected_category: shared::Selected,
+}
 
-pub fn reset(
-    buffer: &mut Vec<Range<usize>>,
-    bookmarks: &Vec<Bookmark>,
-    selected_bookmark: &mut Option<usize>,
-) {
-    buffer.clear();
-    buffer.push(0..bookmarks.len());
-    selected_bookmark.take();
+impl ResetValues {
+    pub fn reset(&self) {
+        self.bookmark_buffer.reset(&self.bookmarks);
+        self.selected_bookmark.clear();
+        self.selected_category.clear();
+    }
 }

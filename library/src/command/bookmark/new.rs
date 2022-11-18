@@ -1,14 +1,15 @@
 use crate::{
     bookmark::Bookmark,
     command::{Command, CommandErr},
-    reset, shared,
+    reset::ResetValues,
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct New {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
     selected: shared::Selected,
+    reset_values: ResetValues,
 }
 
 impl Command for New {
@@ -27,11 +28,7 @@ impl Command for New {
             std::iter::empty::<&str>(),
         ));
 
-        reset::reset(
-            &mut self.buffer.borrow_mut(),
-            &self.bookmarks.borrow(),
-            &mut self.selected.borrow_mut(),
-        );
+        self.reset_values.reset();
 
         self.selected.replace(index);
 
