@@ -7,47 +7,28 @@ pub fn gen_storeable_impl(
     line: &syn::Ident,
     store_fields: &Vec<Box<dyn AnyField>>,
 ) -> TokenStream2 {
-    let regex_parts = store_fields
-        .iter()
-        .map(|f| {
-            let key = f.get_key();
-            quote! {
-                #key,
-                bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-            }
-        })
-        .collect::<Vec<_>>();
+    let regex_parts = store_fields.iter().map(|f| {
+        let key = f.get_key();
+        quote! {
+            #key,
+            bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
+        }
+    });
 
     let capture_extracts = store_fields
         .iter()
         .enumerate()
-        .map(|(i, f)| f.get_capture_extract(i + 1, &line))
-        .collect::<Vec<_>>();
+        .map(|(i, f)| f.get_capture_extract(i + 1, &line));
 
-    let field_names = store_fields
-        .iter()
-        .map(|f| f.get_ident())
-        .collect::<Vec<_>>();
+    let field_names = store_fields.iter().map(|f| f.get_ident());
 
-    let to_line_calls = store_fields
-        .iter()
-        .map(|f| f.get_to_line_call())
-        .collect::<Vec<_>>();
+    let to_line_calls = store_fields.iter().map(|f| f.get_to_line_call());
 
-    let push_matches = store_fields
-        .iter()
-        .map(|f| f.get_push_match())
-        .collect::<Vec<_>>();
+    let push_matches = store_fields.iter().map(|f| f.get_push_match());
 
-    let set_matches = store_fields
-        .iter()
-        .map(|f| f.get_set_match())
-        .collect::<Vec<_>>();
+    let set_matches = store_fields.iter().map(|f| f.get_set_match());
 
-    let get_matches = store_fields
-        .iter()
-        .map(|f| f.get_get_match())
-        .collect::<Vec<_>>();
+    let get_matches = store_fields.iter().map(|f| f.get_get_match());
 
     quote! {
         impl bookmark_storage::Storeable for #name {

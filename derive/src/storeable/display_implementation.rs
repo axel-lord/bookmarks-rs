@@ -12,14 +12,12 @@ pub fn display_implementation(
         let simple_displays = store_fields
             .iter()
             .enumerate()
-            .map(|(i, f)| f.get_simple_display(i))
-            .collect::<Vec<_>>();
+            .map(|(i, f)| f.get_simple_display(i));
 
         let fancy_displays = display_fields
             .iter()
             .enumerate()
-            .map(|(i, f)| f.get_fancy_display(i))
-            .collect::<Vec<_>>();
+            .map(|(i, f)| f.get_fancy_display(i));
 
         let title_display = title_field.get_title_display();
 
