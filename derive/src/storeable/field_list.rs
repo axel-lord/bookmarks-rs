@@ -13,6 +13,50 @@ impl FieldList {
     fn get_push_ident(&self) -> syn::Ident {
         quote::format_ident!("push_{}", self.singular)
     }
+
+    fn get_push_method(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = &self.ident;
+        let single_ident = &self.singular;
+        let push_ident = self.get_push_ident();
+
+        quote! {
+            pub fn #push_ident(&mut self, #single_ident: &str) -> &mut Self {
+                self.#ident.push(self.#line.push(#single_ident).into());
+
+                self
+            }
+        }
+    }
+
+    fn get_get_method(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = &self.ident;
+
+        quote! {
+            pub fn #ident(&self) -> impl Iterator<Item = &str> {
+                self.#ident.get(&self.#line)
+            }
+        }
+    }
+
+    fn get_set_method(&self, line: &syn::Ident) -> TokenStream2 {
+        let ident = &self.ident;
+        let set_ident = self.get_set_ident();
+
+        quote! {
+            pub fn #set_ident<'a>(
+                &mut self,
+                #ident: impl Iterator<Item = impl AsRef<str>>,
+            ) -> &mut Self {
+                self.#ident.clear();
+
+                for item in #ident {
+                    self.#ident.push(self.#line.push(item.as_ref()).into());
+                }
+
+                self
+            }
+        }
+    }
 }
 
 impl AnyField for FieldList {
@@ -31,13 +75,13 @@ impl AnyField for FieldList {
     }
 
     fn get_create_line_param(&self) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         quote! {#ident: impl Iterator<Item = impl AsRef<str>>,}
     }
 
     fn get_create_line_format_param(&self) -> TokenStream2 {
-        let token = self.get_key();
-        let ident = self.get_ident();
+        let token = self.key.clone();
+        let ident = &self.ident;
         quote! {
             #token,
             bookmark_storage::join_with_delim(#ident),
@@ -45,7 +89,7 @@ impl AnyField for FieldList {
     }
 
     fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         quote! {#ident: #line.extend(#ident).into(),}
     }
 
@@ -59,7 +103,7 @@ impl AnyField for FieldList {
     }
 
     fn get_get_match(&self) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         let ident_string = self.get_ident_string();
         quote! {
             #ident_string => {
@@ -69,12 +113,12 @@ impl AnyField for FieldList {
     }
 
     fn get_to_line_call(&self) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         quote! {self.#ident()}
     }
 
     fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         quote! {
             let group = captures.get(#number).ok_or_else(err)?.range();
             let #ident =
@@ -85,7 +129,7 @@ impl AnyField for FieldList {
     }
 
     fn get_fancy_display(&self, _: usize) -> TokenStream2 {
-        let ident = self.get_ident();
+        let ident = &self.ident;
         let format_string = format!("\n\t{}: ", ident);
         quote! {
             if !self.#ident.is_empty() {
@@ -96,8 +140,8 @@ impl AnyField for FieldList {
     }
 
     fn get_simple_display(&self, index: usize) -> TokenStream2 {
-        let ident = self.get_ident();
-        let key = self.get_key();
+        let ident = &self.ident;
+        let key = self.key.clone();
 
         if index == 0 {
             quote! {
@@ -113,34 +157,14 @@ impl AnyField for FieldList {
     }
 
     fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
-        let ident = self.get_ident();
-        let push_ident = self.get_push_ident();
-        let set_ident = self.get_set_ident();
-        let single_ident = &self.singular;
+        let get_fn = self.get_get_method(line);
+        let set_fn = self.get_set_method(line);
+        let push_fn = self.get_push_method(line);
 
         quote! {
-            pub fn #ident(&self) -> impl Iterator<Item = &str> {
-                self.#ident.get(&self.#line)
-            }
-
-            pub fn #set_ident<'a>(
-                &mut self,
-                #ident: impl Iterator<Item = impl AsRef<str>>,
-            ) -> &mut Self {
-                self.#ident.clear();
-
-                for item in #ident {
-                    self.#ident.push(self.#line.push(item.as_ref()).into());
-                }
-
-                self
-            }
-
-            pub fn #push_ident(&mut self, #single_ident: &str) -> &mut Self {
-                self.#ident.push(self.#line.push(#single_ident).into());
-
-                self
-            }
+            #get_fn
+            #set_fn
+            #push_fn
         }
     }
 }
