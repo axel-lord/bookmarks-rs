@@ -38,7 +38,10 @@ where
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or(Ok(self.buffer.bookmark_count()))
+            .unwrap_or(Ok(self
+                .buffer
+                .bookmark_count()
+                .unwrap_or(self.storage.len())))
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -53,9 +56,19 @@ where
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
-            .map(|from| wrap_if_negative(from, self.buffer.bookmark_count()))??;
+            .map(|from| {
+                wrap_if_negative(
+                    from,
+                    self.buffer.bookmark_count().unwrap_or(self.storage.len()),
+                )
+            })??;
 
-        for (index, item) in shared::Buffer::enumerated_iter(&self.buffer.borrow(), &items)
+        for (index, item) in self
+            .buffer
+            .iter()
+            .map(|i| (i, items.get(i)))
+            .take_while(|(_, t)| t.is_some())
+            .map(|(i, t)| (i, t.unwrap()))
             .skip(from)
             .take(count)
         {

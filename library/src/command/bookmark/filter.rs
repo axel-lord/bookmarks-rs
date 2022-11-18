@@ -17,13 +17,10 @@ impl Command for Filter {
             ));
         }
 
-        let filtered = self
-            .bookmark_buffer
-            .filter(&self.bookmarks.borrow(), |bookmark| {
+        self.bookmark_buffer
+            .filter_in_place(&self.bookmarks, |bookmark| {
                 args.iter().all(|arg| bookmark.url().contains(arg))
             });
-
-        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }
@@ -43,13 +40,10 @@ impl Command for FilterInv {
             ));
         }
 
-        let filtered = self
-            .bookmark_buffer
-            .filter(&self.bookmarks.borrow(), |bookmark| {
+        self.bookmark_buffer
+            .filter_in_place(&self.bookmarks, |bookmark| {
                 !args.iter().any(|arg| bookmark.url().contains(arg))
             });
-
-        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }
