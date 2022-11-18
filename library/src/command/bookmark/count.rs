@@ -20,7 +20,10 @@ impl Command for Count {
         println!(
             "total: {}, in buffer: {}",
             self.bookmarks.len(),
-            self.bookmark_buffer.bookmark_count(),
+            self.bookmark_buffer
+                .bookmark_count()
+                .map(|b| b.to_string())
+                .unwrap_or("All".into()),
         );
 
         Ok(())

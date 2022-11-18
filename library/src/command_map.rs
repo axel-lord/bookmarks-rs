@@ -117,9 +117,7 @@ impl CommandMap<'static> {
 
         let reset_values = ResetValues {
             bookmark_buffer: bookmark_buffer.clone(),
-            bookmarks: bookmarks.clone(),
             category_buffer: category_buffer.clone(),
-            categories: categories.clone(),
             selected_category: selected_category.clone(),
             selected_bookmark: selected_bookmark.clone(),
         };

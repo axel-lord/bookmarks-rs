@@ -27,9 +27,14 @@ where
             ));
         }
 
+        let storage = self.storage.borrow();
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
-            shared::Buffer::unenumerated_iter(&self.buffer.borrow(), &self.storage.borrow()),
+            self.buffer
+                .iter()
+                .map(|i| storage.get(i))
+                .take_while(Option::is_some)
+                .map(Option::unwrap),
         )?;
 
         Ok(())

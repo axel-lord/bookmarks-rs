@@ -17,17 +17,21 @@ impl Command for Print {
             ));
         }
 
-        let Some(index) = self.selected.borrow().clone() else {
+        // let Some(index) = self.selected.borrow().clone() else {
+        //     return Err(CommandErr::Execution("no bookmark selected".into()));
+        // };
+
+        if self.selected.is_empty() {
             return Err(CommandErr::Execution("no bookmark selected".into()));
-        };
+        }
 
         let bookmarks = self.bookmarks.borrow();
 
-        let Some(selected) = bookmarks.get(index) else {
+        let Some(selected) = self.selected.get(&bookmarks) else {
             return Err(CommandErr::Execution("selected bookmark does not exist".into()));
         };
 
-        println!("{}. {:#}", index, selected);
+        println!("{}. {:#}", self.selected.index().unwrap(), selected);
 
         Ok(())
     }

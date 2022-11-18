@@ -20,13 +20,8 @@ impl Command for Regex {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = self
-            .bookmark_buffer
-            .filter(&self.bookmarks.borrow(), |bookmark| {
-                re.is_match(bookmark.url())
-            });
-
-        self.bookmark_buffer.replace(filtered);
+        self.bookmark_buffer
+            .filter_in_place(&self.bookmarks, |bookmark| re.is_match(bookmark.url()));
 
         Ok(())
     }
@@ -49,13 +44,8 @@ impl Command for RegexInv {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = self
-            .bookmark_buffer
-            .filter(&self.bookmarks.borrow(), |bookmark| {
-                !re.is_match(bookmark.url())
-            });
-
-        self.bookmark_buffer.replace(filtered);
+        self.bookmark_buffer
+            .filter_in_place(&self.bookmarks, |bookmark| !re.is_match(bookmark.url()));
 
         Ok(())
     }

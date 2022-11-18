@@ -38,7 +38,7 @@ where
             )));
         }
 
-        self.selected.borrow_mut().replace(index);
+        self.selected.replace(index);
 
         println!("selected:\n{}. {:#}", index, self.items.borrow()[index]);
 
