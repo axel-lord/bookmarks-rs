@@ -1,5 +1,6 @@
 pub mod bookmark;
 pub mod category;
+pub mod info;
 pub mod list;
 pub mod load;
 pub mod reset;
@@ -7,6 +8,8 @@ pub mod save;
 pub mod select;
 
 use std::error::Error;
+
+use crate::command_map::CommandMap;
 
 pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
@@ -60,5 +63,17 @@ where
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         self(args)
+    }
+}
+
+impl Command for CommandMap<'static> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+        CommandMap::call(
+            self,
+            &args.get(0).ok_or_else(|| {
+                CommandErr::Execution("needs to be called with a subcommand".into())
+            })?,
+            &args[1..],
+        )
     }
 }

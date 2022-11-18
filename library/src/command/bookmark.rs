@@ -100,7 +100,7 @@ impl Command for Bookmark {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         self.command_map.call(
             &args.get(0).ok_or_else(|| {
-                CommandErr::Execution("category needs to be called with a subcommand".into())
+                CommandErr::Execution("bookmark needs to be called with a subcommand".into())
             })?,
             &args[1..],
         )
