@@ -82,23 +82,29 @@ impl Buffer {
         self.borrow_mut().push(0..items.borrow().len());
     }
 
-    pub fn bookmark_iter<'a>(
+    pub fn enumerated_iter<'a, T>(
         buffer: &'a Vec<Range<usize>>,
-        bookmarks: &'a Vec<Bookmark>,
-    ) -> impl Iterator<Item = (usize, &'a Bookmark)> {
+        items: &'a Vec<T>,
+    ) -> impl Iterator<Item = (usize, &'a T)>
+    where
+        T: Storeable,
+    {
         buffer
             .iter()
-            .map(|r| r.clone().into_iter().map(|i| (i, &bookmarks[i])))
+            .map(|r| r.clone().into_iter().map(|i| (i, &items[i])))
             .flatten()
     }
 
-    pub fn unenumerated_bookmark_iter<'a>(
+    pub fn unenumerated_iter<'a, T>(
         buffer: &'a Vec<Range<usize>>,
-        bookmarks: &'a Vec<Bookmark>,
-    ) -> impl Iterator<Item = &'a Bookmark> {
+        items: &'a Vec<T>,
+    ) -> impl Iterator<Item = &'a T>
+    where
+        T: Storeable,
+    {
         buffer
             .iter()
-            .map(|r| r.clone().into_iter().map(|i| &bookmarks[i]))
+            .map(|r| r.clone().into_iter().map(|i| &items[i]))
             .flatten()
     }
 
@@ -106,7 +112,7 @@ impl Buffer {
     where
         F: Fn(&Bookmark) -> bool,
     {
-        Self::bookmark_iter(&self.borrow(), bookmarks)
+        Self::enumerated_iter(&self.borrow(), bookmarks)
             .filter_map(move |(i, bookmark)| {
                 if condition(bookmark) {
                     Some(i..i + 1)

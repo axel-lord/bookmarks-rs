@@ -4,11 +4,10 @@ pub mod list;
 pub mod new;
 pub mod print;
 pub mod regex;
-pub mod save;
 pub mod set;
 
 use crate::{
-    command::{load, select, Command, CommandErr},
+    command::{load, save, select, Command, CommandErr},
     command_map::CommandMap,
     reset::ResetValues,
     shared,

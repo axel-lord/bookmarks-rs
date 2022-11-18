@@ -35,7 +35,7 @@ impl Command for List {
             .map(|from| list::wrap_if_negative(from, self.bookmark_buffer.bookmark_count()))??;
 
         for (index, bookmark) in
-            shared::Buffer::bookmark_iter(&self.bookmark_buffer.borrow(), &bookmarks)
+            shared::Buffer::enumerated_iter(&self.bookmark_buffer.borrow(), &bookmarks)
                 .skip(from)
                 .take(count)
         {

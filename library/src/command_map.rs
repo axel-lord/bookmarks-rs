@@ -111,12 +111,15 @@ impl<'a> CommandMap<'a> {
 impl CommandMap<'static> {
     pub fn build(bookmarks: shared::Bookmarks, categories: shared::Categroies) -> Self {
         let bookmark_buffer = shared::Buffer::default();
+        let category_buffer = shared::Buffer::default();
         let selected_bookmark = shared::Selected::default();
         let selected_category = shared::Selected::default();
 
         let reset_values = ResetValues {
             bookmark_buffer: bookmark_buffer.clone(),
             bookmarks: bookmarks.clone(),
+            category_buffer: category_buffer.clone(),
+            categories: categories.clone(),
             selected_category: selected_category.clone(),
             selected_bookmark: selected_bookmark.clone(),
         };
@@ -131,6 +134,7 @@ impl CommandMap<'static> {
                 category::Category::build(
                     "category".into(),
                     categories.clone(),
+                    category_buffer.clone(),
                     selected_category.clone(),
                     reset_values.clone(),
                 ),
