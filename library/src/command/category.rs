@@ -1,11 +1,9 @@
 use crate::{
-    command::{load, save, select, Command, CommandErr},
+    command::{list, load, save, select, Command, CommandErr},
     command_map::CommandMap,
     reset::ResetValues,
     shared,
 };
-
-pub mod list;
 
 #[derive(Debug, Default)]
 pub struct Category {
@@ -28,7 +26,11 @@ impl Category {
                     None,
                     load::Load::build(categories.clone(), reset_values.clone()),
                 )
-                .push("list", None, list::List::build(categories.clone()))
+                .push(
+                    "list",
+                    None,
+                    list::List::build(categories.clone(), category_buffer.clone()),
+                )
                 .push(
                     "save",
                     None,
