@@ -9,9 +9,9 @@ where
     io::read_to_string(reader)?
         .lines()
         .enumerate()
-        .skip_while(|(_, l)| !l.contains(T::token_begin()))
+        .skip_while(|(_, l)| !l.contains(T::TOKEN_BEGIN))
         .skip(1)
-        .take_while(|(_, l)| !l.contains(T::token_end()))
+        .take_while(|(_, l)| !l.contains(T::TOKEN_END))
         .map(|(i, l)| T::with_str(l, Some(i)))
         .collect()
 }

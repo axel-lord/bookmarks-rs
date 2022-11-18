@@ -1,5 +1,4 @@
-use crate::{token, ContentString};
-use bookmark_storage::{Field, ListField, Section};
+use bookmark_storage::{content_string::ContentString, token, Field, ListField, Section};
 
 #[derive(Debug, bookmark_derive::Storeable)]
 pub struct Bookmark {
@@ -21,45 +20,7 @@ pub struct Bookmark {
 }
 
 impl Section for Bookmark {
-    fn token_end() -> &'static str {
-        token::UNSORTED_END
-    }
-
-    fn token_begin() -> &'static str {
-        token::UNSORTED_BEGIN
-    }
-
-    fn item_name() -> &'static str {
-        "bookmark"
-    }
+    const ITEM_NAME: &'static str = "bookmark";
+    const TOKEN_END: &'static str = token::UNSORTED_END;
+    const TOKEN_BEGIN: &'static str = token::CATEGORY_BEGIN;
 }
-
-// impl std::fmt::Display for Bookmark {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         if !f.alternate() {
-//             write!(f, "{} | {}", self.url(), self.description())?;
-//
-//             let mut tag_iter = self.tags();
-//             if let Some(t) = tag_iter.next() {
-//                 write!(f, " | {}", t)?;
-//             };
-//
-//             for t in tag_iter {
-//                 write!(f, ", {}", t)?
-//             }
-//         } else {
-//             writeln!(f, "{}", self.description())?;
-//             writeln!(f, "\turl: {}", self.url())?;
-//
-//             if self.tags.len() != 0 {
-//                 writeln!(
-//                     f,
-//                     "\ttags: [{}]",
-//                     self.tags().collect::<Vec<_>>().join(", ")
-//                 )?;
-//             }
-//         }
-//
-//         Ok(())
-//     }
-// }
