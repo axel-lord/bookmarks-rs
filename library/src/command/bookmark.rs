@@ -1,13 +1,12 @@
 pub mod count;
 pub mod filter;
-pub mod list;
 pub mod new;
 pub mod print;
 pub mod regex;
 pub mod set;
 
 use crate::{
-    command::{load, save, select, Command, CommandErr},
+    command::{list, load, save, select, Command, CommandErr},
     command_map::CommandMap,
     reset::ResetValues,
     shared,

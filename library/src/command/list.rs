@@ -1,4 +1,9 @@
-use crate::command::CommandErr;
+use bookmark_storage::Listed;
+
+use crate::{
+    command::{Command, CommandErr},
+    shared,
+};
 
 pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
     if number.abs() as usize > max {
@@ -12,4 +17,51 @@ pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> 
     } else {
         max - number.abs() as usize
     })
+}
+
+#[derive(Debug, bookmark_derive::BuildCommand)]
+pub struct List<T>
+where
+    T: Listed + std::fmt::Display,
+{
+    storage: shared::Storage<T>,
+    buffer: shared::Buffer,
+}
+
+impl<T> Command for List<T>
+where
+    T: Listed + std::fmt::Display,
+{
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+        let items = self.storage.borrow();
+
+        let count = args
+            .get(0)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(self.buffer.bookmark_count()))
+            .map_err(|_| {
+                CommandErr::Execution(format!(
+                    "could not parse {} as a positive integer",
+                    &args[0]
+                ))
+            })?;
+
+        let from = args
+            .get(1)
+            .map(|arg| arg.parse())
+            .unwrap_or(Ok(0))
+            .map_err(|_| {
+                CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
+            })
+            .map(|from| wrap_if_negative(from, self.buffer.bookmark_count()))??;
+
+        for (index, item) in shared::Buffer::enumerated_iter(&self.buffer.borrow(), &items)
+            .skip(from)
+            .take(count)
+        {
+            println!("{}. {:#}", index, item);
+        }
+
+        Ok(())
+    }
 }
