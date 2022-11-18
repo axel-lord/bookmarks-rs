@@ -8,13 +8,13 @@ where
     I: Iterator<Item = &'a T>,
     W: Write,
 {
-    writeln!(writer, "{}", T::token_begin())?;
+    writeln!(writer, "{}", T::TOKEN_BEGIN)?;
 
     for item in content.map(|item| item.to_line()) {
         writeln!(writer, "{item}")?;
     }
 
-    writeln!(writer, "{}", T::token_end())?;
+    writeln!(writer, "{}", T::TOKEN_END)?;
 
     Ok(())
 }

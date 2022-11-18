@@ -1,5 +1,4 @@
-use crate::{token, ContentString};
-use bookmark_storage::{Field, ListField, Section};
+use bookmark_storage::{content_string::ContentString, token, Field, ListField, Section};
 use std::{collections::HashMap, error::Error};
 
 #[derive(Debug, bookmark_derive::Storeable)]
@@ -96,65 +95,7 @@ impl Category {
 }
 
 impl Section for Category {
-    fn token_end() -> &'static str {
-        token::CATEGORY_END
-    }
-
-    fn token_begin() -> &'static str {
-        token::CATEGORY_BEGIN
-    }
-
-    fn item_name() -> &'static str {
-        "category"
-    }
+    const ITEM_NAME: &'static str = "category";
+    const TOKEN_END: &'static str = token::CATEGORY_END;
+    const TOKEN_BEGIN: &'static str = token::CATEGORY_BEGIN;
 }
-
-// impl std::fmt::Display for Category {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         if !f.alternate() {
-//             write!(
-//                 f,
-//                 "{} | {} | {}",
-//                 self.name(),
-//                 self.description(),
-//                 self.id()
-//             )?;
-//
-//             if !self.identifiers.is_empty() {
-//                 write!(
-//                     f,
-//                     "\nidentifiers: {}",
-//                     &self.identifiers().collect::<Vec<&str>>().join(", ")
-//                 )?
-//             }
-//
-//             if !self.subcategories.is_empty() {
-//                 write!(
-//                     f,
-//                     "\nsubcategories: {}",
-//                     &self.subcategories().collect::<Vec<&str>>().join(", ")
-//                 )?
-//             }
-//         } else {
-//             writeln!(f, "{}", self.name())?;
-//             writeln!(f, "\tdescription: {}", self.description())?;
-//             writeln!(f, "\tid: {}", self.id())?;
-//
-//             if self.identifiers.len() != 0 {
-//                 writeln!(
-//                     f,
-//                     "\tidentifiers: [{}]",
-//                     self.identifiers().collect::<Vec<_>>().join(", ")
-//                 )?;
-//             }
-//             if self.subcategories.len() != 0 {
-//                 writeln!(
-//                     f,
-//                     "\tsubcategories: [{}]",
-//                     self.subcategories().collect::<Vec<_>>().join(", ")
-//                 )?;
-//             }
-//         }
-//         Ok(())
-//     }
-// }

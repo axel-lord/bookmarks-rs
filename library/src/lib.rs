@@ -2,15 +2,10 @@ pub mod bookmark;
 pub mod category;
 pub mod command;
 pub mod command_map;
-pub mod pattern_match;
 pub mod reset;
 pub mod shared;
-pub mod token;
 
-mod content_string;
 mod parse_command;
-
-pub use crate::content_string::ContentString;
 
 use crate::{command::CommandErr, command_map::CommandMap, parse_command::parse_command};
 use lazy_static::lazy_static;
