@@ -8,10 +8,7 @@ pub fn gen_name_impl(
     line: &syn::Ident,
     store_fields: &Vec<Box<dyn AnyField>>,
 ) -> TokenStream2 {
-    let new_fields = store_fields
-        .iter()
-        .map(|f| f.get_new_init(&line))
-        .collect::<Vec<_>>();
+    let new_fields = store_fields.iter().map(|f| f.get_new_init(&line));
 
     let create_line_params = store_fields
         .iter()
@@ -20,18 +17,14 @@ pub fn gen_name_impl(
 
     let create_line_format_params = store_fields
         .iter()
-        .map(|f| f.get_create_line_format_param())
-        .collect::<Vec<_>>();
+        .map(|f| f.get_create_line_format_param());
 
     let create_line_format_string = std::iter::repeat("{}")
         .take(store_fields.len() * 2)
         .collect::<Vec<_>>()
         .join(" ");
 
-    let field_access = store_fields
-        .iter()
-        .map(|f| f.get_field_methods(&line))
-        .collect::<Vec<_>>();
+    let field_access = store_fields.iter().map(|f| f.get_field_methods(&line));
 
     quote! {
         impl #name {
