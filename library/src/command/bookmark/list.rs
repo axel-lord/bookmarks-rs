@@ -7,7 +7,7 @@ use crate::{
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct List {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for List {
@@ -17,7 +17,7 @@ impl Command for List {
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or(Ok(self.buffer.bookmark_count()))
+            .unwrap_or(Ok(self.bookmark_buffer.bookmark_count()))
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -32,11 +32,12 @@ impl Command for List {
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
-            .map(|from| list::wrap_if_negative(from, self.buffer.bookmark_count()))??;
+            .map(|from| list::wrap_if_negative(from, self.bookmark_buffer.bookmark_count()))??;
 
-        for (index, bookmark) in shared::Buffer::bookmark_iter(&self.buffer.borrow(), &bookmarks)
-            .skip(from)
-            .take(count)
+        for (index, bookmark) in
+            shared::Buffer::bookmark_iter(&self.bookmark_buffer.borrow(), &bookmarks)
+                .skip(from)
+                .take(count)
         {
             println!("{}. {:#}", index, bookmark);
         }

@@ -1,12 +1,12 @@
 use crate::{
-    command::{load::Load, Command, CommandErr},
+    command::{load, select, Command, CommandErr},
     command_map::CommandMap,
+    reset::ResetValues,
     shared,
 };
 
 pub mod list;
 pub mod save;
-pub mod select;
 
 #[derive(Debug, Default)]
 pub struct Category {
@@ -14,13 +14,27 @@ pub struct Category {
 }
 
 impl Category {
-    pub fn build(name: String, categories: shared::Categroies) -> Box<Self> {
+    pub fn build(
+        name: String,
+        categories: shared::Categroies,
+        selected_category: shared::Selected,
+        reset_values: ResetValues,
+    ) -> Box<Self> {
         Box::new(Self {
             command_map: CommandMap::new()
                 .set_name(name)
-                .push("load", None, Load::build(categories.clone()))
+                .push(
+                    "load",
+                    None,
+                    load::Load::build(categories.clone(), reset_values.clone()),
+                )
                 .push("list", None, list::List::build(categories.clone()))
-                .push("save", None, save::Save::build(categories.clone())),
+                .push("save", None, save::Save::build(categories.clone()))
+                .push(
+                    "select",
+                    None,
+                    select::Select::build(categories.clone(), selected_category.clone()),
+                ),
         })
     }
 }

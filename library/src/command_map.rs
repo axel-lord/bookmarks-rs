@@ -2,6 +2,7 @@ use std::{cell::RefCell, collections::HashMap, fmt::Debug};
 
 use crate::{
     command::{self, Command, CommandErr},
+    reset::ResetValues,
     shared,
 };
 
@@ -109,27 +110,30 @@ impl<'a> CommandMap<'a> {
 
 impl CommandMap<'static> {
     pub fn build(bookmarks: shared::Bookmarks, categories: shared::Categroies) -> Self {
-        let buffer = shared::Buffer::default();
+        let bookmark_buffer = shared::Buffer::default();
         let selected_bookmark = shared::Selected::default();
+        let selected_category = shared::Selected::default();
 
-        crate::reset::reset(
-            &mut buffer.borrow_mut(),
-            &bookmarks.borrow(),
-            &mut selected_bookmark.borrow_mut(),
-        );
+        let reset_values = ResetValues {
+            bookmark_buffer: bookmark_buffer.clone(),
+            bookmarks: bookmarks.clone(),
+            selected_category: selected_category.clone(),
+            selected_bookmark: selected_bookmark.clone(),
+        };
 
         use command::*;
 
         Self::new()
-            .push(
-                "reset",
-                None,
-                reset::Reset::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
-            )
+            .push("reset", None, reset::Reset::build(reset_values.clone()))
             .push(
                 "category",
                 None,
-                category::Category::build("category".into(), categories.clone()),
+                category::Category::build(
+                    "category".into(),
+                    categories.clone(),
+                    selected_category.clone(),
+                    reset_values.clone(),
+                ),
             )
             .push(
                 "bookmark",
@@ -137,19 +141,15 @@ impl CommandMap<'static> {
                 bookmark::Bookmark::build(
                     "bookmark".into(),
                     bookmarks.clone(),
-                    buffer.clone(),
+                    bookmark_buffer.clone(),
                     selected_bookmark.clone(),
+                    reset_values.clone(),
                 ),
             )
             .push(
                 "load",
                 None,
-                load::LoadAll::build(
-                    categories.clone(),
-                    bookmarks.clone(),
-                    buffer.clone(),
-                    selected_bookmark.clone(),
-                ),
+                load::LoadAll::build(categories.clone(), bookmarks.clone(), reset_values.clone()),
             )
             .push(
                 "save",

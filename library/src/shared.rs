@@ -4,25 +4,36 @@ use std::{
     rc::Rc,
 };
 
+use bookmark_storage::Storeable;
+
 use crate::{bookmark::Bookmark, category::Category};
 
 #[derive(Debug)]
-pub struct Storage<T>(Rc<RefCell<Vec<T>>>);
+pub struct Storage<T: Storeable>(Rc<RefCell<Vec<T>>>);
 
-impl<T> Deref for Storage<T> {
+impl<T> Deref for Storage<T>
+where
+    T: Storeable,
+{
     type Target = RefCell<Vec<T>>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<T> Clone for Storage<T> {
+impl<T> Clone for Storage<T>
+where
+    T: Storeable,
+{
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-impl<T> Default for Storage<T> {
+impl<T> Default for Storage<T>
+where
+    T: Storeable,
+{
     fn default() -> Self {
         Self(Default::default())
     }
@@ -61,6 +72,14 @@ shared!(Buffer, Vec<Range<usize>>);
 impl Buffer {
     pub fn bookmark_count(&self) -> usize {
         self.borrow().iter().map(Range::len).sum()
+    }
+
+    pub fn reset<T>(&self, items: &Storage<T>)
+    where
+        T: Storeable,
+    {
+        self.borrow_mut().clear();
+        self.borrow_mut().push(0..items.borrow().len());
     }
 
     pub fn bookmark_iter<'a>(

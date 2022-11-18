@@ -7,7 +7,7 @@ use std::{fs::File, io::BufWriter};
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Save {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for Save {
@@ -21,7 +21,7 @@ impl Command for Save {
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
             shared::Buffer::unenumerated_bookmark_iter(
-                &self.buffer.borrow(),
+                &self.bookmark_buffer.borrow(),
                 &self.bookmarks.borrow(),
             ),
         )?;

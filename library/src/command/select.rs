@@ -1,15 +1,23 @@
+use bookmark_storage::Storeable;
+
 use crate::{
     command::{Command, CommandErr},
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
-pub struct Select {
-    bookmarks: shared::Bookmarks,
+pub struct Select<T>
+where
+    T: Storeable,
+{
+    items: shared::Storage<T>,
     selected: shared::Selected,
 }
 
-impl Command for Select {
+impl<T> Command for Select<T>
+where
+    T: Storeable + std::fmt::Display,
+{
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
             return Err(CommandErr::Usage(
@@ -24,7 +32,7 @@ impl Command for Select {
             ))
         })?;
 
-        if !(..self.bookmarks.borrow().len()).contains(&index) {
+        if !(..self.items.borrow().len()).contains(&index) {
             return Err(CommandErr::Execution(format!(
                 "{index} is not the index of a bookmark"
             )));
@@ -32,11 +40,7 @@ impl Command for Select {
 
         self.selected.borrow_mut().replace(index);
 
-        println!(
-            "selected bookmark:\n{}. {:#}",
-            index,
-            self.bookmarks.borrow()[index]
-        );
+        println!("selected:\n{}. {:#}", index, self.items.borrow()[index]);
 
         Ok(())
     }

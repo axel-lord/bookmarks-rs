@@ -5,12 +5,12 @@ pub mod new;
 pub mod print;
 pub mod regex;
 pub mod save;
-pub mod select;
 pub mod set;
 
 use crate::{
-    command::{load::Load, Command, CommandErr},
+    command::{load, select, Command, CommandErr},
     command_map::CommandMap,
+    reset::ResetValues,
     shared,
 };
 
@@ -23,8 +23,9 @@ impl Bookmark {
     pub fn build(
         name: String,
         bookmarks: shared::Bookmarks,
-        buffer: shared::Buffer,
+        bookmark_buffer: shared::Buffer,
         selected_bookmark: shared::Selected,
+        reset_values: ResetValues,
     ) -> Box<Self> {
         Box::new(Self {
             command_map: CommandMap::new()
@@ -32,38 +33,42 @@ impl Bookmark {
                 .push(
                     "list",
                     None,
-                    list::List::build(bookmarks.clone(), buffer.clone()),
+                    list::List::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "filter",
                     None,
-                    filter::Filter::build(bookmarks.clone(), buffer.clone()),
+                    filter::Filter::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "filter-inv",
                     None,
-                    filter::FilterInv::build(bookmarks.clone(), buffer.clone()),
+                    filter::FilterInv::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "regex",
                     None,
-                    regex::Regex::build(bookmarks.clone(), buffer.clone()),
+                    regex::Regex::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "regex-inv",
                     None,
-                    regex::RegexInv::build(bookmarks.clone(), buffer.clone()),
+                    regex::RegexInv::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "count",
                     None,
-                    count::Count::build(bookmarks.clone(), buffer.clone()),
+                    count::Count::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
-                .push("load", None, Load::build(bookmarks.clone()))
+                .push(
+                    "load",
+                    None,
+                    load::Load::build(bookmarks.clone(), reset_values.clone()),
+                )
                 .push(
                     "save",
                     None,
-                    save::Save::build(bookmarks.clone(), buffer.clone()),
+                    save::Save::build(bookmarks.clone(), bookmark_buffer.clone()),
                 )
                 .push(
                     "select",
@@ -78,7 +83,11 @@ impl Bookmark {
                 .push(
                     "new",
                     Some("add a new empty bookmark"),
-                    new::New::build(bookmarks.clone(), buffer.clone(), selected_bookmark.clone()),
+                    new::New::build(
+                        bookmarks.clone(),
+                        selected_bookmark.clone(),
+                        reset_values.clone(),
+                    ),
                 )
                 .push(
                     "set",

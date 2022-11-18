@@ -6,7 +6,7 @@ use crate::{
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Filter {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for Filter {
@@ -17,11 +17,13 @@ impl Command for Filter {
             ));
         }
 
-        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
-            args.iter().all(|arg| bookmark.url().contains(arg))
-        });
+        let filtered = self
+            .bookmark_buffer
+            .filter(&self.bookmarks.borrow(), |bookmark| {
+                args.iter().all(|arg| bookmark.url().contains(arg))
+            });
 
-        self.buffer.replace(filtered);
+        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }
@@ -30,7 +32,7 @@ impl Command for Filter {
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct FilterInv {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for FilterInv {
@@ -41,11 +43,13 @@ impl Command for FilterInv {
             ));
         }
 
-        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
-            !args.iter().any(|arg| bookmark.url().contains(arg))
-        });
+        let filtered = self
+            .bookmark_buffer
+            .filter(&self.bookmarks.borrow(), |bookmark| {
+                !args.iter().any(|arg| bookmark.url().contains(arg))
+            });
 
-        self.buffer.replace(filtered);
+        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }

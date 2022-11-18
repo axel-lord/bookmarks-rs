@@ -6,7 +6,7 @@ use crate::{
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Regex {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for Regex {
@@ -20,11 +20,13 @@ impl Command for Regex {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
-            re.is_match(bookmark.url())
-        });
+        let filtered = self
+            .bookmark_buffer
+            .filter(&self.bookmarks.borrow(), |bookmark| {
+                re.is_match(bookmark.url())
+            });
 
-        self.buffer.replace(filtered);
+        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }
@@ -33,7 +35,7 @@ impl Command for Regex {
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct RegexInv {
     bookmarks: shared::Bookmarks,
-    buffer: shared::Buffer,
+    bookmark_buffer: shared::Buffer,
 }
 
 impl Command for RegexInv {
@@ -47,11 +49,13 @@ impl Command for RegexInv {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        let filtered = self.buffer.filter(&self.bookmarks.borrow(), |bookmark| {
-            !re.is_match(bookmark.url())
-        });
+        let filtered = self
+            .bookmark_buffer
+            .filter(&self.bookmarks.borrow(), |bookmark| {
+                !re.is_match(bookmark.url())
+            });
 
-        self.buffer.replace(filtered);
+        self.bookmark_buffer.replace(filtered);
 
         Ok(())
     }

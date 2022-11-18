@@ -22,5 +22,5 @@ pub struct Bookmark {
 impl Section for Bookmark {
     const ITEM_NAME: &'static str = "bookmark";
     const TOKEN_END: &'static str = token::UNSORTED_END;
-    const TOKEN_BEGIN: &'static str = token::CATEGORY_BEGIN;
+    const TOKEN_BEGIN: &'static str = token::UNSORTED_BEGIN;
 }
