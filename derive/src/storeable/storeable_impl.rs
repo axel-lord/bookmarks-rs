@@ -2,7 +2,7 @@ use super::any_field::AnyField;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 
-pub fn gen_set(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_set(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     let set_matches = store_fields.iter().map(|f| f.get_set_match());
 
     quote! {
@@ -22,7 +22,7 @@ pub fn gen_set(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-pub fn gen_get(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_get(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     let get_matches = store_fields.iter().map(|f| f.get_get_match());
 
     quote! {
@@ -40,7 +40,7 @@ pub fn gen_get(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-pub fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     let push_matches = store_fields.iter().map(|f| f.get_push_match());
 
     quote! {
@@ -60,7 +60,7 @@ pub fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-pub fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     let capture_extracts = store_fields
         .iter()
         .enumerate()
@@ -114,7 +114,7 @@ pub fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>)
     }
 }
 
-pub fn gen_to_line(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_to_line(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     let to_line_calls = store_fields.iter().map(|f| f.get_to_line_call());
 
     quote! {
@@ -124,7 +124,7 @@ pub fn gen_to_line(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-pub fn gen_is_edited(line: &syn::Ident) -> TokenStream2 {
+fn gen_is_edited(line: &syn::Ident) -> TokenStream2 {
     quote! {
         fn is_edited(&self) -> bool {
             self.#line.is_appended_to()
