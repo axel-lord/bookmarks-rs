@@ -1,5 +1,6 @@
 pub mod bookmark;
 pub mod category;
+pub mod count;
 pub mod info;
 pub mod list;
 pub mod load;
