@@ -129,7 +129,7 @@ impl CommandMap<'static> {
             .push(
                 "category",
                 None,
-                category::Category::build(
+                category::build(
                     "category".into(),
                     categories.clone(),
                     category_buffer.clone(),
@@ -140,7 +140,7 @@ impl CommandMap<'static> {
             .push(
                 "bookmark",
                 None,
-                bookmark::Bookmark::build(
+                bookmark::build(
                     "bookmark".into(),
                     bookmarks.clone(),
                     bookmark_buffer.clone(),
