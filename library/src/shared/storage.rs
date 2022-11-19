@@ -1,4 +1,4 @@
-use crate::{bookmark::Bookmark, category::Category};
+use crate::{bookmark::Bookmark, category::Category, info::Info};
 use bookmark_storage::Storeable;
 use std::{
     cell::{Ref, RefCell, RefMut},
@@ -46,3 +46,5 @@ where
 pub type Bookmarks = Storage<Bookmark>;
 
 pub type Categroies = Storage<Category>;
+
+pub type Infos = Storage<Info>;

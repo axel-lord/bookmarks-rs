@@ -1,28 +1,33 @@
-use crate::{
-    command::{Command, CommandErr},
-    command_map::CommandMap,
-};
+use crate::{command::load, command_map::CommandMap, reset::ResetValues, shared::Infos};
 
-#[derive(Debug, Default)]
-pub struct Info {
-    command_map: CommandMap<'static>,
-}
+use super::CommandErr;
 
-impl Info {
-    pub fn build(name: String) -> Box<Self> {
-        Box::new(Self {
-            command_map: CommandMap::new().set_name(name),
-        })
-    }
-}
+pub fn build(name: String, reset_values: ResetValues) -> Box<CommandMap<'static>> {
+    let info_container = Infos::default();
+    Box::new(
+        CommandMap::new()
+            .set_name(name)
+            .push(
+                "load",
+                None,
+                load::Load::build(info_container.clone(), reset_values),
+            )
+            .push("show", None, {
+                let info_container = info_container.clone();
+                Box::new(move |args: &[_]| {
+                    if !args.is_empty() {
+                        return Err(CommandErr::Execution("no info loaded".into()));
+                    }
 
-impl Command for Info {
-    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        self.command_map.call(
-            &args.get(0).ok_or_else(|| {
-                CommandErr::Execution("bookmark needs to be called with a subcommand".into())
-            })?,
-            &args[1..],
-        )
-    }
+                    for (i, info) in info_container.borrow().iter().enumerate() {
+                        println!("{i}. Categroies: ");
+                        for category in info.categories() {
+                            println!("\t{category}");
+                        }
+                    }
+
+                    Ok(())
+                })
+            }),
+    )
 }
