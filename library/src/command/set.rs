@@ -2,12 +2,18 @@ use crate::{command::Command, shared, CommandErr};
 use bookmark_storage::{Property, Storeable};
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
-pub struct Set {
-    bookmarks: shared::Bookmarks,
+pub struct Set<T>
+where
+    T: Storeable + std::fmt::Display,
+{
+    storage: shared::Storage<T>,
     selected: shared::Selected,
 }
 
-impl Command for Set {
+impl<T> Command for Set<T>
+where
+    T: Storeable + std::fmt::Display,
+{
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() < 2 {
             return Err(CommandErr::Usage(format!(
@@ -16,18 +22,18 @@ impl Command for Set {
             )));
         }
 
-        let mut bookmarks = self.bookmarks.borrow_mut();
-        let bookmark = self
+        let mut storage = self.storage.borrow_mut();
+        let item = self
             .selected
-            .get_mut(&mut bookmarks)
-            .ok_or_else(|| CommandErr::Execution("no or an invalid bookmark selected".into()))?;
+            .get_mut(&mut storage)
+            .ok_or_else(|| CommandErr::Execution("no or an invalid item selected".into()))?;
 
         let property = args[0].as_str();
 
-        match bookmark.get(property) {
+        match item.get(property) {
             Err(err) => return Err(err.into()),
             Ok(Property::List(_)) => {
-                bookmark.set(property, Property::List(Vec::from(&args[1..])))?;
+                item.set(property, Property::List(Vec::from(&args[1..])))?;
             }
             Ok(Property::Single(_)) => {
                 if args[1..].len() != 1 {
@@ -36,12 +42,12 @@ impl Command for Set {
                         property
                     )));
                 } else {
-                    bookmark.set(property, Property::Single(args[1].clone().into()))?;
+                    item.set(property, Property::Single(args[1].clone().into()))?;
                 }
             }
         }
 
-        println!("{}. {:#}", self.selected.index().unwrap(), bookmark);
+        println!("{}. {:#}", self.selected.index().unwrap(), item);
 
         Ok(())
     }
