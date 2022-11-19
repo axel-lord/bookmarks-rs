@@ -2,10 +2,9 @@ pub mod filter;
 pub mod new;
 pub mod print;
 pub mod regex;
-pub mod set;
 
 use crate::{
-    command::{count, list, load, save, select},
+    command::{count, list, load, save, select, set},
     command_map::CommandMap,
     reset::ResetValues,
     shared,

@@ -7,6 +7,7 @@ pub mod load;
 pub mod reset;
 pub mod save;
 pub mod select;
+pub mod set;
 
 use std::error::Error;
 
