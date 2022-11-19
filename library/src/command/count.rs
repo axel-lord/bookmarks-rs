@@ -1,15 +1,23 @@
+use bookmark_storage::Storeable;
+
 use crate::{
     command::{Command, CommandErr},
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
-pub struct Count {
-    bookmarks: shared::Bookmarks,
-    bookmark_buffer: shared::Buffer,
+pub struct Count<T>
+where
+    T: Storeable,
+{
+    storage: shared::Storage<T>,
+    buffer: shared::Buffer,
 }
 
-impl Command for Count {
+impl<T> Command for Count<T>
+where
+    T: Storeable,
+{
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if !args.is_empty() {
             return Err(CommandErr::Execution(
@@ -19,8 +27,8 @@ impl Command for Count {
 
         println!(
             "total: {}, in buffer: {}",
-            self.bookmarks.len(),
-            self.bookmark_buffer
+            self.storage.len(),
+            self.buffer
                 .count()
                 .map(|b| b.to_string())
                 .unwrap_or("All".into()),

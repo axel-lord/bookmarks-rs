@@ -8,7 +8,7 @@ use super::Storage;
 pub struct Buffer(Rc<RefCell<Option<Vec<usize>>>>);
 
 impl Buffer {
-    pub fn bookmark_count(&self) -> Option<usize> {
+    pub fn count(&self) -> Option<usize> {
         Some(self.0.borrow().as_ref()?.len())
     }
 
