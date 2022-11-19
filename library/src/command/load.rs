@@ -1,4 +1,7 @@
-use std::fs::File;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 use crate::{
     command::{Command, CommandErr},
@@ -64,27 +67,16 @@ impl Command for LoadAll {
             ));
         }
 
-        let loaded = bookmark_storage::load(&mut File::open(&args[0])?)?;
+        let reader = BufReader::new(File::open(&args[0])?);
+        let mut lines = reader.lines().enumerate();
 
-        if loaded.is_empty() {
-            return Err(CommandErr::Execution(format!(
-                "no category lines parsed from {}",
-                &args[0]
-            )));
-        }
+        let categories = bookmark_storage::load::load_from(lines.by_ref())?;
+        println!("loaded {} categories", categories.len());
+        self.categories.borrow_mut().extend(categories.into_iter());
 
-        self.categories.borrow_mut().extend(loaded.into_iter());
-
-        let loaded = bookmark_storage::load(&mut File::open(&args[0])?)?;
-
-        if loaded.is_empty() {
-            return Err(CommandErr::Execution(format!(
-                "no bookmark lines parsed from {}",
-                &args[0]
-            )));
-        }
-
-        self.bookmarks.borrow_mut().extend(loaded.into_iter());
+        let bookmarks = bookmark_storage::load::load_from(lines.by_ref())?;
+        println!("loaded {} bookmarks", bookmarks.len());
+        self.bookmarks.borrow_mut().extend(bookmarks.into_iter());
 
         self.reset_values.reset();
 

@@ -149,6 +149,11 @@ impl CommandMap<'static> {
                 ),
             )
             .push(
+                "info",
+                None,
+                info::build("info".into(), reset_values.clone()),
+            )
+            .push(
                 "load",
                 None,
                 load::LoadAll::build(categories.clone(), bookmarks.clone(), reset_values.clone()),

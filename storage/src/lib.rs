@@ -187,12 +187,15 @@ pub fn join_with_delim<'a>(mut fields: impl Iterator<Item = impl AsRef<str>>) ->
 pub trait Storeable: Sized {
     fn is_edited(&self) -> bool;
     fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr>;
-    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr>;
     fn to_line(&self) -> String;
 
     fn get(&self, property: &str) -> Result<Property, PropertyErr>;
     fn set(&mut self, property: &str, value: Property) -> Result<&mut Self, PropertyErr>;
     fn push(&mut self, property: &str, value: &str) -> Result<&mut Self, PropertyErr>;
+
+    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
+        Self::with_string(line.into(), line_num)
+    }
 }
 
 pub trait Section {

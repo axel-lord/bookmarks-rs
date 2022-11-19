@@ -4,4 +4,4 @@ mod storage;
 
 pub use buffer::Buffer;
 pub use selected::Selected;
-pub use storage::{Bookmarks, Categroies, Storage};
+pub use storage::{Bookmarks, Categroies, Infos, Storage};
