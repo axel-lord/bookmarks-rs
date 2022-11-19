@@ -1,4 +1,3 @@
-pub mod count;
 pub mod filter;
 pub mod new;
 pub mod print;
@@ -6,7 +5,7 @@ pub mod regex;
 pub mod set;
 
 use crate::{
-    command::{list, load, save, select},
+    command::{count, list, load, save, select},
     command_map::CommandMap,
     reset::ResetValues,
     shared,

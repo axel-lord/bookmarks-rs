@@ -1,5 +1,5 @@
 use crate::{
-    command::{list, load, save, select},
+    command::{count, list, load, save, select},
     command_map::CommandMap,
     reset::ResetValues,
     shared,
@@ -24,6 +24,11 @@ pub fn build(
                 "list",
                 None,
                 list::List::build(categories.clone(), category_buffer.clone()),
+            )
+            .push(
+                "count",
+                None,
+                count::Count::build(categories.clone(), category_buffer.clone()),
             )
             .push(
                 "save",
