@@ -4,7 +4,7 @@ pub mod print;
 pub mod regex;
 
 use crate::{
-    command::{count, list, load, save, select, set},
+    command::{count, list, load, push, save, select, set},
     command_map::CommandMap,
     reset::ResetValues,
     shared,
@@ -69,6 +69,11 @@ pub fn build(
                 "print",
                 Some("print selected bookmark\nusage: print"),
                 print::Print::build(bookmarks.clone(), selected_bookmark.clone()),
+            )
+            .push(
+                "push",
+                Some("print selected bookmark\nusage: push FIELD [VALUE, ...]"),
+                push::build(bookmarks.clone(), selected_bookmark.clone()),
             )
             .push(
                 "new",
