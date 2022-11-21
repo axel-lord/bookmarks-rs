@@ -1,5 +1,5 @@
 use crate::{
-    command::{count, list, load, push, save, select, set},
+    command::{count, list, load, print, push, save, select, set},
     command_map::CommandMap,
     reset::ResetValues,
     shared,
@@ -39,6 +39,11 @@ pub fn build(
                 "save",
                 None,
                 save::Save::build(categories.clone(), category_buffer.clone()),
+            )
+            .push(
+                "print",
+                Some("print selected category"),
+                print::build(categories.clone(), selected_category.clone()),
             )
             .push(
                 "push",
