@@ -70,7 +70,7 @@ where
     }
 }
 
-impl Command for CommandMap<'static> {
+impl<'a> Command for CommandMap<'a> {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         CommandMap::call(
             self,

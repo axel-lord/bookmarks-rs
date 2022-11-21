@@ -1,9 +1,14 @@
-use crate::{command::load, command_map::CommandMap, reset::ResetValues, shared::Infos};
+use crate::{command::load, command_map::CommandMap, reset::ResetValues, shared};
 
 use super::CommandErr;
 
-pub fn build(name: String, reset_values: ResetValues) -> Box<CommandMap<'static>> {
-    let info_container = Infos::default();
+pub fn build(
+    name: String,
+    reset_values: ResetValues,
+    info_container: shared::Infos,
+    _info_buffer: shared::Buffer,
+    _selected_info: shared::Selected,
+) -> Box<CommandMap<'static>> {
     Box::new(
         CommandMap::new()
             .set_name(name)

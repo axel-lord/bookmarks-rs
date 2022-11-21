@@ -8,26 +8,122 @@ pub mod shared;
 
 mod parse_command;
 
-use crate::{command::CommandErr, command_map::CommandMap, parse_command::parse_command};
+use crate::{
+    bookmark::Bookmark, category::Category, command::CommandErr, command_map::CommandMap,
+    info::Info, parse_command::parse_command, reset::ResetValues,
+};
+use command::Command;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::io;
 
-pub fn run(init_commands: Option<String>) -> i32 {
+pub trait CommandBuilder {
+    fn name(&self) -> &'static str;
+    fn build(
+        &mut self,
+        bookmarks: shared::BufferStorage<Bookmark>,
+        categories: shared::BufferStorage<Category>,
+        infos: shared::BufferStorage<Info>,
+        reset_values: ResetValues,
+    ) -> Box<dyn Command>;
+    fn help(&self) -> Option<&'static str> {
+        None
+    }
+}
+
+impl<F> CommandBuilder for (&'static str, F)
+where
+    F: FnMut(
+        shared::BufferStorage<Bookmark>,
+        shared::BufferStorage<Category>,
+        shared::BufferStorage<Info>,
+        ResetValues,
+    ) -> Box<dyn Command>,
+{
+    fn name(&self) -> &'static str {
+        self.0
+    }
+    fn build(
+        &mut self,
+        bookmarks: shared::BufferStorage<Bookmark>,
+        categories: shared::BufferStorage<Category>,
+        infos: shared::BufferStorage<Info>,
+        reset_values: ResetValues,
+    ) -> Box<dyn Command> {
+        (self.1)(bookmarks, categories, infos, reset_values)
+    }
+}
+
+impl<F> CommandBuilder for (&'static str, &'static str, F)
+where
+    F: FnMut(
+        shared::BufferStorage<Bookmark>,
+        shared::BufferStorage<Category>,
+        shared::BufferStorage<Info>,
+        ResetValues,
+    ) -> Box<dyn Command>,
+{
+    fn name(&self) -> &'static str {
+        self.0
+    }
+    fn help(&self) -> Option<&'static str> {
+        Some(self.1)
+    }
+    fn build(
+        &mut self,
+        bookmarks: shared::BufferStorage<Bookmark>,
+        categories: shared::BufferStorage<Category>,
+        infos: shared::BufferStorage<Info>,
+        reset_values: ResetValues,
+    ) -> Box<dyn Command> {
+        (self.2)(bookmarks, categories, infos, reset_values)
+    }
+}
+
+pub fn run(
+    init_commands: Option<String>,
+    mut extended_commands: Vec<Box<dyn CommandBuilder>>,
+) -> i32 {
     lazy_static! {
         static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
         static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
     }
 
-    let bookmarks = shared::Bookmarks::default();
-    let categories = shared::Categroies::default();
+    let bookmarks = shared::BufferStorage::<Bookmark>::default();
+    let categories = shared::BufferStorage::<Category>::default();
+    let infos = shared::BufferStorage::<Info>::default();
 
-    let command_map = CommandMap::build(bookmarks.clone(), categories.clone());
+    let reset_values = ResetValues {
+        bookmark_buffer: bookmarks.1.clone(),
+        category_buffer: categories.1.clone(),
+        selected_category: categories.2.clone(),
+        selected_bookmark: bookmarks.2.clone(),
+    };
+
+    let command_map = extended_commands.iter_mut().fold(
+        CommandMap::build(
+            bookmarks.clone(),
+            categories.clone(),
+            infos.clone(),
+            reset_values.clone(),
+        ),
+        |map, builder| {
+            map.push(
+                builder.name(),
+                builder.help(),
+                builder.build(
+                    bookmarks.clone(),
+                    categories.clone(),
+                    infos.clone(),
+                    reset_values.clone(),
+                ),
+            )
+        },
+    );
 
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
         let command = command.trim();
 
-        // let Some((cmd, args)) = parse_command(&command) else {
         let Some(args) = parse_command(&command) else {
             println!("could not parse \"{command}\"");
             return Ok(());
