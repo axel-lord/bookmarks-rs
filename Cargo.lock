@@ -21,6 +21,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bookmark-import"
+version = "0.1.0"
+dependencies = [
+ "bookmark-library",
+ "bookmark-storage",
+]
+
+[[package]]
 name = "bookmark-library"
 version = "0.1.0"
 dependencies = [
@@ -34,6 +42,7 @@ dependencies = [
 name = "bookmark-manager"
 version = "0.1.0"
 dependencies = [
+ "bookmark-import",
  "bookmark-library",
 ]
 

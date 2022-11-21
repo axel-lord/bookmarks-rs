@@ -1,7 +1,10 @@
 use std::{cell::RefCell, collections::HashMap, fmt::Debug};
 
 use crate::{
+    bookmark::Bookmark,
+    category::Category,
     command::{self, Command, CommandErr},
+    info::Info,
     reset::ResetValues,
     shared,
 };
@@ -59,12 +62,19 @@ impl<'a> CommandMap<'a> {
 
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
         match name {
-            "help" => {
-                if args.len() != 1 {
-                    Err(CommandErr::Usage(
-                        "help called with incorrect number of arguments".into(),
-                    ))
-                } else {
+            "help" => match args.len() {
+                0 => {
+                    println!("available commands:");
+                    for (command, entry) in self.0.iter() {
+                        if let Some(ref help) = entry.help {
+                            println!("- {command}, {help}");
+                        } else {
+                            println!("- {command}");
+                        }
+                    }
+                    Ok(())
+                }
+                1 => {
                     let command = &args[0];
                     if let Some(help) = self.help(command) {
                         println!("{help}");
@@ -75,7 +85,10 @@ impl<'a> CommandMap<'a> {
                         )))
                     }
                 }
-            }
+                _ => Err(CommandErr::Usage(
+                    "help called with incorrect number of arguments".into(),
+                )),
+            },
             _ => {
                 if let Some(command) = self.0.get(name) {
                     command.command.borrow_mut().call(args)
@@ -109,19 +122,14 @@ impl<'a> CommandMap<'a> {
 }
 
 impl CommandMap<'static> {
-    pub fn build(bookmarks: shared::Bookmarks, categories: shared::Categroies) -> Self {
-        let bookmark_buffer = shared::Buffer::default();
-        let category_buffer = shared::Buffer::default();
-        let selected_bookmark = shared::Selected::default();
-        let selected_category = shared::Selected::default();
-
-        let reset_values = ResetValues {
-            bookmark_buffer: bookmark_buffer.clone(),
-            category_buffer: category_buffer.clone(),
-            selected_category: selected_category.clone(),
-            selected_bookmark: selected_bookmark.clone(),
-        };
-
+    pub fn build(
+        shared::BufferStorage::<Bookmark>(bookmarks, bookmark_buffer, selected_bookmark): shared::BufferStorage<Bookmark>,
+        shared::BufferStorage::<Category>(categories, category_buffer, selected_category): shared::BufferStorage<Category>,
+        shared::BufferStorage::<Info>(infos, info_buffer, selected_info): shared::BufferStorage<
+            Info,
+        >,
+        reset_values: ResetValues,
+    ) -> Self {
         use command::*;
 
         Self::new()
@@ -151,7 +159,13 @@ impl CommandMap<'static> {
             .push(
                 "info",
                 None,
-                info::build("info".into(), reset_values.clone()),
+                info::build(
+                    "info".into(),
+                    reset_values.clone(),
+                    infos,
+                    info_buffer,
+                    selected_info,
+                ),
             )
             .push(
                 "load",
