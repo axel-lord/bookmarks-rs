@@ -4,6 +4,7 @@ pub mod count;
 pub mod info;
 pub mod list;
 pub mod load;
+pub mod print;
 pub mod push;
 pub mod reset;
 pub mod save;
