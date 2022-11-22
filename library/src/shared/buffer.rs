@@ -21,25 +21,24 @@ impl Buffer {
         F: FnMut(&T) -> bool,
         T: Storeable,
     {
-        let current = self.0.borrow_mut().take();
+        let mut internal = self.0.borrow_mut();
+
+        let current = internal.take();
         let content = content.borrow();
-        if let Some(current) = current {
-            self.0.replace(Some(
-                current
-                    .into_iter()
-                    .filter(|i| f(&content[i.clone()]))
-                    .collect(),
-            ));
+
+        internal.replace(if let Some(current) = current {
+            current
+                .into_iter()
+                .filter(|i| f(&content[i.clone()]))
+                .collect()
         } else {
-            self.0.replace(Some(
-                content
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, v)| f(&v))
-                    .map(|(i, _)| i)
-                    .collect(),
-            ));
-        }
+            content
+                .iter()
+                .enumerate()
+                .filter(|(_, v)| f(&v))
+                .map(|(i, _)| i)
+                .collect()
+        });
         self
     }
 
