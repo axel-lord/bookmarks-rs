@@ -30,6 +30,15 @@ impl Buffer {
                     .filter(|i| f(&content[i.clone()]))
                     .collect(),
             ));
+        } else {
+            self.0.replace(Some(
+                content
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, v)| f(&v))
+                    .map(|(i, _)| i)
+                    .collect(),
+            ));
         }
         self
     }
