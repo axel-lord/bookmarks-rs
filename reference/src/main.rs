@@ -22,7 +22,7 @@ impl bookmark_storage::Storeable for Reference {
         use aho_corasick::AhoCorasick;
         use lazy_static::lazy_static;
         lazy_static! {
-            static ref ac: AhoCorasick =
+            static ref AC: AhoCorasick =
                 AhoCorasick::new(&["<name>", "<children>", "<info>", "<tags>"]);
         }
 
@@ -31,9 +31,14 @@ impl bookmark_storage::Storeable for Reference {
         let mut info = Default::default();
         let mut tags = Default::default();
 
-        let iter = ac.find_iter(&line).collect::<Vec<_>>();
+        let iter = AC.find_iter(&line).collect::<Vec<_>>();
         for (i, window) in iter.windows(2).enumerate() {
-            let mat1 = &window[0];
+            let [mat1, mat2] = window else {
+                return Err(bookmark_storage::ParseErr::Other(format!(
+                    "{}: window did not contain 2 items", 
+                    err()
+                )));
+            };
             match mat1.pattern() {
                 _ if i.clone() != mat1.pattern() => {
                     return Err(bookmark_storage::ParseErr::Other(format!(
