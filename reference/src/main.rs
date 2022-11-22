@@ -18,44 +18,7 @@ impl bookmark_storage::Storeable for Reference {
         line: String,
         line_num: Option<usize>,
     ) -> Result<Self, bookmark_storage::ParseErr> {
-        use lazy_static::lazy_static;
-        lazy_static! {
-            static ref LINE_RE: regex::Regex = regex::Regex::new(
-                &[
-                    "^",
-                    "<name>",
-                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-                    "<children>",
-                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-                    "<info>",
-                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-                    "<tags>",
-                    bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-                    "$",
-                ]
-                .concat()
-            )
-            .unwrap();
-        }
-
         let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
-        let captures = LINE_RE.captures(&line).ok_or_else(err)?;
-
-        let name = captures.get(1).ok_or_else(err)?.range().into();
-
-        let group = captures.get(2).ok_or_else(err)?.range();
-        let children =
-            bookmark_storage::pattern_match::split_list_field(line.get(group.clone()).unwrap())
-                .map(|f| f + group.start)
-                .collect();
-
-        let info = captures.get(3).ok_or_else(err)?.range().into();
-
-        let group = captures.get(4).ok_or_else(err)?.range();
-        let tags =
-            bookmark_storage::pattern_match::split_list_field(line.get(group.clone()).unwrap())
-                .map(|f| f + group.start)
-                .collect();
 
         Ok(Self {
             line: line.into(),
