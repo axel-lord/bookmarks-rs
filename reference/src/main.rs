@@ -19,6 +19,37 @@ impl bookmark_storage::Storeable for Reference {
         line_num: Option<usize>,
     ) -> Result<Self, bookmark_storage::ParseErr> {
         let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
+        use aho_corasick::AhoCorasick;
+        use lazy_static::lazy_static;
+        lazy_static! {
+            static ref ac: AhoCorasick =
+                AhoCorasick::new(&["<name>", "<children>", "<info>", "<tags>"]);
+        }
+
+        let mut name = Default::default();
+        let mut children = Default::default();
+        let mut info = Default::default();
+        let mut tags = Default::default();
+
+        let iter = ac.find_iter(&line).collect::<Vec<_>>();
+        for (i, window) in iter.windows(2).enumerate() {
+            let mat1 = &window[0];
+            match mat1.pattern() {
+                _ if i.clone() != mat1.pattern() => {
+                    return Err(bookmark_storage::ParseErr::Other(format!(
+                        "{}: patterns matched in wrong order",
+                        err()
+                    )))
+                }
+                0 => {}
+                _ => {
+                    return Err(bookmark_storage::ParseErr::Other(format!(
+                        "{}: invalid pattern matched",
+                        err()
+                    )))
+                }
+            }
+        }
 
         Ok(Self {
             line: line.into(),
