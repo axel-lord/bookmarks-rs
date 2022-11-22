@@ -109,6 +109,12 @@ impl From<Field> for Range<usize> {
     }
 }
 
+impl Default for Field {
+    fn default() -> Self {
+        Self(0..0)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ListField(Vec<Field>);
 
@@ -152,6 +158,12 @@ impl FromIterator<Field> for ListField {
 impl FromIterator<Range<usize>> for ListField {
     fn from_iter<T: IntoIterator<Item = Range<usize>>>(iter: T) -> Self {
         Self(iter.into_iter().map(Field::from).collect())
+    }
+}
+
+impl Default for ListField {
+    fn default() -> Self {
+        Self(Vec::new())
     }
 }
 
