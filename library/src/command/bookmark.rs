@@ -1,6 +1,7 @@
 pub mod filter;
 pub mod new;
 pub mod regex;
+pub mod sort;
 
 use crate::{
     command::{count, list, load, print, push, save, select, set},
@@ -87,6 +88,11 @@ pub fn build(
                 "set",
                 Some("set a value on a bookmark\nusage: set VALUE [VALUES, [...]]"),
                 set::Set::build(bookmarks.clone(), selected_bookmark.clone()),
+            )
+            .push(
+                "sort",
+                Some("sort bookmarks by url"),
+                sort::build(bookmarks.clone(), reset_values.clone()),
             ),
     )
 }
