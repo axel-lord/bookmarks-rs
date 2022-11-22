@@ -2,6 +2,7 @@ pub mod filter;
 pub mod new;
 pub mod regex;
 pub mod sort;
+pub mod unique;
 
 use crate::{
     command::{count, list, load, print, push, save, select, set},
@@ -93,6 +94,11 @@ pub fn build(
                 "sort",
                 Some("sort bookmarks by url"),
                 sort::build(bookmarks.clone(), reset_values.clone()),
+            )
+            .push(
+                "unique",
+                Some("sort bookmarks and remove duplicates"),
+                unique::build(bookmarks.clone(), reset_values.clone()),
             ),
     )
 }
