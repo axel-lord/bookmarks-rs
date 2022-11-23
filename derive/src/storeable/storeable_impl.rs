@@ -100,6 +100,7 @@ fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> 
             Ok(Self {
                 #line: #line.into(),
                 #(#field_names,)*
+                ..Default::default()
             })
         }
         fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
