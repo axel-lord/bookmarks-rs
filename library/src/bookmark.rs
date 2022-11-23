@@ -1,6 +1,6 @@
 use bookmark_storage::{content_string::ContentString, token, Field, ListField, Section};
 
-#[derive(Debug, bookmark_derive::Storeable)]
+#[derive(Debug, bookmark_derive::Storeable, Default)]
 pub struct Bookmark {
     #[line]
     line: ContentString,
