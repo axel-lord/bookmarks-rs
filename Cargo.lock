@@ -47,6 +47,7 @@ dependencies = [
 name = "bookmark-library"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
  "bookmark-derive",
  "bookmark-storage",
  "lazy_static",
@@ -66,7 +67,6 @@ name = "bookmark-storage"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "regex",
 ]
 
 [[package]]
@@ -118,6 +118,7 @@ dependencies = [
 name = "derive-test"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
  "bookmark-derive",
  "bookmark-storage",
  "lazy_static",
@@ -563,7 +564,6 @@ dependencies = [
  "aho-corasick",
  "bookmark-storage",
  "lazy_static",
- "regex",
 ]
 
 [[package]]

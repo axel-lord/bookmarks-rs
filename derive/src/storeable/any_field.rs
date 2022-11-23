@@ -11,7 +11,7 @@ pub trait AnyField {
     fn get_set_match(&self) -> TokenStream2;
     fn get_get_match(&self) -> TokenStream2;
     fn get_to_line_call(&self) -> TokenStream2;
-    fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2;
+    fn get_capture_extract(&self, line: &syn::Ident) -> TokenStream2;
     fn get_fancy_display(&self, index: usize) -> TokenStream2;
     fn get_simple_display(&self, index: usize) -> TokenStream2;
 

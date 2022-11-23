@@ -9,4 +9,3 @@ edition = "2021"
 aho-corasick = "0.7.20"
 bookmark-storage = {path = "../storage"}
 lazy_static = "1.4.0"
-regex = "1.7"

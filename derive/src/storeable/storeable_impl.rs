@@ -61,45 +61,39 @@ fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
 }
 
 fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
-    let capture_extracts = store_fields
-        .iter()
-        .enumerate()
-        .map(|(i, f)| f.get_capture_extract(i + 1, &line));
+    let capture_extracts = store_fields.iter().map(|f| f.get_capture_extract(&line));
 
     let field_names = store_fields.iter().map(|f| f.get_ident());
 
-    let regex_parts = store_fields.iter().map(|f| {
-        let key = f.get_key();
-        quote! {
-            #key,
-            bookmark_storage::pattern_match::WHITESPACE_PADDED_GROUP,
-        }
-    });
+    let tokens = store_fields.iter().map(|f| f.get_key());
 
     quote! {
         fn with_string(
             #line: String,
             line_num: Option<usize>,
         ) -> Result<Self, bookmark_storage::ParseErr> {
+            let err = || bookmark_storage::ParseErr::Line(Some(#line.clone()), line_num);
+            let len = || #line.len();
+
+            use aho_corasick::AhoCorasick;
             use lazy_static::lazy_static;
             lazy_static! {
-                static ref LINE_RE: regex::Regex = regex::Regex::new(
-                    &[
-                        "^",
-                        #(
-                            #regex_parts
-                        )*
-                        "$",
-                    ]
-                    .concat()
-                )
-                .unwrap();
+                static ref AC: AhoCorasick =
+                    AhoCorasick::new(&[
+                        #(#tokens),*
+                    ]);
             }
 
-            let err = || bookmark_storage::ParseErr::Line(Some(#line.clone()), line_num);
-            let captures = LINE_RE.captures(&#line).ok_or_else(err)?;
+            let mut iter = AC.find_iter(&#line).enumerate().peekable();
 
             #(
+                let (i, mat) = iter.next().ok_or_else(err)?;
+                let start = mat.end();
+                let end = iter.peek().map(|m| m.1.start()).unwrap_or_else(len);
+                if start > end || mat.pattern() != i {
+                    return Err(err());
+                }
+
                 #capture_extracts
             )*
 

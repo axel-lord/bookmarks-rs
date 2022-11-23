@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 lazy_static = "1.4"
-regex = "1.7"
 bookmark-derive = {path = "../derive"}
 bookmark-storage = {path = "../storage"}
+aho-corasick = "0.7.20"
+regex = "1.7.0"

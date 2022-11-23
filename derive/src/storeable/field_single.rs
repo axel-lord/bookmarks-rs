@@ -96,10 +96,13 @@ impl AnyField for FieldSingle {
         quote! {&self.#ident()}
     }
 
-    fn get_capture_extract(&self, number: usize, _line: &syn::Ident) -> TokenStream2 {
+    fn get_capture_extract(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
         quote! {
-            let #ident = captures.get(#number).ok_or_else(err)?.range().into();
+            let #ident =
+                bookmark_storage::pattern_match::substring_location(&#line, &#line[start..end].trim())
+                    .ok_or_else(err)?
+                    .into();
         }
     }
 
