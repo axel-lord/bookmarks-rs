@@ -156,7 +156,7 @@ pub fn run(
     if let Some(init_commands) = init_commands {
         for command in init_commands.lines() {
             match eval_command(&command, true) {
-                Err(0) => break,
+                Err(0) => return 0,
                 Err(code) => {
                     println!("error running init commands");
                     return code;
