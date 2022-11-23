@@ -60,23 +60,13 @@ impl FieldList {
 }
 
 impl AnyField for FieldList {
-    fn get_key(&self) -> TokenStream2 {
-        self.key.clone()
-    }
-
-    fn get_ident(&self) -> &syn::Ident {
-        &self.ident
-    }
-
-    fn get_push_match(&self) -> TokenStream2 {
-        let match_str = self.get_ident_string();
-        let push_ident = self.get_push_ident();
-        quote! {#match_str => self.#push_ident(value),}
-    }
-
-    fn get_create_line_param(&self) -> TokenStream2 {
+    fn get_capture_extract(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
-        quote! {#ident: impl Iterator<Item = impl AsRef<str>>,}
+        quote! {
+            let #ident = bookmark_storage::pattern_match::split_list_field(&#line[start..end])
+                .map(|f| f + start)
+                .collect();
+        }
     }
 
     fn get_create_line_format_param(&self) -> TokenStream2 {
@@ -88,18 +78,32 @@ impl AnyField for FieldList {
         }
     }
 
-    fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
+    fn get_create_line_param(&self) -> TokenStream2 {
         let ident = &self.ident;
-        quote! {#ident: #line.extend(#ident).into(),}
+        quote! {#ident: impl Iterator<Item = impl AsRef<str>>,}
     }
 
-    fn get_set_match(&self) -> TokenStream2 {
-        let set_ident = self.get_set_ident();
-        let ident_string = self.get_ident_string();
+    fn get_fancy_display(&self, _: usize) -> TokenStream2 {
+        let ident = &self.ident;
+        let format_string = format!("\n\t{}: ", ident);
+        quote! {
+            if !self.#ident.is_empty() {
+                write!(f, #format_string)?;
+                bookmark_storage::write_list_field(f, self.#ident())?;
+            }
+        }
+    }
 
-        quote! {(#ident_string, bookmark_storage::Property::List(values)) => {
-            self.#set_ident(values.iter());
-        }}
+    fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
+        let get_fn = self.get_get_method(line);
+        let set_fn = self.get_set_method(line);
+        let push_fn = self.get_push_method(line);
+
+        quote! {
+            #get_fn
+            #set_fn
+            #push_fn
+        }
     }
 
     fn get_get_match(&self) -> TokenStream2 {
@@ -112,31 +116,32 @@ impl AnyField for FieldList {
         }
     }
 
-    fn get_to_line_call(&self) -> TokenStream2 {
-        let ident = &self.ident;
-        quote! {self.#ident()}
+    fn get_ident(&self) -> &syn::Ident {
+        &self.ident
     }
 
-    fn get_capture_extract(&self, number: usize, line: &syn::Ident) -> TokenStream2 {
-        let ident = &self.ident;
-        quote! {
-            let group = captures.get(#number).ok_or_else(err)?.range();
-            let #ident =
-                bookmark_storage::pattern_match::split_list_field(#line.get(group.clone()).unwrap())
-                    .map(|f| f + group.start)
-                    .collect();
-        }
+    fn get_key(&self) -> TokenStream2 {
+        self.key.clone()
     }
 
-    fn get_fancy_display(&self, _: usize) -> TokenStream2 {
+    fn get_new_init(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
-        let format_string = format!("\n\t{}: ", ident);
-        quote! {
-            if !self.#ident.is_empty() {
-                write!(f, #format_string)?;
-                bookmark_storage::write_list_field(f, self.#ident())?;
-            }
-        }
+        quote! {#ident: #line.extend(#ident).into(),}
+    }
+
+    fn get_push_match(&self) -> TokenStream2 {
+        let match_str = self.get_ident_string();
+        let push_ident = self.get_push_ident();
+        quote! {#match_str => self.#push_ident(value),}
+    }
+
+    fn get_set_match(&self) -> TokenStream2 {
+        let set_ident = self.get_set_ident();
+        let ident_string = self.get_ident_string();
+
+        quote! {(#ident_string, bookmark_storage::Property::List(values)) => {
+            self.#set_ident(values.iter());
+        }}
     }
 
     fn get_simple_display(&self, index: usize) -> TokenStream2 {
@@ -156,15 +161,8 @@ impl AnyField for FieldList {
         }
     }
 
-    fn get_field_methods(&self, line: &syn::Ident) -> TokenStream2 {
-        let get_fn = self.get_get_method(line);
-        let set_fn = self.get_set_method(line);
-        let push_fn = self.get_push_method(line);
-
-        quote! {
-            #get_fn
-            #set_fn
-            #push_fn
-        }
+    fn get_to_line_call(&self) -> TokenStream2 {
+        let ident = &self.ident;
+        quote! {self.#ident()}
     }
 }

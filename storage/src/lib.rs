@@ -190,6 +190,7 @@ pub fn join_with_delim<'a>(mut fields: impl Iterator<Item = impl AsRef<str>>) ->
     }
 
     for i in fields {
+        out += &DELIM;
         out += i.as_ref();
     }
 

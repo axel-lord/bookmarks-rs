@@ -19,6 +19,8 @@ impl bookmark_storage::Storeable for Reference {
         line_num: Option<usize>,
     ) -> Result<Self, bookmark_storage::ParseErr> {
         let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
+        let len = || line.len();
+
         use aho_corasick::AhoCorasick;
         use lazy_static::lazy_static;
         lazy_static! {
@@ -26,35 +28,61 @@ impl bookmark_storage::Storeable for Reference {
                 AhoCorasick::new(&["<name>", "<children>", "<info>", "<tags>"]);
         }
 
-        let mut name = Default::default();
-        let mut children = Default::default();
-        let mut info = Default::default();
-        let mut tags = Default::default();
+        let mut iter = AC.find_iter(&line).enumerate().peekable();
 
-        let iter = AC.find_iter(&line).collect::<Vec<_>>();
-        for (i, window) in iter.windows(2).enumerate() {
-            let [mat1, mat2] = window else {
-                return Err(bookmark_storage::ParseErr::Other(format!(
-                    "{}: window did not contain 2 items", 
-                    err()
-                )));
-            };
-            match mat1.pattern() {
-                _ if i.clone() != mat1.pattern() => {
-                    return Err(bookmark_storage::ParseErr::Other(format!(
-                        "{}: patterns matched in wrong order",
-                        err()
-                    )))
-                }
-                0 => {}
-                _ => {
-                    return Err(bookmark_storage::ParseErr::Other(format!(
-                        "{}: invalid pattern matched",
-                        err()
-                    )))
-                }
-            }
+        // completely repeatable
+        let (i, mat) = iter.next().ok_or_else(err)?;
+        let start = mat.end();
+        let end = iter.peek().map(|m| m.1.start()).unwrap_or_else(len);
+        if start > end || mat.pattern() != i {
+            return Err(err());
         }
+
+        // unique for every match, single field pattern
+        let name =
+            bookmark_storage::pattern_match::substring_location(&line, &line[start..end].trim())
+                .ok_or_else(err)?
+                .into();
+
+        // completely repeatable
+        let (i, mat) = iter.next().ok_or_else(err)?;
+        let start = mat.end();
+        let end = iter.peek().map(|m| m.1.start()).unwrap_or_else(len);
+        if start > end || mat.pattern() != i {
+            return Err(err());
+        }
+
+        // unique for every match, single field pattern
+        let children = bookmark_storage::pattern_match::split_list_field(&line[start..end])
+            .map(|f| f + start)
+            .collect();
+
+        // completely repeatable
+        let (i, mat) = iter.next().ok_or_else(err)?;
+        let start = mat.end();
+        let end = iter.peek().map(|m| m.1.start()).unwrap_or_else(len);
+        if start > end || mat.pattern() != i {
+            return Err(err());
+        }
+
+        // unique for every match, single field pattern
+        let info =
+            bookmark_storage::pattern_match::substring_location(&line, &line[start..end].trim())
+                .ok_or_else(err)?
+                .into();
+
+        // completely repeatable
+        let (i, mat) = iter.next().ok_or_else(err)?;
+        let start = mat.end();
+        let end = iter.peek().map(|m| m.1.start()).unwrap_or_else(len);
+        if start > end || mat.pattern() != i {
+            return Err(err());
+        }
+
+        // unique for every match, single field pattern
+        let tags = bookmark_storage::pattern_match::split_list_field(&line[start..end])
+            .map(|f| f + start)
+            .collect();
 
         Ok(Self {
             line: line.into(),
