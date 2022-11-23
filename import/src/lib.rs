@@ -11,9 +11,9 @@ use bookmark_library::{
 use scraper::{Html, Selector};
 
 #[derive(Debug)]
-pub struct OnetabImport;
+pub struct Import;
 
-impl bookmark_library::CommandBuilder for OnetabImport {
+impl bookmark_library::CommandBuilder for Import {
     fn name(&self) -> &'static str {
         "import"
     }
