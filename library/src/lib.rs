@@ -94,10 +94,10 @@ pub fn run(
     let infos = shared::BufferStorage::<Info>::default();
 
     let reset_values = ResetValues {
-        bookmark_buffer: bookmarks.1.clone(),
-        category_buffer: categories.1.clone(),
-        selected_category: categories.2.clone(),
-        selected_bookmark: bookmarks.2.clone(),
+        bookmark_buffer: bookmarks.buffer.clone(),
+        category_buffer: categories.buffer.clone(),
+        selected_category: categories.selected.clone(),
+        selected_bookmark: bookmarks.selected.clone(),
     };
 
     let command_map = extended_commands

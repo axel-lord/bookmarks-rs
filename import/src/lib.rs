@@ -19,7 +19,9 @@ impl bookmark_library::CommandBuilder for Import {
     }
     fn build(
         &mut self,
-        BufferStorage(bookmarks, _, _): BufferStorage<Bookmark>,
+        BufferStorage {
+            storage: bookmarks, ..
+        }: BufferStorage<Bookmark>,
         _categories: BufferStorage<bookmark_library::category::Category>,
         _infos: BufferStorage<bookmark_library::info::Info>,
         reset_values: ResetValues,

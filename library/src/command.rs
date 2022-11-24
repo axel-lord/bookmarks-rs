@@ -13,7 +13,7 @@ pub mod set;
 
 use std::error::Error;
 
-use crate::command_map::CommandMap;
+use crate::{category::IdentifierErr, command_map::CommandMap};
 
 pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
@@ -47,6 +47,12 @@ impl From<bookmark_storage::ParseErr> for CommandErr {
 
 impl From<bookmark_storage::PropertyErr> for CommandErr {
     fn from(err: bookmark_storage::PropertyErr) -> Self {
+        Self::Execution(format!("{err}"))
+    }
+}
+
+impl From<IdentifierErr> for CommandErr {
+    fn from(err: IdentifierErr) -> Self {
         Self::Execution(format!("{err}"))
     }
 }
