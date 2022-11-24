@@ -100,26 +100,29 @@ pub fn run(
         selected_bookmark: bookmarks.2.clone(),
     };
 
-    let command_map = extended_commands.iter_mut().fold(
-        CommandMap::build(
-            bookmarks.clone(),
-            categories.clone(),
-            infos.clone(),
-            reset_values.clone(),
-        ),
-        |map, builder| {
-            map.push(
-                builder.name(),
-                builder.help(),
-                builder.build(
-                    bookmarks.clone(),
-                    categories.clone(),
-                    infos.clone(),
-                    reset_values.clone(),
-                ),
-            )
-        },
-    );
+    let command_map = extended_commands
+        .iter_mut()
+        .fold(
+            CommandMap::build(
+                bookmarks.clone(),
+                categories.clone(),
+                infos.clone(),
+                reset_values.clone(),
+            ),
+            |map, builder| {
+                map.push(
+                    builder.name(),
+                    builder.help(),
+                    builder.build(
+                        bookmarks.clone(),
+                        categories.clone(),
+                        infos.clone(),
+                        reset_values.clone(),
+                    ),
+                )
+            },
+        )
+        .build();
 
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
         let command = command.trim();

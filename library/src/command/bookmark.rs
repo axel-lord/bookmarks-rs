@@ -6,7 +6,7 @@ pub mod unique;
 
 use crate::{
     command::{count, list, load, print, push, save, select, set},
-    command_map::CommandMap,
+    command_map::{CommandMap, CommandMapBuilder},
     reset::ResetValues,
     shared,
 };
@@ -19,8 +19,8 @@ pub fn build(
     reset_values: ResetValues,
 ) -> Box<CommandMap<'static>> {
     Box::new(
-        CommandMap::new()
-            .set_name(name)
+        CommandMapBuilder::new()
+            .name(name)
             .push(
                 "list",
                 None,
@@ -99,6 +99,7 @@ pub fn build(
                 "unique",
                 Some("sort bookmarks and remove duplicates"),
                 unique::build(bookmarks.clone(), reset_values.clone()),
-            ),
+            )
+            .build(),
     )
 }

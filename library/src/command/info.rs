@@ -1,4 +1,9 @@
-use crate::{command::load, command_map::CommandMap, reset::ResetValues, shared};
+use crate::{
+    command::load,
+    command_map::{CommandMap, CommandMapBuilder},
+    reset::ResetValues,
+    shared,
+};
 
 use super::CommandErr;
 
@@ -10,8 +15,8 @@ pub fn build(
     _selected_info: shared::Selected,
 ) -> Box<CommandMap<'static>> {
     Box::new(
-        CommandMap::new()
-            .set_name(name)
+        CommandMapBuilder::new()
+            .name(name)
             .push(
                 "load",
                 None,
@@ -33,6 +38,7 @@ pub fn build(
 
                     Ok(())
                 })
-            }),
+            })
+            .build(),
     )
 }

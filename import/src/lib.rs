@@ -4,7 +4,7 @@ use std::{
 };
 
 use bookmark_library::{
-    bookmark::Bookmark, command::CommandErr, command_map::CommandMap, reset::ResetValues,
+    bookmark::Bookmark, command::CommandErr, command_map::CommandMapBuilder, reset::ResetValues,
     shared::BufferStorage,
 };
 
@@ -25,8 +25,8 @@ impl bookmark_library::CommandBuilder for Import {
         reset_values: ResetValues,
     ) -> Box<dyn bookmark_library::command::Command> {
         Box::new(
-            CommandMap::new()
-                .set_name("import".into())
+            CommandMapBuilder::new()
+                .name("import".into())
                 .push("onetab", Some("import a onetab export"), {
                     let bookmarks = bookmarks.clone();
                     Box::new(move |args: &[String]| {
@@ -143,7 +143,8 @@ impl bookmark_library::CommandBuilder for Import {
 
                         Ok(())
                     })
-                }),
+                })
+                .build(),
         )
     }
 }
