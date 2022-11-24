@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, fmt::Debug};
+use std::{cell::RefCell, collections::HashMap, fmt::Debug, iter::FromIterator};
 
 use crate::{
     bookmark::Bookmark,
@@ -33,31 +33,40 @@ impl Debug for CommandEntry {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String, Option<String>);
+#[derive(Debug, Default)]
+pub struct CommandMapBuilder<'a>(Vec<(&'a str, CommandEntry)>, String, Option<String>);
 
-impl<'a> CommandMap<'a> {
+impl<'a> CommandMapBuilder<'a> {
     pub fn new() -> Self {
         Default::default()
     }
 
     pub fn push(mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) -> Self {
-        self.0.insert(name, CommandEntry::new(command, help));
+        self.0.push((name, CommandEntry::new(command, help)));
         self
     }
 
-    pub fn set_name(mut self, name: String) -> Self {
+    pub fn name(mut self, name: String) -> Self {
         self.1 = name;
         self
     }
 
-    pub fn name(&self) -> &str {
-        &self.1
-    }
-
-    pub fn set_lookup_backup(mut self, backup: Option<String>) -> Self {
+    pub fn lookup_backup(mut self, backup: Option<String>) -> Self {
         self.2 = backup;
         self
+    }
+
+    pub fn build(self) -> CommandMap<'a> {
+        CommandMap(HashMap::from_iter(self.0.into_iter()), self.1, self.2)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String, Option<String>);
+
+impl<'a> CommandMap<'a> {
+    pub fn name(&self) -> &str {
+        &self.1
     }
 
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
@@ -129,10 +138,10 @@ impl CommandMap<'static> {
             Info,
         >,
         reset_values: ResetValues,
-    ) -> Self {
+    ) -> CommandMapBuilder<'static> {
         use command::*;
 
-        Self::new()
+        CommandMapBuilder::new()
             .push("reset", None, reset::Reset::build(reset_values.clone()))
             .push(
                 "category",
@@ -178,6 +187,6 @@ impl CommandMap<'static> {
                 save::SaveAll::build(categories.clone(), bookmarks.clone()),
             )
             .push("debug", None, Box::new(command_debug))
-            .set_lookup_backup(Some("bookmark".into()))
+            .lookup_backup(Some("bookmark".into()))
     }
 }
