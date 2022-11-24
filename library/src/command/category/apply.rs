@@ -1,5 +1,3 @@
-use std::borrow::BorrowMut;
-
 use crate::{
     bookmark::Bookmark,
     category::Category,
@@ -18,17 +16,30 @@ pub fn build(
             ));
         }
 
+        let apply_category = |category: &Category| -> Result<(), CommandErr> {
+            let criteria = category.identifier_container()?;
+            let include_matcher = aho_corasick::AhoCorasickBuilder::new()
+                .ascii_case_insensitive(true)
+                .auto_configure(&criteria.include)
+                .build(&criteria.include);
+
+            bookmarks
+                .buffer
+                .filter_in_place(&bookmarks.storage, |bookmark| {
+                    criteria.require.iter().all(|r| bookmark.url().contains(r))
+                        && (criteria.whole.iter().any(|v| *v == bookmark.url())
+                            || include_matcher.is_match(bookmark.url()))
+                });
+            Ok(())
+        };
+
         let category_storage = categories.storage.borrow();
         let category = categories
             .selected
             .get(&category_storage)
             .ok_or_else(|| CommandErr::Usage("no category selected".into()))?;
 
-        let criteria = category.identifier_container()?;
-
-        bookmarks
-            .buffer
-            .filter_in_place(&bookmarks.storage, |_bookmark| true);
+        apply_category(category)?;
 
         Ok(())
     })
