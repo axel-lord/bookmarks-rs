@@ -16,6 +16,10 @@ impl Buffer {
         self.0.borrow_mut().take();
     }
 
+    pub fn replace(&self, with: Option<Vec<usize>>) {
+        self.0.replace(with);
+    }
+
     pub fn filter_in_place<F, T>(&self, content: &Storage<T>, mut f: F) -> &Self
     where
         F: FnMut(&T) -> bool,

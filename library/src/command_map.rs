@@ -34,7 +34,11 @@ impl Debug for CommandEntry {
 }
 
 #[derive(Debug, Default)]
-pub struct CommandMapBuilder<'a>(Vec<(&'a str, CommandEntry)>, String, Option<String>);
+pub struct CommandMapBuilder<'a> {
+    commands: Vec<(&'a str, CommandEntry)>,
+    name: String,
+    fallback: Option<String>,
+}
 
 impl<'a> CommandMapBuilder<'a> {
     pub fn new() -> Self {
@@ -42,31 +46,39 @@ impl<'a> CommandMapBuilder<'a> {
     }
 
     pub fn push(mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) -> Self {
-        self.0.push((name, CommandEntry::new(command, help)));
+        self.commands.push((name, CommandEntry::new(command, help)));
         self
     }
 
     pub fn name(mut self, name: String) -> Self {
-        self.1 = name;
+        self.name = name;
         self
     }
 
     pub fn lookup_backup(mut self, backup: Option<String>) -> Self {
-        self.2 = backup;
+        self.fallback = backup;
         self
     }
 
     pub fn build(self) -> CommandMap<'a> {
-        CommandMap(HashMap::from_iter(self.0.into_iter()), self.1, self.2)
+        CommandMap {
+            commands: HashMap::from_iter(self.commands.into_iter()),
+            name: self.name,
+            fallback: self.fallback,
+        }
     }
 }
 
 #[derive(Default, Debug)]
-pub struct CommandMap<'a>(HashMap<&'a str, CommandEntry>, String, Option<String>);
+pub struct CommandMap<'a> {
+    commands: HashMap<&'a str, CommandEntry>,
+    name: String,
+    fallback: Option<String>,
+}
 
 impl<'a> CommandMap<'a> {
     pub fn name(&self) -> &str {
-        &self.1
+        &self.name
     }
 
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
@@ -74,7 +86,7 @@ impl<'a> CommandMap<'a> {
             "help" => match args.len() {
                 0 => {
                     println!("available commands:");
-                    for (command, entry) in self.0.iter() {
+                    for (command, entry) in self.commands.iter() {
                         if let Some(ref help) = entry.help {
                             println!("- {command}, {help}");
                         } else {
@@ -99,10 +111,10 @@ impl<'a> CommandMap<'a> {
                 )),
             },
             _ => {
-                if let Some(command) = self.0.get(name) {
+                if let Some(command) = self.commands.get(name) {
                     command.command.borrow_mut().call(args)
-                } else if let Some(ref lookup_backup) = self.2 {
-                    let Some(command) = self.0.get(lookup_backup.as_str()) else {
+                } else if let Some(ref lookup_backup) = self.fallback {
+                    let Some(command) = self.commands.get(lookup_backup.as_str()) else {
                         return Err(CommandErr::Lookup);
                     };
 
@@ -119,24 +131,22 @@ impl<'a> CommandMap<'a> {
 
     pub fn help(&self, name: &str) -> Option<String> {
         if name == "help" {
-            Some(if self.1.len() == 0 {
+            Some(if self.name.len() == 0 {
                 "show help for a command\nusage: help COMMAND".into()
             } else {
-                format!("show help for a command\nusage: {} help COMMAND", self.1)
+                format!("show help for a command\nusage: {} help COMMAND", self.name)
             })
         } else {
-            self.0.get(name)?.help.clone()
+            self.commands.get(name)?.help.clone()
         }
     }
 }
 
 impl CommandMap<'static> {
     pub fn build(
-        shared::BufferStorage::<Bookmark>(bookmarks, bookmark_buffer, selected_bookmark): shared::BufferStorage<Bookmark>,
-        shared::BufferStorage::<Category>(categories, category_buffer, selected_category): shared::BufferStorage<Category>,
-        shared::BufferStorage::<Info>(infos, info_buffer, selected_info): shared::BufferStorage<
-            Info,
-        >,
+        bookmarks: shared::BufferStorage<Bookmark>,
+        categories: shared::BufferStorage<Category>,
+        infos: shared::BufferStorage<Info>,
         reset_values: ResetValues,
     ) -> CommandMapBuilder<'static> {
         use command::*;
@@ -149,8 +159,7 @@ impl CommandMap<'static> {
                 category::build(
                     "category".into(),
                     categories.clone(),
-                    category_buffer.clone(),
-                    selected_category.clone(),
+                    bookmarks.clone(),
                     reset_values.clone(),
                 ),
             )
@@ -159,9 +168,9 @@ impl CommandMap<'static> {
                 None,
                 bookmark::build(
                     "bookmark".into(),
-                    bookmarks.clone(),
-                    bookmark_buffer.clone(),
-                    selected_bookmark.clone(),
+                    bookmarks.storage.clone(),
+                    bookmarks.buffer.clone(),
+                    bookmarks.selected.clone(),
                     reset_values.clone(),
                 ),
             )
@@ -171,20 +180,24 @@ impl CommandMap<'static> {
                 info::build(
                     "info".into(),
                     reset_values.clone(),
-                    infos,
-                    info_buffer,
-                    selected_info,
+                    infos.storage,
+                    infos.buffer,
+                    infos.selected,
                 ),
             )
             .push(
                 "load",
                 None,
-                load::LoadAll::build(categories.clone(), bookmarks.clone(), reset_values.clone()),
+                load::LoadAll::build(
+                    categories.storage.clone(),
+                    bookmarks.storage.clone(),
+                    reset_values.clone(),
+                ),
             )
             .push(
                 "save",
                 None,
-                save::SaveAll::build(categories.clone(), bookmarks.clone()),
+                save::SaveAll::build(categories.storage.clone(), bookmarks.storage.clone()),
             )
             .push("debug", None, Box::new(command_debug))
             .lookup_backup(Some("bookmark".into()))
