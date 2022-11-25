@@ -31,15 +31,12 @@ impl Buffer {
         let content = content.borrow();
 
         internal.replace(if let Some(current) = current {
-            current
-                .into_iter()
-                .filter(|i| f(&content[i.clone()]))
-                .collect()
+            current.into_iter().filter(|i| f(&content[*i])).collect()
         } else {
             content
                 .iter()
                 .enumerate()
-                .filter(|(_, v)| f(&v))
+                .filter(|(_, v)| f(v))
                 .map(|(i, _)| i)
                 .collect()
         });
@@ -50,7 +47,7 @@ impl Buffer {
         if self.0.borrow().is_some() {
             EitherIter::A(self.0.borrow().as_ref().unwrap().clone().into_iter())
         } else {
-            EitherIter::B((0..).into_iter())
+            EitherIter::B(0..)
         }
     }
 }

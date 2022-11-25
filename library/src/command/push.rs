@@ -26,7 +26,7 @@ where
         match item.get(property)? {
             Property::List(_) => {
                 for value in &args[1..] {
-                    item.push(property, &value)?;
+                    item.push(property, value)?;
                 }
             }
             Property::Single(_) => {

@@ -59,7 +59,7 @@ pub fn build(
             .push(
                 "save",
                 None,
-                save::Save::build(bookmarks.clone(), bookmark_buffer.clone()),
+                save::Save::build(bookmarks.clone(), bookmark_buffer /*.clone()*/),
             )
             .push(
                 "select",
@@ -88,7 +88,7 @@ pub fn build(
             .push(
                 "set",
                 Some("set a value on a bookmark\nusage: set VALUE [VALUES, [...]]"),
-                set::Set::build(bookmarks.clone(), selected_bookmark.clone()),
+                set::Set::build(bookmarks.clone(), selected_bookmark /*.clone()*/),
             )
             .push(
                 "sort",
@@ -98,7 +98,7 @@ pub fn build(
             .push(
                 "unique",
                 Some("sort bookmarks and remove duplicates"),
-                unique::build(bookmarks.clone(), reset_values.clone()),
+                unique::build(bookmarks /*.clone()*/, reset_values /*.clone()*/),
             )
             .build(),
     )

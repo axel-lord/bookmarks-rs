@@ -2,7 +2,7 @@ use super::any_field::AnyField;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 
-fn gen_set(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_set(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let set_matches = store_fields.iter().map(|f| f.get_set_match());
 
     quote! {
@@ -22,7 +22,7 @@ fn gen_set(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-fn gen_get(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_get(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let get_matches = store_fields.iter().map(|f| f.get_get_match());
 
     quote! {
@@ -40,7 +40,7 @@ fn gen_get(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_push(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let push_matches = store_fields.iter().map(|f| f.get_push_match());
 
     quote! {
@@ -60,14 +60,15 @@ fn gen_push(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
     }
 }
 
-fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
-    let capture_extracts = store_fields.iter().map(|f| f.get_capture_extract(&line));
+fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
+    let capture_extracts = store_fields.iter().map(|f| f.get_capture_extract(line));
 
     let field_names = store_fields.iter().map(|f| f.get_ident());
 
     let tokens = store_fields.iter().map(|f| f.get_key());
 
     quote! {
+        #[allow(clippy::needless_update)]
         fn with_string(
             #line: String,
             line_num: Option<usize>,
@@ -109,7 +110,7 @@ fn gen_with_string(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> 
     }
 }
 
-fn gen_to_line(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_to_line(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let to_line_calls = store_fields.iter().map(|f| f.get_to_line_call());
 
     quote! {
@@ -130,7 +131,7 @@ fn gen_is_edited(line: &syn::Ident) -> TokenStream2 {
 pub fn gen_storeable_impl(
     name: &syn::Ident,
     line: &syn::Ident,
-    store_fields: &Vec<Box<dyn AnyField>>,
+    store_fields: &[Box<dyn AnyField>],
 ) -> TokenStream2 {
     let with_string_fn = gen_with_string(line, store_fields);
     let to_line_fn = gen_to_line(store_fields);

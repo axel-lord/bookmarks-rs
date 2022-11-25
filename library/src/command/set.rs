@@ -42,7 +42,7 @@ where
                         property
                     )));
                 } else {
-                    item.set(property, Property::Single(args[1].clone().into()))?;
+                    item.set(property, Property::Single(args[1].clone()))?;
                 }
             }
         }

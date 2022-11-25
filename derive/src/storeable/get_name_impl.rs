@@ -3,8 +3,8 @@ use quote::quote;
 
 use super::any_field::AnyField;
 
-fn gen_field_access(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
-    let field_access = store_fields.iter().map(|f| f.get_field_methods(&line));
+fn gen_field_access(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
+    let field_access = store_fields.iter().map(|f| f.get_field_methods(line));
 
     quote! {
         #(
@@ -15,10 +15,10 @@ fn gen_field_access(line: &syn::Ident, store_fields: &Vec<Box<dyn AnyField>>) ->
 
 fn gen_new(
     line: &syn::Ident,
-    store_fields: &Vec<Box<dyn AnyField>>,
+    store_fields: &[Box<dyn AnyField>],
     params: &Vec<TokenStream2>,
 ) -> TokenStream2 {
-    let new_fields = store_fields.iter().map(|f| f.get_new_init(&line));
+    let new_fields = store_fields.iter().map(|f| f.get_new_init(line));
 
     quote! {
         pub fn new<'a>(#(#params)*) -> Self {

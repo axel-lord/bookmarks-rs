@@ -80,7 +80,7 @@ impl<'a> Command for CommandMap<'a> {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         CommandMap::call(
             self,
-            &args.get(0).ok_or_else(|| {
+            args.get(0).ok_or_else(|| {
                 CommandErr::Execution("needs to be called with a subcommand".into())
             })?,
             &args[1..],

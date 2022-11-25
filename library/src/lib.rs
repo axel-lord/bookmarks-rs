@@ -127,7 +127,7 @@ pub fn run(
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
         let command = command.trim();
 
-        let Some(args) = parse_command(&command) else {
+        let Some(args) = parse_command(command) else {
             println!("could not parse \"{command}\"");
             return Ok(());
         };
@@ -138,11 +138,11 @@ pub fn run(
             return Err(0);
         }
 
-        if let Err(err) = command_map.call(&command, &args[1..]) {
+        if let Err(err) = command_map.call(command, &args[1..]) {
             match err {
                 CommandErr::Usage(ref msg) => {
                     println!("incorrect usage: {msg}");
-                    if let Some(help) = command_map.help(&command) {
+                    if let Some(help) = command_map.help(command) {
                         println!("{help}");
                     };
                 }
@@ -158,7 +158,7 @@ pub fn run(
 
     if let Some(init_commands) = init_commands {
         for command in init_commands.lines() {
-            match eval_command(&command, true) {
+            match eval_command(command, true) {
                 Err(0) => return 0,
                 Err(code) => {
                     println!("error running init commands");

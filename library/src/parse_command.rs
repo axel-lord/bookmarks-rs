@@ -9,7 +9,7 @@ pub fn parse_command(line: &str) -> Option<Vec<String>> {
     let mut next_start = 0;
     let mut arg_vec = Vec::new();
 
-    for capture in ARG_RE.captures_iter(&line) {
+    for capture in ARG_RE.captures_iter(line) {
         // if capture exists so should whole capture
         let whole_capture = capture
             .get(0)

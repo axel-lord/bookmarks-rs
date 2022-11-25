@@ -2,7 +2,7 @@ use super::{any_field::AnyField, field_single::FieldSingle};
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 
-fn gen_simple_display(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
+fn gen_simple_display(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let simple_displays = store_fields
         .iter()
         .enumerate()
@@ -16,7 +16,7 @@ fn gen_simple_display(store_fields: &Vec<Box<dyn AnyField>>) -> TokenStream2 {
 }
 
 fn gen_alternate_display(
-    display_fields: &Vec<Box<dyn AnyField>>,
+    display_fields: &[Box<dyn AnyField>],
     title_field: &FieldSingle,
 ) -> TokenStream2 {
     let alternate_displays = display_fields
@@ -37,8 +37,8 @@ fn gen_alternate_display(
 
 fn gen_display(
     name: &syn::Ident,
-    store_fields: &Vec<Box<dyn AnyField>>,
-    display_fields: &Vec<Box<dyn AnyField>>,
+    store_fields: &[Box<dyn AnyField>],
+    display_fields: &[Box<dyn AnyField>],
     title_field: &FieldSingle,
 ) -> TokenStream2 {
     let simple_display = gen_simple_display(store_fields);
@@ -60,8 +60,8 @@ fn gen_display(
 
 pub fn display_implementation(
     name: &syn::Ident,
-    store_fields: &Vec<Box<dyn AnyField>>,
-    display_fields: &Vec<Box<dyn AnyField>>,
+    store_fields: &[Box<dyn AnyField>],
+    display_fields: &[Box<dyn AnyField>],
     title_field: &Option<FieldSingle>,
 ) -> TokenStream2 {
     if let Some(title_field) = title_field {

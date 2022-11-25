@@ -131,7 +131,7 @@ impl<'a> CommandMap<'a> {
 
     pub fn help(&self, name: &str) -> Option<String> {
         if name == "help" {
-            Some(if self.name.len() == 0 {
+            Some(if self.name.is_empty() {
                 "show help for a command\nusage: help COMMAND".into()
             } else {
                 format!("show help for a command\nusage: {} help COMMAND", self.name)
@@ -191,13 +191,16 @@ impl CommandMap<'static> {
                 load::LoadAll::build(
                     categories.storage.clone(),
                     bookmarks.storage.clone(),
-                    reset_values.clone(),
+                    reset_values, /*.clone()*/
                 ),
             )
             .push(
                 "save",
                 None,
-                save::SaveAll::build(categories.storage.clone(), bookmarks.storage.clone()),
+                save::SaveAll::build(
+                    categories.storage, /*.clone()*/
+                    bookmarks.storage,  /*.clone()*/
+                ),
             )
             .push("debug", None, Box::new(command_debug))
             .lookup_backup(Some("bookmark".into()))
