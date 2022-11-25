@@ -87,3 +87,13 @@ impl<'a> Command for CommandMap<'a> {
         )
     }
 }
+
+pub fn args_are_empty<T>(args: &[T]) -> Result<(), CommandErr> {
+    if args.is_empty() {
+        Ok(())
+    } else {
+        Err(CommandErr::Usage(
+            "command that takes no arguments called with arguments".into(),
+        ))
+    }
+}

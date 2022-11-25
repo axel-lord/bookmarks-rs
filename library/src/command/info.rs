@@ -1,18 +1,59 @@
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    rc::{Rc, Weak},
+};
+
 use crate::{
-    command::load,
+    category::Category,
+    command::{self, load},
     command_map::{CommandMap, CommandMapBuilder},
+    info::Info,
     reset::ResetValues,
     shared,
 };
 
 use super::CommandErr;
 
+#[derive(Default)]
+struct CatNode {
+    name: String,
+    parents: Vec<Weak<RefCell<CatNode>>>,
+    children: Vec<Weak<RefCell<CatNode>>>,
+}
+
+impl CatNode {
+    fn new(name: String) -> Self {
+        Self {
+            name,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Default)]
+struct CatMap {
+    map: HashMap<String, Rc<RefCell<CatNode>>>,
+}
+
+impl CatMap {
+    fn get_or_create(&mut self, key: &str) -> Rc<RefCell<CatNode>> {
+        self.map
+            .entry(key.into())
+            .or_insert_with(|| Rc::new(RefCell::new(CatNode::new(key.into()))))
+            .clone()
+    }
+
+    fn new() -> Self {
+        Default::default()
+    }
+}
+
 pub fn build(
     name: String,
+    infos: shared::BufferStorage<Info>,
+    categories: shared::BufferStorage<Category>,
     reset_values: ResetValues,
-    info_container: shared::Infos,
-    _info_buffer: shared::Buffer,
-    _selected_info: shared::Selected,
 ) -> Box<CommandMap<'static>> {
     Box::new(
         CommandMapBuilder::new()
@@ -20,10 +61,37 @@ pub fn build(
             .push(
                 "load",
                 None,
-                load::Load::build(info_container.clone(), reset_values),
+                load::Load::build(infos.storage.clone(), reset_values),
             )
+            .push("categories", Some("show category hierarchy"), {
+                let categories = categories;
+                let infos = infos.clone();
+                Box::new(move |args: &[_]| {
+                    command::args_are_empty(args)?;
+
+                    let mut map = CatMap::new();
+                    for cat in categories.storage.borrow().iter() {
+                        let cat_entry = map.get_or_create(cat.id());
+
+                        for child in cat.subcategories() {
+                            let child_entry = map.get_or_create(child);
+
+                            child_entry
+                                .borrow_mut()
+                                .parents
+                                .push(Rc::downgrade(&cat_entry));
+                            cat_entry
+                                .borrow_mut()
+                                .children
+                                .push(Rc::downgrade(&child_entry));
+                        }
+                    }
+
+                    Ok(())
+                })
+            })
             .push("show", None, {
-                let info_container = info_container /*.clone()*/;
+                let info_container = infos.storage;
                 Box::new(move |args: &[_]| {
                     if !args.is_empty() {
                         return Err(CommandErr::Execution("no info loaded".into()));
