@@ -179,10 +179,9 @@ impl CommandMap<'static> {
                 None,
                 info::build(
                     "info".into(),
+                    infos,
+                    categories.clone(),
                     reset_values.clone(),
-                    infos.storage,
-                    infos.buffer,
-                    infos.selected,
                 ),
             )
             .push(
