@@ -21,7 +21,7 @@ pub fn build(
             .push(
                 "load",
                 None,
-                load::Load::build(categories.storage.clone(), reset_values.clone()),
+                load::Load::build(categories.storage.clone(), reset_values /*.clone()*/),
             )
             .push(
                 "list",
@@ -61,7 +61,7 @@ pub fn build(
             .push(
                 "apply",
                 Some("filter bookmarks in buffer by selected category"),
-                apply::build(bookmarks.clone(), categories.clone()),
+                apply::build(bookmarks /*.clone()*/, categories /*.clone()*/),
             )
             .build(),
     )

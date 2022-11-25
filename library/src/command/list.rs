@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
-    if number.abs() as usize > max {
+    if number.unsigned_abs() > max {
         return Err(CommandErr::Execution(format!(
             "number {number} larger than max value {max}"
         )));
@@ -15,7 +15,7 @@ pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> 
     Ok(if number >= 0 {
         number as usize
     } else {
-        max - number.abs() as usize
+        max - number.unsigned_abs()
     })
 }
 
@@ -38,7 +38,7 @@ where
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or(Ok(self.buffer.count().unwrap_or(self.storage.len())))
+            .unwrap_or_else(|| Ok(self.buffer.count().unwrap_or_else(|| self.storage.len())))
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",

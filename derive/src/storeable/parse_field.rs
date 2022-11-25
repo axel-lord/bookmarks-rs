@@ -23,7 +23,7 @@ pub fn parse_field(field: &syn::Field) -> FieldType {
     let mut is_title = false;
 
     for attr in field.attrs.iter() {
-        match parse_attr(&attr) {
+        match parse_attr(attr) {
             AttrType::Content => attr_type = AttrType::Content,
             AttrType::Key(k) => {
                 if key.is_none() {

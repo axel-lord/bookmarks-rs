@@ -31,7 +31,7 @@ where
             self.buffer
                 .count()
                 .map(|b| b.to_string())
-                .unwrap_or("All".into()),
+                .unwrap_or_else(|| "All".into()),
         );
 
         Ok(())

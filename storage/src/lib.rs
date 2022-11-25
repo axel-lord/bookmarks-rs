@@ -115,7 +115,7 @@ impl Default for Field {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ListField(Vec<Field>);
 
 impl From<Vec<Range<usize>>> for ListField {
@@ -161,12 +161,6 @@ impl FromIterator<Range<usize>> for ListField {
     }
 }
 
-impl Default for ListField {
-    fn default() -> Self {
-        Self(Vec::new())
-    }
-}
-
 impl ListField {
     pub fn new() -> Self {
         Self(Default::default())
@@ -177,7 +171,7 @@ impl ListField {
     }
 }
 
-pub fn join_with_delim<'a>(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
+pub fn join_with_delim(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
     use lazy_static::lazy_static;
     lazy_static! {
         static ref DELIM: String = format!(" {} ", token::DELIM);

@@ -16,7 +16,7 @@ pub fn split_by_delim_to_ranges(list: &str) -> Vec<Range<usize>> {
         .collect()
 }
 
-pub fn split_list_field<'a>(list_field: &'a str) -> impl 'a + Iterator<Item = Field> {
+pub fn split_list_field(list_field: &'_ str) -> impl '_ + Iterator<Item = Field> {
     list_field.split(token::DELIM).filter_map(|item| {
         let trimmed = item.trim();
         if trimmed.is_empty() {
@@ -57,9 +57,9 @@ mod tests {
     #[test]
     pub fn substring_location_basic() {
         let string = "Hello there! Nice to meet you!";
-        assert_eq!(substring_location(&string, &string[0..5]), Some(0..5));
-        assert_eq!(substring_location(&string, &string[2..5]), Some(2..5));
-        assert_eq!(substring_location(&string, &string[2..7]), Some(2..7));
+        assert_eq!(substring_location(string, &string[0..5]), Some(0..5));
+        assert_eq!(substring_location(string, &string[2..5]), Some(2..5));
+        assert_eq!(substring_location(string, &string[2..7]), Some(2..7));
     }
 
     #[test]
@@ -75,7 +75,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0.clone()])
+                .map(|f| &field[f.0])
                 .collect::<Vec<_>>(),
             vec!["a", "b", "c"]
         );
@@ -90,7 +90,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0.clone()])
+                .map(|f| &field[f.0])
                 .collect::<Vec<_>>(),
             vec!["a", "b", "c"]
         );
@@ -106,7 +106,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0.clone()])
+                .map(|f| &field[f.0])
                 .collect::<Vec<_>>(),
             Vec::<&str>::new()
         );

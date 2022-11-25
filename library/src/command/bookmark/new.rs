@@ -14,7 +14,7 @@ pub struct New {
 
 impl Command for New {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(CommandErr::Usage(
                 "new should be called without any arguments".into(),
             ));

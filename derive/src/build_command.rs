@@ -57,7 +57,7 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
         (
             quote! {#lt #params #gt},
             quote! {#lt #simple #gt},
-            w_clause.to_token_stream().into(),
+            w_clause.to_token_stream(),
         )
     };
 

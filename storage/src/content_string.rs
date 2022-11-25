@@ -1,19 +1,10 @@
 use crate::Field;
 use std::ops::Range;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ContentString {
     is_appended_to: bool,
     string: String,
-}
-
-impl Default for ContentString {
-    fn default() -> Self {
-        ContentString {
-            is_appended_to: false,
-            string: Default::default(),
-        }
-    }
 }
 
 impl From<&str> for ContentString {

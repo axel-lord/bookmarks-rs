@@ -93,7 +93,7 @@ impl bookmark_library::CommandBuilder for Import {
                     })
                 })
                 .push("json", Some("parse firefox bookmark backup"), {
-                    let bookmarks = bookmarks.clone();
+                    // let bookmarks = bookmarks.clone();
                     Box::new(move |args: &[_]| {
                         if args.len() != 1 {
                             return Err(CommandErr::Usage(

@@ -23,7 +23,7 @@ pub fn build(
                 load::Load::build(info_container.clone(), reset_values),
             )
             .push("show", None, {
-                let info_container = info_container.clone();
+                let info_container = info_container /*.clone()*/;
                 Box::new(move |args: &[_]| {
                     if !args.is_empty() {
                         return Err(CommandErr::Execution("no info loaded".into()));

@@ -16,6 +16,10 @@ where
         self.0.borrow().len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.0.borrow().is_empty()
+    }
+
     pub fn borrow(&self) -> Ref<Vec<T>> {
         self.0.borrow()
     }

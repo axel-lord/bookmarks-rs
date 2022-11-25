@@ -25,7 +25,7 @@ impl bookmark_storage::Storeable for Reference {
         use lazy_static::lazy_static;
         lazy_static! {
             static ref AC: AhoCorasick =
-                AhoCorasick::new(&["<name>", "<children>", "<info>", "<tags>"]);
+                AhoCorasick::new(["<name>", "<children>", "<info>", "<tags>"]);
         }
 
         let mut iter = AC.find_iter(&line).enumerate().peekable();
@@ -40,7 +40,7 @@ impl bookmark_storage::Storeable for Reference {
 
         // unique for every match, single field pattern
         let name =
-            bookmark_storage::pattern_match::substring_location(&line, &line[start..end].trim())
+            bookmark_storage::pattern_match::substring_location(&line, line[start..end].trim())
                 .ok_or_else(err)?
                 .into();
 
@@ -67,7 +67,7 @@ impl bookmark_storage::Storeable for Reference {
 
         // unique for every match, single field pattern
         let info =
-            bookmark_storage::pattern_match::substring_location(&line, &line[start..end].trim())
+            bookmark_storage::pattern_match::substring_location(&line, line[start..end].trim())
                 .ok_or_else(err)?
                 .into();
 
@@ -98,7 +98,7 @@ impl bookmark_storage::Storeable for Reference {
     }
 
     fn to_line(&self) -> String {
-        Self::create_line(&self.name(), self.children(), &self.info(), self.tags())
+        Self::create_line(self.name(), self.children(), self.info(), self.tags())
     }
 
     fn is_edited(&self) -> bool {
@@ -286,6 +286,7 @@ impl std::convert::TryFrom<&str> for Reference {
     }
 }
 
+#[allow(clippy::write_literal)]
 impl std::fmt::Display for Reference {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if !f.alternate() {

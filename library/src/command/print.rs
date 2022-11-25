@@ -10,7 +10,7 @@ where
     T: 'static + Storeable + std::fmt::Display,
 {
     Box::new(move |args: &[_]| {
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(CommandErr::Usage(
                 "print should be called without any arguments".into(),
             ));

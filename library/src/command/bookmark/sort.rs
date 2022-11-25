@@ -6,7 +6,7 @@ use crate::{
 
 pub fn build(bookmarks: shared::Bookmarks, reset_values: ResetValues) -> Box<dyn Command> {
     Box::new(move |args: &[_]| {
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(CommandErr::Usage(
                 "sort should be called without any arguments".into(),
             ));
