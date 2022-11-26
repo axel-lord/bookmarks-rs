@@ -179,7 +179,7 @@ impl CommandMap<'static> {
                 None,
                 info::build(
                     "info".into(),
-                    infos,
+                    infos.clone(),
                     categories.clone(),
                     reset_values.clone(),
                 ),
@@ -190,7 +190,8 @@ impl CommandMap<'static> {
                 load::LoadAll::build(
                     categories.storage.clone(),
                     bookmarks.storage.clone(),
-                    reset_values, /*.clone()*/
+                    infos,
+                    reset_values,
                 ),
             )
             .push(

@@ -98,7 +98,7 @@ pub fn build(
                         let (level, current) = cat_stack.pop().unwrap();
                         let current = current.borrow();
 
-                        println!("{}{}", "\t".repeat(level), current.name);
+                        println!("{}{}", "   ".repeat(level), current.name);
 
                         // safeguard for recursion
                         if level > 16 {

@@ -5,6 +5,7 @@ use std::{
 
 use crate::{
     command::{Command, CommandErr},
+    info::Info,
     reset::ResetValues,
     shared,
 };
@@ -56,6 +57,7 @@ where
 pub struct LoadAll {
     categories: shared::Categroies,
     bookmarks: shared::Bookmarks,
+    infos: shared::BufferStorage<Info>,
     reset_values: ResetValues,
 }
 
@@ -69,6 +71,10 @@ impl Command for LoadAll {
 
         let reader = BufReader::new(File::open(&args[0])?);
         let mut lines = reader.lines().enumerate();
+
+        let infos = bookmark_storage::load::load_from(lines.by_ref())?;
+        println!("loaded {} infos", infos.len());
+        self.infos.storage.borrow_mut().extend(infos.into_iter());
 
         let categories = bookmark_storage::load::load_from(lines.by_ref())?;
         println!("loaded {} categories", categories.len());
