@@ -1,5 +1,5 @@
 use bookmark_derive::Storeable;
-use bookmark_storage::{content_string::ContentString, Field, ListField};
+use bookmark_storage::{ContentString, Field, ListField};
 
 const TAGS_TOKEN: &str = "<tags>";
 const INFO_TOKEN: &str = "<info>";
