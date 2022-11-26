@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     rc::{Rc, Weak},
 };
 
@@ -84,6 +84,29 @@ pub fn build(
                                 .borrow_mut()
                                 .children
                                 .push(Rc::downgrade(&child_entry));
+                        }
+                    }
+
+                    let mut cat_stack = Vec::new();
+                    for info in infos.storage.borrow().iter() {
+                        for cat in info.categories().collect::<Vec<_>>().into_iter().rev() {
+                            cat_stack.push((0usize, map.get_or_create(cat)));
+                        }
+                    }
+
+                    while !cat_stack.is_empty() {
+                        let (level, current) = cat_stack.pop().unwrap();
+                        let current = current.borrow();
+
+                        println!("{}{}", "\t".repeat(level), current.name);
+
+                        // safeguard for recursion
+                        if level > 16 {
+                            break;
+                        }
+
+                        for child in current.children.iter().rev() {
+                            cat_stack.push((level + 1, child.upgrade().unwrap()));
                         }
                     }
 
