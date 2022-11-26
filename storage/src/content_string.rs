@@ -2,6 +2,8 @@ use crate::Field;
 use std::ops::Range;
 
 #[derive(Debug, Clone, Default)]
+/// String that keeps track of whether or not it has been appended to
+/// used by Storeable derives to store string data.
 pub struct ContentString {
     is_appended_to: bool,
     string: String,
@@ -30,18 +32,24 @@ impl std::ops::Deref for ContentString {
 }
 
 impl ContentString {
+    /// Create a new ContentString it is empty and
+    /// marked as not appended to.
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Consume the ContentString and get a regular string from it.
     pub fn take(self) -> String {
         self.string
     }
 
+    /// Check whether or not the string has been appended to.
     pub fn is_appended_to(&self) -> bool {
         self.is_appended_to
     }
 
+    /// Push some more content onto the string and get the location
+    /// of the pushed content.
     pub fn push(&mut self, content: &str) -> Range<usize> {
         let begin = self.string.len();
         self.string += content;
@@ -52,6 +60,7 @@ impl ContentString {
         begin..end
     }
 
+    /// Push multiple pieces of content and get their locations.
     pub fn extend<'a>(
         &mut self,
         content: impl 'a + Iterator<Item = impl AsRef<str>>,
