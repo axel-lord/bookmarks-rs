@@ -1,3 +1,11 @@
+#![warn(
+    missing_copy_implementations,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
+    rustdoc::missing_crate_level_docs
+)]
 pub mod content_string;
 pub mod load;
 pub mod pattern_match;
