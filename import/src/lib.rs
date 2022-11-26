@@ -1,3 +1,14 @@
+//! Commands for importing bookmarks from foreign formats.
+
+#![warn(
+    missing_copy_implementations,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
+    rustdoc::missing_crate_level_docs
+)]
+
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
@@ -10,7 +21,8 @@ use bookmark_library::{
 
 use scraper::{Html, Selector};
 
-#[derive(Debug)]
+/// Type used to build import command.
+#[derive(Debug, Clone, Copy)]
 pub struct Import;
 
 impl bookmark_library::CommandBuilder for Import {
