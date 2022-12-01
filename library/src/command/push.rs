@@ -16,12 +16,20 @@ where
             ));
         }
 
-        let mut storage = storage.borrow_mut();
-        let item = selected
-            .get_mut(&mut storage)
-            .ok_or_else(|| CommandErr::Execution("no or an invalid item selected".into()))?;
+        // let item = selected
+        //     .get_mut(&storage)
+        //     .ok_or_else(|| CommandErr::Execution("no or an invalid item selected".into()))?;
 
-        let property = args[0].as_str();
+        let property_name = args[0].as_str();
+        let property = storage
+            .read()
+            .get(
+                selected
+                    .index()
+                    .ok_or_else(|| CommandErr::Execution("no item selected".into()))?,
+            )
+            .ok_or_else(|| CommandErr::Execution("invalid item selected".into()))?
+            .get(property_name);
 
         match item.get(property)? {
             Property::List(_) => {

@@ -1,23 +1,23 @@
 use bookmark_storage::Storeable;
 
-use std::{cell::RefCell, rc::Rc};
+use std::sync::{Arc, RwLock};
 
 use super::Storage;
 
 #[derive(Clone, Debug, Default)]
-pub struct Buffer(Rc<RefCell<Option<Vec<usize>>>>);
+pub struct Buffer(Arc<RwLock<Option<Vec<usize>>>>);
 
 impl Buffer {
     pub fn count(&self) -> Option<usize> {
-        Some(self.0.borrow().as_ref()?.len())
+        Some(self.0.read().unwrap().as_ref()?.len())
     }
 
     pub fn reset(&self) {
-        self.0.borrow_mut().take();
+        self.0.write().unwrap().take();
     }
 
     pub fn replace(&self, with: Option<Vec<usize>>) {
-        self.0.replace(with);
+        *self.0.write().unwrap() = with;
     }
 
     pub fn filter_in_place<F, T>(&self, content: &Storage<T>, mut f: F) -> &Self
@@ -25,10 +25,10 @@ impl Buffer {
         F: FnMut(&T) -> bool,
         T: Storeable,
     {
-        let mut internal = self.0.borrow_mut();
+        let mut internal = self.0.write().unwrap();
 
         let current = internal.take();
-        let content = content.borrow();
+        let content = content.read();
 
         internal.replace(if let Some(current) = current {
             current.into_iter().filter(|i| f(&content[*i])).collect()
@@ -44,8 +44,8 @@ impl Buffer {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = usize> {
-        if self.0.borrow().is_some() {
-            EitherIter::A(self.0.borrow().as_ref().unwrap().clone().into_iter())
+        if self.0.read().unwrap().is_some() {
+            EitherIter::A(self.0.read().unwrap().as_ref().unwrap().clone().into_iter())
         } else {
             EitherIter::B(0..)
         }

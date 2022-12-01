@@ -32,7 +32,7 @@ where
             ))
         })?;
 
-        if !(..self.items.borrow().len()).contains(&index) {
+        if !(..self.items.len()).contains(&index) {
             return Err(CommandErr::Execution(format!(
                 "{index} is not the index of a bookmark"
             )));
@@ -40,7 +40,7 @@ where
 
         self.selected.replace(index);
 
-        println!("selected:\n{}. {:#}", index, self.items.borrow()[index]);
+        println!("selected:\n{}. {:#}", index, self.items.get(index).unwrap());
 
         Ok(())
     }

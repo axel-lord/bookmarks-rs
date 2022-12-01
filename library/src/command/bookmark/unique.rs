@@ -12,18 +12,17 @@ pub fn build(bookmarks: shared::Bookmarks, reset_values: ResetValues) -> Box<dyn
             ));
         }
 
-        let mut bookmarks = bookmarks.borrow_mut();
-
         let mut removed_count = 0usize;
-        bookmarks.sort_by(|a, b| a.url().partial_cmp(b.url()).unwrap());
-        bookmarks.dedup_by(|a, b| {
-            if a.url().eq_ignore_ascii_case(b.url()) {
-                removed_count += 1;
-                true
-            } else {
-                false
-            }
-        });
+        bookmarks
+            .sort_by(|a, b| a.url().partial_cmp(b.url()).unwrap())
+            .dedup_by(|a, b| {
+                if a.url().eq_ignore_ascii_case(b.url()) {
+                    removed_count += 1;
+                    true
+                } else {
+                    false
+                }
+            });
         reset_values.reset();
 
         println!("remvoved {removed_count} bookmarks");

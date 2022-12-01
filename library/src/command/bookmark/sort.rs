@@ -12,7 +12,6 @@ pub fn build(bookmarks: shared::Bookmarks, reset_values: ResetValues) -> Box<dyn
             ));
         }
 
-        let mut bookmarks = bookmarks.borrow_mut();
         bookmarks.sort_by(|a, b| a.url().partial_cmp(b.url()).unwrap());
         reset_values.reset();
 

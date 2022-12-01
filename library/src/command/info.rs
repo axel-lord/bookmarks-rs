@@ -70,7 +70,7 @@ pub fn build(
                     command::args_are_empty(args)?;
 
                     let mut map = CatMap::new();
-                    for cat in categories.storage.borrow().iter() {
+                    for cat in categories.storage.read().iter() {
                         let cat_entry = map.get_or_create(cat.id());
 
                         for child in cat.subcategories() {
@@ -88,7 +88,7 @@ pub fn build(
                     }
 
                     let mut cat_stack = Vec::new();
-                    for info in infos.storage.borrow().iter() {
+                    for info in infos.storage.read().iter() {
                         for cat in info.categories().collect::<Vec<_>>().into_iter().rev() {
                             cat_stack.push((0usize, map.get_or_create(cat)));
                         }
@@ -120,7 +120,7 @@ pub fn build(
                         return Err(CommandErr::Execution("no info loaded".into()));
                     }
 
-                    for (i, info) in info_container.borrow().iter().enumerate() {
+                    for (i, info) in info_container.read().iter().enumerate() {
                         println!("{i}. Categroies: ");
                         for category in info.categories() {
                             println!("\t{category}");

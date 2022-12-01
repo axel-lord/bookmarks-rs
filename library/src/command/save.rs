@@ -27,7 +27,7 @@ where
             ));
         }
 
-        let storage = self.storage.borrow();
+        let storage = self.storage.read();
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
             self.buffer
@@ -57,9 +57,9 @@ impl Command for SaveAll {
 
         let mut writer = BufWriter::new(File::create(&args[0])?);
 
-        bookmark_storage::save(&mut writer, self.categories.borrow().iter())?;
+        bookmark_storage::save(&mut writer, self.categories.read().iter())?;
 
-        bookmark_storage::save(&mut writer, self.bookmarks.borrow().iter())?;
+        bookmark_storage::save(&mut writer, self.bookmarks.read().iter())?;
 
         Ok(())
     }

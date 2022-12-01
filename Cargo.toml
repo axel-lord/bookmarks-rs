@@ -6,6 +6,7 @@ members = [
 	"derive-test",
 	"storage",
 	"reference",
+	"gui",
 ]
 
 default-members = [
