@@ -22,7 +22,7 @@ impl Command for New {
 
         let index = self.bookmarks.len();
 
-        self.bookmarks.borrow_mut().push(Bookmark::new(
+        self.bookmarks.push(Bookmark::new(
             "no url",
             "no info",
             std::iter::empty::<&str>(),
@@ -34,9 +34,12 @@ impl Command for New {
 
         println!(
             "added and selected:\n{index}. {:#}",
-            self.selected.get(&self.bookmarks.borrow_mut()).ok_or_else(
-                || CommandErr::Execution("failed in using index of added bookmark".into())
-            )?
+            self.bookmarks
+                .read()
+                .get(self.selected.index().unwrap())
+                .ok_or_else(|| CommandErr::Execution(
+                    "failed in using index of added bookmark".into()
+                ))?
         );
 
         Ok(())

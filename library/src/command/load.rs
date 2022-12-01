@@ -42,10 +42,7 @@ where
         }
 
         // self.destination.borrow_mut().extend_from_slice(&loaded);
-        let mut destination = self.destination.borrow_mut();
-        for loaded in loaded.into_iter() {
-            destination.push(loaded);
-        }
+        self.destination.extend(loaded.into_iter());
 
         self.reset_values.reset();
 
@@ -74,15 +71,15 @@ impl Command for LoadAll {
 
         let infos = bookmark_storage::load::load_from(lines.by_ref())?;
         println!("loaded {} infos", infos.len());
-        self.infos.storage.borrow_mut().extend(infos.into_iter());
+        self.infos.storage.extend(infos.into_iter());
 
         let categories = bookmark_storage::load::load_from(lines.by_ref())?;
         println!("loaded {} categories", categories.len());
-        self.categories.borrow_mut().extend(categories.into_iter());
+        self.categories.extend(categories.into_iter());
 
         let bookmarks = bookmark_storage::load::load_from(lines.by_ref())?;
         println!("loaded {} bookmarks", bookmarks.len());
-        self.bookmarks.borrow_mut().extend(bookmarks.into_iter());
+        self.bookmarks.extend(bookmarks.into_iter());
 
         self.reset_values.reset();
 

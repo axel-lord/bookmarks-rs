@@ -33,7 +33,7 @@ where
     T: Listed + std::fmt::Display,
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        let items = self.storage.borrow();
+        let items = self.storage.read();
 
         let count = args
             .get(0)

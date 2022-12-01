@@ -22,10 +22,9 @@ where
             )));
         }
 
-        let mut storage = self.storage.borrow_mut();
         let item = self
             .selected
-            .get_mut(&mut storage)
+            .get_mut(&mut self.storage)
             .ok_or_else(|| CommandErr::Execution("no or an invalid item selected".into()))?;
 
         let property = args[0].as_str();

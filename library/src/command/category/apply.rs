@@ -33,13 +33,18 @@ pub fn build(
             Ok(())
         };
 
-        let category_storage = categories.storage.borrow();
-        let category = categories
-            .selected
-            .get(&category_storage)
-            .ok_or_else(|| CommandErr::Usage("no category selected".into()))?;
-
-        apply_category(category)?;
+        apply_category(
+            categories
+                .storage
+                .read()
+                .get(
+                    categories
+                        .selected
+                        .index()
+                        .ok_or_else(|| CommandErr::Usage("no category selected".into()))?,
+                )
+                .unwrap(),
+        )?;
 
         Ok(())
     })

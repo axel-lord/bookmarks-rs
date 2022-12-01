@@ -19,13 +19,22 @@ where
             return Err(CommandErr::Execution("noting selected".into()));
         }
 
-        let bookmarks = storage.borrow();
+        // let Some(selected_item) = selected.get(&storage) else {
+        //     return Err(CommandErr::Execution("selected item does not exist".into()));
+        // };
 
-        let Some(selected_item) = selected.get(&bookmarks) else {
-            return Err(CommandErr::Execution("selected item does not exist".into()));
-        };
-
-        println!("{}. {:#}", selected.index().unwrap(), selected_item);
+        println!(
+            "{}. {:#}",
+            selected.index().unwrap(),
+            storage
+                .read()
+                .get(
+                    selected.index().ok_or_else(|| CommandErr::Execution(
+                        "selected item does not exist".into()
+                    ))?
+                )
+                .unwrap()
+        );
 
         Ok(())
     })
