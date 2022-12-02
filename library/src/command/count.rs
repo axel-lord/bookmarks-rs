@@ -10,8 +10,7 @@ pub struct Count<T>
 where
     T: Storeable,
 {
-    storage: shared::Storage<T>,
-    buffer: shared::Buffer,
+    buffer_storage: shared::BufferStorage<T>,
 }
 
 impl<T> Command for Count<T>
@@ -27,8 +26,11 @@ where
 
         println!(
             "total: {}, in buffer: {}",
-            self.storage.len(),
-            self.buffer
+            self.buffer_storage.storage.read().unwrap().len(),
+            self.buffer_storage
+                .buffer
+                .read()
+                .unwrap()
                 .count()
                 .map(|b| b.to_string())
                 .unwrap_or_else(|| "All".into()),

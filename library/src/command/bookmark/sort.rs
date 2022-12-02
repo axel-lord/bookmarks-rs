@@ -1,10 +1,14 @@
 use crate::{
+    bookmark::Bookmark,
     command::{Command, CommandErr},
     reset::ResetValues,
     shared,
 };
 
-pub fn build(bookmarks: shared::Bookmarks, reset_values: ResetValues) -> Box<dyn Command> {
+pub fn build(
+    bookmarks: shared::BufferStorage<Bookmark>,
+    reset_values: ResetValues,
+) -> Box<dyn Command> {
     Box::new(move |args: &[_]| {
         if !args.is_empty() {
             return Err(CommandErr::Usage(
@@ -12,7 +16,11 @@ pub fn build(bookmarks: shared::Bookmarks, reset_values: ResetValues) -> Box<dyn
             ));
         }
 
-        bookmarks.sort_by(|a, b| a.url().partial_cmp(b.url()).unwrap());
+        bookmarks
+            .storage
+            .write()
+            .unwrap()
+            .sort_by(|a, b| a.url().partial_cmp(b.url()).unwrap());
         reset_values.reset();
 
         Ok(())

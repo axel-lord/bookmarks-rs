@@ -1,18 +1,26 @@
-use crate::shared;
+use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
 
-#[derive(Debug, Clone)]
-pub struct ResetValues {
-    pub bookmark_buffer: shared::Buffer,
-    pub category_buffer: shared::Buffer,
-    pub selected_bookmark: shared::Selected,
-    pub selected_category: shared::Selected,
+macro_rules! reset_values_create {
+    ($name:ident, $($field_ident:ident: $field_ty:ty),*) => {
+        #[derive(Debug, Clone)]
+        pub struct $name {
+            $($field_ident: shared::BufferStorage<$field_ty>,)*
+        }
+
+        impl $name {
+            pub fn new($($field_ident: shared::BufferStorage<$field_ty>),*) -> Self {
+                Self {$($field_ident,)*}
+            }
+            pub fn reset(&self) {
+                $(self.$field_ident.reset();)*
+            }
+        }
+    };
 }
 
-impl ResetValues {
-    pub fn reset(&self) {
-        self.bookmark_buffer.reset();
-        self.category_buffer.reset();
-        self.selected_bookmark.clear();
-        self.selected_category.clear();
-    }
-}
+reset_values_create!(
+    ResetValues,
+    infos: Info,
+    categories: Category,
+    bookmarks: Bookmark
+);

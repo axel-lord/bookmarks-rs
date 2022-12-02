@@ -24,8 +24,7 @@ pub struct List<T>
 where
     T: Listed + std::fmt::Display,
 {
-    storage: shared::Storage<T>,
-    buffer: shared::Buffer,
+    buffer_storage: shared::BufferStorage<T>,
 }
 
 impl<T> Command for List<T>
@@ -33,12 +32,13 @@ where
     T: Listed + std::fmt::Display,
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        let items = self.storage.read();
+        let items = self.buffer_storage.storage.read().unwrap();
+        let buffer = self.buffer_storage.buffer.read().unwrap();
 
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or_else(|| Ok(self.buffer.count().unwrap_or_else(|| self.storage.len())))
+            .unwrap_or_else(|| Ok(buffer.count().unwrap_or(items.len())))
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -53,12 +53,9 @@ where
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
-            .map(|from| {
-                wrap_if_negative(from, self.buffer.count().unwrap_or(self.storage.len()))
-            })??;
+            .map(|from| wrap_if_negative(from, buffer.count().unwrap_or(items.len())))??;
 
-        for (index, item) in self
-            .buffer
+        for (index, item) in buffer
             .iter()
             .map(|i| (i, items.get(i)))
             .take_while(|(_, t)| t.is_some())

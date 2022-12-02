@@ -1,12 +1,12 @@
 use crate::{
+    bookmark::Bookmark,
     command::{Command, CommandErr},
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Regex {
-    bookmarks: shared::Bookmarks,
-    bookmark_buffer: shared::Buffer,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for Regex {
@@ -20,8 +20,13 @@ impl Command for Regex {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        self.bookmark_buffer
-            .filter_in_place(&self.bookmarks, |bookmark| re.is_match(bookmark.url()));
+        self.bookmarks
+            .buffer
+            .write()
+            .unwrap()
+            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
+                re.is_match(bookmark.url())
+            });
 
         Ok(())
     }
@@ -29,8 +34,7 @@ impl Command for Regex {
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct RegexInv {
-    bookmarks: shared::Bookmarks,
-    bookmark_buffer: shared::Buffer,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for RegexInv {
@@ -44,8 +48,13 @@ impl Command for RegexInv {
             return Err(CommandErr::Execution(format!("invalid pattern /{pattern}/")));
         };
 
-        self.bookmark_buffer
-            .filter_in_place(&self.bookmarks, |bookmark| !re.is_match(bookmark.url()));
+        self.bookmarks
+            .buffer
+            .write()
+            .unwrap()
+            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
+                !re.is_match(bookmark.url())
+            });
 
         Ok(())
     }

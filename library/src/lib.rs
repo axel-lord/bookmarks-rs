@@ -13,6 +13,7 @@ pub mod bookmark;
 pub mod category;
 pub mod command;
 pub mod command_map;
+pub mod container;
 pub mod info;
 pub mod reset;
 pub mod shared;
@@ -104,12 +105,7 @@ pub fn run(
     let categories = shared::BufferStorage::<Category>::default();
     let infos = shared::BufferStorage::<Info>::default();
 
-    let reset_values = ResetValues {
-        bookmark_buffer: bookmarks.buffer.clone(),
-        category_buffer: categories.buffer.clone(),
-        selected_category: categories.selected.clone(),
-        selected_bookmark: bookmarks.selected.clone(),
-    };
+    let reset_values = ResetValues::new(infos.clone(), categories.clone(), bookmarks.clone());
 
     let command_map = extended_commands
         .iter_mut()

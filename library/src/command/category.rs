@@ -21,43 +21,31 @@ pub fn build(
             .push(
                 "load",
                 None,
-                load::Load::build(categories.storage.clone(), reset_values /*.clone()*/),
+                load::Load::build(categories.clone(), reset_values /*.clone()*/),
             )
             .push(
                 "list",
                 Some("list categories"),
-                list::List::build(categories.storage.clone(), categories.buffer.clone()),
+                list::List::build(categories.clone()),
             )
             .push(
                 "count",
                 Some("count amount of categories"),
-                count::Count::build(categories.storage.clone(), categories.buffer.clone()),
+                count::Count::build(categories.clone()),
             )
-            .push(
-                "set",
-                None,
-                set::Set::build(categories.storage.clone(), categories.selected.clone()),
-            )
-            .push(
-                "save",
-                None,
-                save::Save::build(categories.storage.clone(), categories.buffer.clone()),
-            )
+            .push("set", None, set::Set::build(categories.clone()))
+            .push("save", None, save::Save::build(categories.clone()))
             .push(
                 "print",
                 Some("print selected category"),
-                print::build(categories.storage.clone(), categories.selected.clone()),
+                print::build(categories.clone()),
             )
             .push(
                 "push",
                 Some("push a value onto a list field"),
-                push::build(categories.storage.clone(), categories.selected.clone()),
+                push::build(categories.clone()),
             )
-            .push(
-                "select",
-                None,
-                select::Select::build(categories.storage.clone(), categories.selected.clone()),
-            )
+            .push("select", None, select::Select::build(categories.clone()))
             .push(
                 "apply",
                 Some("filter bookmarks in buffer by selected category"),

@@ -52,7 +52,7 @@ impl bookmark_library::CommandBuilder for Import {
 
                         let reader = BufReader::new(File::open(&args[0])?);
 
-                        let mut bookmarks = bookmarks.borrow_mut();
+                        let mut bookmarks = bookmarks.write().unwrap();
                         for line in reader.lines() {
                             let line = line?;
                             let Some(url_size) = line.find(" | ") else {continue;};
@@ -61,7 +61,7 @@ impl bookmark_library::CommandBuilder for Import {
                             let url = &line[0..url_size];
                             let desc = &line[desc_start..];
 
-                            bookmarks.push(Bookmark::new(url, desc, std::iter::empty::<&str>()))
+                            bookmarks.push(Bookmark::new(url, desc, std::iter::empty::<&str>()));
                         }
 
                         reset_values.reset();
@@ -90,7 +90,7 @@ impl bookmark_library::CommandBuilder for Import {
 
                         let a_selector = Selector::parse("a").unwrap();
 
-                        let mut bookmarks = bookmarks.borrow_mut();
+                        let mut bookmarks = bookmarks.write().unwrap();
                         let mut added_count = 0usize;
                         for element in document.select(&a_selector) {
                             let Some(url) = element.value().attr("href") else {continue;};
@@ -123,7 +123,7 @@ impl bookmark_library::CommandBuilder for Import {
                             CommandErr::Execution("root of json file was not an object".into())
                         })?;
 
-                        let mut bookmarks = bookmarks.borrow_mut();
+                        let mut bookmarks = bookmarks.write().unwrap();
                         let mut element_stack = vec![root];
                         while !element_stack.is_empty() {
                             let top = element_stack.pop().unwrap();
@@ -151,7 +151,7 @@ impl bookmark_library::CommandBuilder for Import {
                                     url,
                                     description,
                                     std::iter::empty::<&str>(),
-                                ))
+                                ));
                             }
                         }
 

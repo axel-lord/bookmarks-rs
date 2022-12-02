@@ -5,7 +5,7 @@ use crate::{
 
 use bookmark_storage::Storeable;
 
-pub fn build<T>(storage: shared::Storage<T>, selected: shared::Selected) -> Box<dyn Command>
+pub fn build<T>(buffer_storage: shared::BufferStorage<T>) -> Box<dyn Command>
 where
     T: 'static + Storeable + std::fmt::Display,
 {
@@ -15,19 +15,20 @@ where
                 "print should be called without any arguments".into(),
             ));
         }
+
+        let selected = buffer_storage.selected.read().unwrap();
+
         if selected.is_empty() {
             return Err(CommandErr::Execution("noting selected".into()));
         }
 
-        // let Some(selected_item) = selected.get(&storage) else {
-        //     return Err(CommandErr::Execution("selected item does not exist".into()));
-        // };
-
         println!(
             "{}. {:#}",
             selected.index().unwrap(),
-            storage
+            buffer_storage
+                .storage
                 .read()
+                .unwrap()
                 .get(
                     selected.index().ok_or_else(|| CommandErr::Execution(
                         "selected item does not exist".into()
