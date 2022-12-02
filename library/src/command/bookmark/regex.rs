@@ -21,12 +21,9 @@ impl Command for Regex {
         };
 
         self.bookmarks
-            .buffer
             .write()
             .unwrap()
-            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
-                re.is_match(bookmark.url())
-            });
+            .filter_in_place(|bookmark| re.is_match(bookmark.url()));
 
         Ok(())
     }
@@ -49,12 +46,9 @@ impl Command for RegexInv {
         };
 
         self.bookmarks
-            .buffer
             .write()
             .unwrap()
-            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
-                !re.is_match(bookmark.url())
-            });
+            .filter_in_place(|bookmark| !re.is_match(bookmark.url()));
 
         Ok(())
     }

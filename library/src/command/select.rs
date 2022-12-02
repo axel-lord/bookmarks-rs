@@ -28,17 +28,15 @@ where
             ))
         })?;
 
-        let items = self.buffer_storage.storage.read().unwrap();
+        let mut buffer_storage = self.buffer_storage.write().unwrap();
 
-        if !(..items.len()).contains(&index) {
-            return Err(CommandErr::Execution(format!(
-                "{index} is not the index of a bookmark"
-            )));
-        }
+        let selected_item = buffer_storage
+            .storage
+            .get(index)
+            .ok_or_else(|| CommandErr::Execution(format!("{index} is not a valid index")))?;
 
-        self.buffer_storage.selected.write().unwrap().replace(index);
-
-        println!("selected:\n{}. {:#}", index, items.get(index).unwrap());
+        println!("selected:\n{}. {:#}", index, selected_item);
+        buffer_storage.selected.replace(index);
 
         Ok(())
     }

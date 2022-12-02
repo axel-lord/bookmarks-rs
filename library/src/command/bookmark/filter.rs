@@ -18,12 +18,9 @@ impl Command for Filter {
         }
 
         self.bookmarks
-            .buffer
             .write()
             .unwrap()
-            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
-                args.iter().all(|arg| bookmark.url().contains(arg))
-            });
+            .filter_in_place(|bookmark| args.iter().all(|arg| bookmark.url().contains(arg)));
 
         Ok(())
     }
@@ -43,12 +40,9 @@ impl Command for FilterInv {
         }
 
         self.bookmarks
-            .buffer
             .write()
             .unwrap()
-            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
-                !args.iter().any(|arg| bookmark.url().contains(arg))
-            });
+            .filter_in_place(|bookmark| !args.iter().any(|arg| bookmark.url().contains(arg)));
 
         Ok(())
     }

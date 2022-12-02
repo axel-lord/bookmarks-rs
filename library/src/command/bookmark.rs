@@ -8,15 +8,10 @@ use crate::{
     bookmark::Bookmark,
     command::{count, list, load, print, push, save, select, set},
     command_map::{CommandMap, CommandMapBuilder},
-    reset::ResetValues,
     shared,
 };
 
-pub fn build(
-    name: String,
-    bookmarks: shared::BufferStorage<Bookmark>,
-    reset_values: ResetValues,
-) -> Box<CommandMap<'static>> {
+pub fn build(name: String, bookmarks: shared::BufferStorage<Bookmark>) -> Box<CommandMap<'static>> {
     Box::new(
         CommandMapBuilder::new()
             .name(name)
@@ -30,11 +25,7 @@ pub fn build(
             .push("regex", None, regex::Regex::build(bookmarks.clone()))
             .push("regex-inv", None, regex::RegexInv::build(bookmarks.clone()))
             .push("count", None, count::Count::build(bookmarks.clone()))
-            .push(
-                "load",
-                None,
-                load::Load::build(bookmarks.clone(), reset_values.clone()),
-            )
+            .push("load", None, load::Load::build(bookmarks.clone()))
             .push("save", None, save::Save::build(bookmarks.clone()))
             .push(
                 "select",
@@ -54,7 +45,7 @@ pub fn build(
             .push(
                 "new",
                 Some("add a new empty bookmark"),
-                new::New::build(bookmarks.clone(), reset_values.clone()),
+                new::New::build(bookmarks.clone()),
             )
             .push(
                 "set",
@@ -64,12 +55,12 @@ pub fn build(
             .push(
                 "sort",
                 Some("sort bookmarks by url"),
-                sort::build(bookmarks.clone(), reset_values.clone()),
+                sort::build(bookmarks.clone()),
             )
             .push(
                 "unique",
                 Some("sort bookmarks and remove duplicates"),
-                unique::build(bookmarks, reset_values),
+                unique::build(bookmarks),
             )
             .build(),
     )

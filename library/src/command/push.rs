@@ -16,15 +16,9 @@ where
             ));
         }
 
-        let selected = buffer_storage.selected.read().unwrap();
-        let mut storage = buffer_storage.storage.write().unwrap();
-        let item = storage
-            .get_mut(
-                selected
-                    .index()
-                    .ok_or_else(|| CommandErr::Execution("no item selected".into()))?,
-            )
-            .ok_or_else(|| CommandErr::Execution("invalid item selected".into()))?;
+        let mut buffer_storage = buffer_storage.write().unwrap();
+
+        let (index, item) = buffer_storage.get_index_and_selected_mut()?;
 
         let property_name = args[0].as_str();
         let property = item.get(property_name);
@@ -42,7 +36,7 @@ where
             }
         }
 
-        println!("{}. {:#}", selected.index().unwrap(), item);
+        println!("{}. {:#}", index, item);
 
         Ok(())
     })

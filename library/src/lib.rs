@@ -15,14 +15,13 @@ pub mod command;
 pub mod command_map;
 pub mod container;
 pub mod info;
-pub mod reset;
 pub mod shared;
 
 mod parse_command;
 
 use crate::{
     bookmark::Bookmark, category::Category, command::CommandErr, command_map::CommandMap,
-    info::Info, parse_command::parse_command, reset::ResetValues,
+    info::Info, parse_command::parse_command,
 };
 use command::Command;
 use lazy_static::lazy_static;
@@ -36,7 +35,6 @@ pub trait CommandBuilder {
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
-        reset_values: ResetValues,
     ) -> Box<dyn Command>;
     fn help(&self) -> Option<&'static str> {
         None
@@ -49,7 +47,6 @@ where
         shared::BufferStorage<Bookmark>,
         shared::BufferStorage<Category>,
         shared::BufferStorage<Info>,
-        ResetValues,
     ) -> Box<dyn Command>,
 {
     fn name(&self) -> &'static str {
@@ -60,9 +57,8 @@ where
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
-        reset_values: ResetValues,
     ) -> Box<dyn Command> {
-        (self.1)(bookmarks, categories, infos, reset_values)
+        (self.1)(bookmarks, categories, infos)
     }
 }
 
@@ -72,7 +68,6 @@ where
         shared::BufferStorage<Bookmark>,
         shared::BufferStorage<Category>,
         shared::BufferStorage<Info>,
-        ResetValues,
     ) -> Box<dyn Command>,
 {
     fn name(&self) -> &'static str {
@@ -86,9 +81,8 @@ where
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
-        reset_values: ResetValues,
     ) -> Box<dyn Command> {
-        (self.2)(bookmarks, categories, infos, reset_values)
+        (self.2)(bookmarks, categories, infos)
     }
 }
 
@@ -105,8 +99,6 @@ pub fn run(
     let categories = shared::BufferStorage::<Category>::default();
     let infos = shared::BufferStorage::<Info>::default();
 
-    let reset_values = ResetValues::new(infos.clone(), categories.clone(), bookmarks.clone());
-
     let command_map = extended_commands
         .iter_mut()
         .fold(
@@ -114,7 +106,6 @@ pub fn run(
                 bookmarks.clone(),
                 categories.clone(),
                 infos.clone(),
-                reset_values.clone(),
             ),
             |map, builder| {
                 map.push(
@@ -124,7 +115,6 @@ pub fn run(
                         bookmarks.clone(),
                         categories.clone(),
                         infos.clone(),
-                        reset_values.clone(),
                     ),
                 )
             },

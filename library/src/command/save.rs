@@ -26,15 +26,14 @@ where
             ));
         }
 
-        let storage = self.buffer_storage.storage.read().unwrap();
+        let buffer_storage = self.buffer_storage.write().unwrap();
+
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
-            self.buffer_storage
+            buffer_storage
                 .buffer
-                .read()
-                .unwrap()
                 .iter()
-                .map(|i| storage.get(i))
+                .map(|i| buffer_storage.storage.get(i))
                 .take_while(Option::is_some)
                 .map(Option::unwrap),
         )?;
@@ -60,11 +59,11 @@ impl Command for SaveAll {
 
         let mut writer = BufWriter::new(File::create(&args[0])?);
 
-        bookmark_storage::save(&mut writer, self.infos.storage.read().unwrap().iter())?;
+        bookmark_storage::save(&mut writer, self.infos.read().unwrap().storage.iter())?;
 
-        bookmark_storage::save(&mut writer, self.categories.storage.read().unwrap().iter())?;
+        bookmark_storage::save(&mut writer, self.categories.read().unwrap().storage.iter())?;
 
-        bookmark_storage::save(&mut writer, self.bookmarks.storage.read().unwrap().iter())?;
+        bookmark_storage::save(&mut writer, self.bookmarks.read().unwrap().storage.iter())?;
 
         Ok(())
     }
