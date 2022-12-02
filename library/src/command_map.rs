@@ -150,8 +150,8 @@ impl CommandMap<'static> {
         reset_values: ResetValues,
     ) -> CommandMapBuilder<'static> {
         use command::*;
-
         CommandMapBuilder::new()
+            .lookup_backup(Some("bookmark".into()))
             .push("reset", None, reset::Reset::build(reset_values.clone()))
             .push(
                 "category",
@@ -194,6 +194,5 @@ impl CommandMap<'static> {
                 save::SaveAll::build(infos, categories, bookmarks),
             )
             .push("debug", None, Box::new(command_debug))
-            .lookup_backup(Some("bookmark".into()))
     }
 }
