@@ -8,7 +8,6 @@ use crate::{
     category::Category,
     command::{Command, CommandErr},
     info::Info,
-    reset::ResetValues,
     shared,
 };
 
@@ -17,7 +16,6 @@ use bookmark_storage::Listed;
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Load<T> {
     buffer_storage: shared::BufferStorage<T>,
-    reset_values: ResetValues,
 }
 
 impl<T> Command for Load<T>
@@ -40,13 +38,10 @@ where
             )));
         }
 
-        self.buffer_storage
-            .storage
-            .write()
-            .unwrap()
-            .extend(loaded.into_iter());
+        let mut buffer_storage = self.buffer_storage.write().unwrap();
 
-        self.reset_values.reset();
+        buffer_storage.storage.extend(loaded.into_iter());
+        buffer_storage.buffer.reset();
 
         Ok(())
     }
@@ -57,7 +52,18 @@ pub struct LoadAll {
     categories: shared::BufferStorage<Category>,
     bookmarks: shared::BufferStorage<Bookmark>,
     infos: shared::BufferStorage<Info>,
-    reset_values: ResetValues,
+}
+
+macro_rules! load_section {
+    ($fmt:expr, $dest:expr, $source:expr) => {{
+        let mut dest = $dest.write().unwrap();
+        let loaded = bookmark_storage::load::load_from($source.by_ref())?;
+
+        println!($fmt, loaded.len());
+
+        dest.storage.extend(loaded.into_iter());
+        dest.buffer.reset();
+    }};
 }
 
 impl Command for LoadAll {
@@ -71,31 +77,11 @@ impl Command for LoadAll {
         let reader = BufReader::new(File::open(&args[0])?);
         let mut lines = reader.lines().enumerate();
 
-        let infos = bookmark_storage::load::load_from(lines.by_ref())?;
-        println!("loaded {} infos", infos.len());
-        self.infos
-            .storage
-            .write()
-            .unwrap()
-            .extend(infos.into_iter());
+        load_section!("loaded {} infos", self.infos, lines);
 
-        let categories = bookmark_storage::load::load_from(lines.by_ref())?;
-        println!("loaded {} categories", categories.len());
-        self.categories
-            .storage
-            .write()
-            .unwrap()
-            .extend(categories.into_iter());
+        load_section!("loaded {} categories", self.categories, lines);
 
-        let bookmarks = bookmark_storage::load::load_from(lines.by_ref())?;
-        println!("loaded {} bookmarks", bookmarks.len());
-        self.bookmarks
-            .storage
-            .write()
-            .unwrap()
-            .extend(bookmarks.into_iter());
-
-        self.reset_values.reset();
+        load_section!("loaded {} bookmarks", self.bookmarks, lines);
 
         Ok(())
     }

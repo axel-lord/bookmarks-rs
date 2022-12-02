@@ -1,11 +1,16 @@
 use crate::{
+    bookmark::Bookmark,
+    category::Category,
     command::{Command, CommandErr},
-    reset::ResetValues,
+    info::Info,
+    shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Reset {
-    reset_values: ResetValues,
+    infos: shared::BufferStorage<Info>,
+    categories: shared::BufferStorage<Category>,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for Reset {
@@ -16,7 +21,9 @@ impl Command for Reset {
             ));
         }
 
-        self.reset_values.reset();
+        self.infos.write().unwrap().reset();
+        self.categories.write().unwrap().reset();
+        self.bookmarks.write().unwrap().reset();
 
         Ok(())
     }

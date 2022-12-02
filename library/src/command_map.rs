@@ -5,7 +5,6 @@ use crate::{
     category::Category,
     command::{self, Command, CommandErr},
     info::Info,
-    reset::ResetValues,
     shared,
 };
 
@@ -147,46 +146,34 @@ impl CommandMap<'static> {
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
-        reset_values: ResetValues,
     ) -> CommandMapBuilder<'static> {
         use command::*;
         CommandMapBuilder::new()
             .lookup_backup(Some("bookmark".into()))
-            .push("reset", None, reset::Reset::build(reset_values.clone()))
+            .push(
+                "reset",
+                None,
+                reset::Reset::build(infos.clone(), categories.clone(), bookmarks.clone()),
+            )
             .push(
                 "category",
                 None,
-                category::build(
-                    "category".into(),
-                    categories.clone(),
-                    bookmarks.clone(),
-                    reset_values.clone(),
-                ),
+                category::build("category".into(), categories.clone(), bookmarks.clone()),
             )
             .push(
                 "bookmark",
                 None,
-                bookmark::build("bookmark".into(), bookmarks.clone(), reset_values.clone()),
+                bookmark::build("bookmark".into(), bookmarks.clone()),
             )
             .push(
                 "info",
                 None,
-                info::build(
-                    "info".into(),
-                    infos.clone(),
-                    categories.clone(),
-                    reset_values.clone(),
-                ),
+                info::build("info".into(), infos.clone(), categories.clone()),
             )
             .push(
                 "load",
                 None,
-                load::LoadAll::build(
-                    categories.clone(),
-                    bookmarks.clone(),
-                    infos.clone(),
-                    reset_values,
-                ),
+                load::LoadAll::build(categories.clone(), bookmarks.clone(), infos.clone()),
             )
             .push(
                 "save",

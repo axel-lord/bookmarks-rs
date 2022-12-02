@@ -1,14 +1,12 @@
 use crate::{
     bookmark::Bookmark,
     command::{Command, CommandErr},
-    reset::ResetValues,
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct New {
     bookmarks: shared::BufferStorage<Bookmark>,
-    reset_values: ResetValues,
 }
 
 impl Command for New {
@@ -19,24 +17,25 @@ impl Command for New {
             ));
         }
 
-        let mut bookmarks = self.bookmarks.storage.write().unwrap();
+        let mut bookmarks = self.bookmarks.write().unwrap();
 
-        let index = bookmarks.len();
+        let index = bookmarks.storage.len();
 
-        bookmarks.push(Bookmark::new(
+        bookmarks.storage.push(Bookmark::new(
             "no url",
             "no info",
             std::iter::empty::<&str>(),
         ));
 
-        self.reset_values.reset();
+        bookmarks.buffer.reset();
 
-        let mut selected = self.bookmarks.selected.write().unwrap();
+        let mut selected = bookmarks.selected;
         selected.replace(index);
 
         println!(
             "added and selected:\n{index}. {:#}",
             bookmarks
+                .storage
                 .get(selected.index().unwrap())
                 .ok_or_else(|| CommandErr::Execution(
                     "failed in using index of added bookmark".into()

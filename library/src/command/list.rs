@@ -32,13 +32,17 @@ where
     T: Listed + std::fmt::Display,
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        let items = self.buffer_storage.storage.read().unwrap();
-        let buffer = self.buffer_storage.buffer.read().unwrap();
+        let buffer_storage = self.buffer_storage.read().unwrap();
 
         let count = args
             .get(0)
             .map(|arg| arg.parse())
-            .unwrap_or_else(|| Ok(buffer.count().unwrap_or(items.len())))
+            .unwrap_or_else(|| {
+                Ok(buffer_storage
+                    .buffer
+                    .count()
+                    .unwrap_or(buffer_storage.storage.len()))
+            })
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -53,11 +57,20 @@ where
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
-            .map(|from| wrap_if_negative(from, buffer.count().unwrap_or(items.len())))??;
+            .map(|from| {
+                wrap_if_negative(
+                    from,
+                    buffer_storage
+                        .buffer
+                        .count()
+                        .unwrap_or(buffer_storage.storage.len()),
+                )
+            })??;
 
-        for (index, item) in buffer
+        for (index, item) in buffer_storage
+            .buffer
             .iter()
-            .map(|i| (i, items.get(i)))
+            .map(|i| (i, buffer_storage.storage.get(i)))
             .take_while(|(_, t)| t.is_some())
             .map(|(i, t)| (i, t.unwrap()))
             .skip(from)

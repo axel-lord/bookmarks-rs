@@ -16,25 +16,20 @@ where
             ));
         }
 
-        let selected = buffer_storage.selected.read().unwrap();
+        let buffer_storage = buffer_storage.read().unwrap();
 
-        if selected.is_empty() {
-            return Err(CommandErr::Execution("noting selected".into()));
-        }
+        let index = buffer_storage
+            .selected
+            .index()
+            .ok_or_else(|| CommandErr::Execution("nothing selected".into()))?;
 
         println!(
             "{}. {:#}",
-            selected.index().unwrap(),
+            index,
             buffer_storage
                 .storage
-                .read()
-                .unwrap()
-                .get(
-                    selected.index().ok_or_else(|| CommandErr::Execution(
-                        "selected item does not exist".into()
-                    ))?
-                )
-                .unwrap()
+                .get(index)
+                .ok_or_else(|| CommandErr::Execution("selected item does not exist".into()))?
         );
 
         Ok(())

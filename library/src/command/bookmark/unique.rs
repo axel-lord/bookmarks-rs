@@ -1,14 +1,10 @@
 use crate::{
     bookmark::Bookmark,
     command::{Command, CommandErr},
-    reset::ResetValues,
     shared,
 };
 
-pub fn build(
-    bookmarks: shared::BufferStorage<Bookmark>,
-    reset_values: ResetValues,
-) -> Box<dyn Command> {
+pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
     Box::new(move |args: &[_]| {
         if !args.is_empty() {
             return Err(CommandErr::Usage(
@@ -17,9 +13,10 @@ pub fn build(
         }
 
         let mut removed_count = 0usize;
-        let mut bookmarks = bookmarks.storage.write().unwrap();
-        bookmarks.sort_by(|a, b| a.url().cmp(b.url()));
-        bookmarks.dedup_by(|a, b| {
+        let mut bookmarks = bookmarks.write().unwrap();
+
+        bookmarks.storage.sort_by(|a, b| a.url().cmp(b.url()));
+        bookmarks.storage.dedup_by(|a, b| {
             if a.url().eq_ignore_ascii_case(b.url()) {
                 removed_count += 1;
                 true
@@ -27,9 +24,11 @@ pub fn build(
                 false
             }
         });
-        reset_values.reset();
 
         println!("remvoved {removed_count} bookmarks");
+
+        bookmarks.selected.clear();
+        bookmarks.buffer.reset();
 
         Ok(())
     })

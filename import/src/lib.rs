@@ -15,8 +15,7 @@ use std::{
 };
 
 use bookmark_library::{
-    bookmark::Bookmark, command::CommandErr, command_map::CommandMapBuilder, reset::ResetValues,
-    shared::BufferStorage,
+    bookmark::Bookmark, command::CommandErr, command_map::CommandMapBuilder, shared::BufferStorage,
 };
 
 use scraper::{Html, Selector};
@@ -31,12 +30,9 @@ impl bookmark_library::CommandBuilder for Import {
     }
     fn build(
         &mut self,
-        BufferStorage {
-            storage: bookmarks, ..
-        }: BufferStorage<Bookmark>,
+        bookmarks: BufferStorage<Bookmark>,
         _categories: BufferStorage<bookmark_library::category::Category>,
         _infos: BufferStorage<bookmark_library::info::Info>,
-        reset_values: ResetValues,
     ) -> Box<dyn bookmark_library::command::Command> {
         Box::new(
             CommandMapBuilder::new()
@@ -53,6 +49,7 @@ impl bookmark_library::CommandBuilder for Import {
                         let reader = BufReader::new(File::open(&args[0])?);
 
                         let mut bookmarks = bookmarks.write().unwrap();
+                        let mut added_count = 0usize;
                         for line in reader.lines() {
                             let line = line?;
                             let Some(url_size) = line.find(" | ") else {continue;};
@@ -61,10 +58,17 @@ impl bookmark_library::CommandBuilder for Import {
                             let url = &line[0..url_size];
                             let desc = &line[desc_start..];
 
-                            bookmarks.push(Bookmark::new(url, desc, std::iter::empty::<&str>()));
+                            bookmarks.storage.push(Bookmark::new(
+                                url,
+                                desc,
+                                std::iter::empty::<&str>(),
+                            ));
+
+                            added_count += 1;
                         }
 
-                        reset_values.reset();
+                        bookmarks.buffer.reset();
+                        println!("added {} bookmarks", added_count);
 
                         Ok(())
                     })
@@ -95,11 +99,16 @@ impl bookmark_library::CommandBuilder for Import {
                         for element in document.select(&a_selector) {
                             let Some(url) = element.value().attr("href") else {continue;};
                             let desc = element.inner_html();
-                            bookmarks.push(Bookmark::new(url, &desc, std::iter::empty::<&str>()));
+                            bookmarks.storage.push(Bookmark::new(
+                                url,
+                                &desc,
+                                std::iter::empty::<&str>(),
+                            ));
                             added_count += 1;
                         }
 
                         println!("added {} bookmarks", added_count);
+                        bookmarks.buffer.reset();
 
                         Ok(())
                     })
@@ -125,6 +134,7 @@ impl bookmark_library::CommandBuilder for Import {
 
                         let mut bookmarks = bookmarks.write().unwrap();
                         let mut element_stack = vec![root];
+                        let mut added_count = 0usize;
                         while !element_stack.is_empty() {
                             let top = element_stack.pop().unwrap();
 
@@ -147,13 +157,17 @@ impl bookmark_library::CommandBuilder for Import {
                                 let Some(url) =
                                     top.get("uri").and_then(|v| v.as_str()) else {continue;};
 
-                                bookmarks.push(Bookmark::new(
+                                bookmarks.storage.push(Bookmark::new(
                                     url,
                                     description,
                                     std::iter::empty::<&str>(),
                                 ));
+                                added_count += 1;
                             }
                         }
+
+                        println!("added {} bookmarks", added_count);
+                        bookmarks.buffer.reset();
 
                         Ok(())
                     })

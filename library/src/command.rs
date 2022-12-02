@@ -13,7 +13,7 @@ pub mod set;
 
 use std::error::Error;
 
-use crate::{category::IdentifierErr, command_map::CommandMap};
+use crate::{category::IdentifierErr, command_map::CommandMap, container::GetSelectedErr};
 
 pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
@@ -39,27 +39,29 @@ impl std::fmt::Display for CommandErr {
 
 impl Error for CommandErr {}
 
-impl From<bookmark_storage::ParseErr> for CommandErr {
-    fn from(err: bookmark_storage::ParseErr) -> Self {
-        Self::Execution(format!("{err}"))
-    }
+macro_rules! trivial_command_err_from {
+    ($($other:ty),*) => {
+        $(
+            impl From<$other> for CommandErr {
+                fn from(err: $other) -> Self {
+                    Self::Execution(format!("{err}"))
+                }
+            }
+        )*
+    };
 }
 
-impl From<bookmark_storage::PropertyErr> for CommandErr {
-    fn from(err: bookmark_storage::PropertyErr) -> Self {
-        Self::Execution(format!("{err}"))
-    }
-}
+trivial_command_err_from!(
+    bookmark_storage::ParseErr,
+    bookmark_storage::PropertyErr,
+    IdentifierErr,
+    std::io::Error,
+    GetSelectedErr
+);
 
-impl From<IdentifierErr> for CommandErr {
-    fn from(err: IdentifierErr) -> Self {
-        Self::Execution(format!("{err}"))
-    }
-}
-
-impl From<std::io::Error> for CommandErr {
-    fn from(err: std::io::Error) -> Self {
-        Self::Execution(format!("{err}"))
+impl From<String> for CommandErr {
+    fn from(err: String) -> Self {
+        Self::Execution(err)
     }
 }
 

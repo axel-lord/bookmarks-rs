@@ -24,13 +24,13 @@ where
             ));
         }
 
+        let buffer_storage = self.buffer_storage.read().unwrap();
+
         println!(
             "total: {}, in buffer: {}",
-            self.buffer_storage.storage.read().unwrap().len(),
-            self.buffer_storage
+            buffer_storage.storage.len(),
+            buffer_storage
                 .buffer
-                .read()
-                .unwrap()
                 .count()
                 .map(|b| b.to_string())
                 .unwrap_or_else(|| "All".into()),

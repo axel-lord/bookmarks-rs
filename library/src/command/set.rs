@@ -21,13 +21,15 @@ where
             )));
         }
 
-        let mut storage = self.buffer_storage.storage.write().unwrap();
-        let selected = self.buffer_storage.selected.read().unwrap();
-        let index = selected
+        let mut buffer_storage = self.buffer_storage.write().unwrap();
+
+        let index = buffer_storage
+            .selected
             .index()
             .ok_or_else(|| CommandErr::Execution("not item selected".into()))?;
 
-        let item = storage
+        let item = buffer_storage
+            .storage
             .get_mut(index)
             .ok_or_else(|| CommandErr::Execution("invalid item selected".into()))?;
 

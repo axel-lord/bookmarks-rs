@@ -9,7 +9,6 @@ use crate::{
     command::{self, load},
     command_map::{CommandMap, CommandMapBuilder},
     info::Info,
-    reset::ResetValues,
     shared,
 };
 
@@ -53,12 +52,11 @@ pub fn build(
     name: String,
     infos: shared::BufferStorage<Info>,
     categories: shared::BufferStorage<Category>,
-    reset_values: ResetValues,
 ) -> Box<CommandMap<'static>> {
     Box::new(
         CommandMapBuilder::new()
             .name(name)
-            .push("load", None, load::Load::build(infos.clone(), reset_values))
+            .push("load", None, load::Load::build(infos.clone()))
             .push("categories", Some("show category hierarchy"), {
                 let categories = categories;
                 let infos = infos.clone();
@@ -66,7 +64,7 @@ pub fn build(
                     command::args_are_empty(args)?;
 
                     let mut map = CatMap::new();
-                    for cat in categories.storage.read().unwrap().iter() {
+                    for cat in categories.read().unwrap().storage.iter() {
                         let cat_entry = map.get_or_create(cat.id());
 
                         for child in cat.subcategories() {
@@ -84,7 +82,7 @@ pub fn build(
                     }
 
                     let mut cat_stack = Vec::new();
-                    for info in infos.storage.read().unwrap().iter() {
+                    for info in infos.read().unwrap().storage.iter() {
                         for cat in info.categories().collect::<Vec<_>>().into_iter().rev() {
                             cat_stack.push((0usize, map.get_or_create(cat)));
                         }
@@ -110,13 +108,13 @@ pub fn build(
                 })
             })
             .push("show", None, {
-                let info_container = infos.storage;
+                let infos = infos;
                 Box::new(move |args: &[_]| {
                     if !args.is_empty() {
                         return Err(CommandErr::Execution("no info loaded".into()));
                     }
 
-                    for (i, info) in info_container.read().unwrap().iter().enumerate() {
+                    for (i, info) in infos.read().unwrap().storage.iter().enumerate() {
                         println!("{i}. Categroies: ");
                         for category in info.categories() {
                             println!("\t{category}");

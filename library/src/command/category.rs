@@ -5,7 +5,6 @@ use crate::{
     category::Category,
     command::{count, list, load, print, push, save, select, set},
     command_map::{CommandMap, CommandMapBuilder},
-    reset::ResetValues,
     shared,
 };
 
@@ -13,16 +12,11 @@ pub fn build(
     name: String,
     categories: shared::BufferStorage<Category>,
     bookmarks: shared::BufferStorage<Bookmark>,
-    reset_values: ResetValues,
 ) -> Box<CommandMap<'static>> {
     Box::new(
         CommandMapBuilder::new()
             .name(name)
-            .push(
-                "load",
-                None,
-                load::Load::build(categories.clone(), reset_values /*.clone()*/),
-            )
+            .push("load", None, load::Load::build(categories.clone()))
             .push(
                 "list",
                 Some("list categories"),
