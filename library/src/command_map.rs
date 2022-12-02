@@ -166,13 +166,7 @@ impl CommandMap<'static> {
             .push(
                 "bookmark",
                 None,
-                bookmark::build(
-                    "bookmark".into(),
-                    bookmarks.storage.clone(),
-                    bookmarks.buffer.clone(),
-                    bookmarks.selected.clone(),
-                    reset_values.clone(),
-                ),
+                bookmark::build("bookmark".into(), bookmarks.clone(), reset_values.clone()),
             )
             .push(
                 "info",
@@ -188,19 +182,16 @@ impl CommandMap<'static> {
                 "load",
                 None,
                 load::LoadAll::build(
-                    categories.storage.clone(),
-                    bookmarks.storage.clone(),
-                    infos,
+                    categories.clone(),
+                    bookmarks.clone(),
+                    infos.clone(),
                     reset_values,
                 ),
             )
             .push(
                 "save",
                 None,
-                save::SaveAll::build(
-                    categories.storage, /*.clone()*/
-                    bookmarks.storage,  /*.clone()*/
-                ),
+                save::SaveAll::build(infos, categories, bookmarks),
             )
             .push("debug", None, Box::new(command_debug))
             .lookup_backup(Some("bookmark".into()))

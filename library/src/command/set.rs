@@ -6,8 +6,7 @@ pub struct Set<T>
 where
     T: Storeable + std::fmt::Display,
 {
-    storage: shared::Storage<T>,
-    selected: shared::Selected,
+    buffer_storage: shared::BufferStorage<T>,
 }
 
 impl<T> Command for Set<T>
@@ -22,10 +21,15 @@ where
             )));
         }
 
-        let item = self
-            .selected
-            .get_mut(&mut self.storage)
-            .ok_or_else(|| CommandErr::Execution("no or an invalid item selected".into()))?;
+        let mut storage = self.buffer_storage.storage.write().unwrap();
+        let selected = self.buffer_storage.selected.read().unwrap();
+        let index = selected
+            .index()
+            .ok_or_else(|| CommandErr::Execution("not item selected".into()))?;
+
+        let item = storage
+            .get_mut(index)
+            .ok_or_else(|| CommandErr::Execution("invalid item selected".into()))?;
 
         let property = args[0].as_str();
 
@@ -46,7 +50,7 @@ where
             }
         }
 
-        println!("{}. {:#}", self.selected.index().unwrap(), item);
+        println!("{}. {:#}", index, item);
 
         Ok(())
     }

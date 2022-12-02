@@ -3,17 +3,16 @@ use std::{fs::File, io::BufWriter};
 use bookmark_storage::Listed;
 
 use crate::{
+    bookmark::Bookmark,
+    category::Category,
     command::{Command, CommandErr},
+    info::Info,
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
-pub struct Save<T>
-where
-    T: Listed,
-{
-    storage: shared::Storage<T>,
-    buffer: shared::Buffer,
+pub struct Save<T> {
+    buffer_storage: shared::BufferStorage<T>,
 }
 
 impl<T> Command for Save<T>
@@ -27,10 +26,13 @@ where
             ));
         }
 
-        let storage = self.storage.read();
+        let storage = self.buffer_storage.storage.read().unwrap();
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
-            self.buffer
+            self.buffer_storage
+                .buffer
+                .read()
+                .unwrap()
                 .iter()
                 .map(|i| storage.get(i))
                 .take_while(Option::is_some)
@@ -43,8 +45,9 @@ where
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct SaveAll {
-    categories: shared::Categroies,
-    bookmarks: shared::Bookmarks,
+    infos: shared::BufferStorage<Info>,
+    categories: shared::BufferStorage<Category>,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for SaveAll {
@@ -57,9 +60,11 @@ impl Command for SaveAll {
 
         let mut writer = BufWriter::new(File::create(&args[0])?);
 
-        bookmark_storage::save(&mut writer, self.categories.read().iter())?;
+        bookmark_storage::save(&mut writer, self.infos.storage.read().unwrap().iter())?;
 
-        bookmark_storage::save(&mut writer, self.bookmarks.read().iter())?;
+        bookmark_storage::save(&mut writer, self.categories.storage.read().unwrap().iter())?;
+
+        bookmark_storage::save(&mut writer, self.bookmarks.storage.read().unwrap().iter())?;
 
         Ok(())
     }

@@ -1,12 +1,12 @@
 use crate::{
+    bookmark::Bookmark,
     command::{Command, CommandErr},
     shared,
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct Filter {
-    bookmarks: shared::Bookmarks,
-    bookmark_buffer: shared::Buffer,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for Filter {
@@ -17,8 +17,11 @@ impl Command for Filter {
             ));
         }
 
-        self.bookmark_buffer
-            .filter_in_place(&self.bookmarks, |bookmark| {
+        self.bookmarks
+            .buffer
+            .write()
+            .unwrap()
+            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
                 args.iter().all(|arg| bookmark.url().contains(arg))
             });
 
@@ -28,8 +31,7 @@ impl Command for Filter {
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
 pub struct FilterInv {
-    bookmarks: shared::Bookmarks,
-    bookmark_buffer: shared::Buffer,
+    bookmarks: shared::BufferStorage<Bookmark>,
 }
 
 impl Command for FilterInv {
@@ -40,8 +42,11 @@ impl Command for FilterInv {
             ));
         }
 
-        self.bookmark_buffer
-            .filter_in_place(&self.bookmarks, |bookmark| {
+        self.bookmarks
+            .buffer
+            .write()
+            .unwrap()
+            .filter_in_place(&self.bookmarks.storage.read().unwrap(), |bookmark| {
                 !args.iter().any(|arg| bookmark.url().contains(arg))
             });
 

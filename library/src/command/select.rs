@@ -6,12 +6,8 @@ use crate::{
 };
 
 #[derive(Debug, bookmark_derive::BuildCommand)]
-pub struct Select<T>
-where
-    T: Storeable,
-{
-    items: shared::Storage<T>,
-    selected: shared::Selected,
+pub struct Select<T> {
+    buffer_storage: shared::BufferStorage<T>,
 }
 
 impl<T> Command for Select<T>
@@ -32,15 +28,17 @@ where
             ))
         })?;
 
-        if !(..self.items.len()).contains(&index) {
+        let items = self.buffer_storage.storage.read().unwrap();
+
+        if !(..items.len()).contains(&index) {
             return Err(CommandErr::Execution(format!(
                 "{index} is not the index of a bookmark"
             )));
         }
 
-        self.selected.replace(index);
+        self.buffer_storage.selected.write().unwrap().replace(index);
 
-        println!("selected:\n{}. {:#}", index, self.items.get(index).unwrap());
+        println!("selected:\n{}. {:#}", index, items.get(index).unwrap());
 
         Ok(())
     }

@@ -23,13 +23,14 @@ pub fn build(
                 .auto_configure(&criteria.include)
                 .build(&criteria.include);
 
-            bookmarks
-                .buffer
-                .filter_in_place(&bookmarks.storage, |bookmark| {
+            bookmarks.buffer.write().unwrap().filter_in_place(
+                &bookmarks.storage.read().unwrap(),
+                |bookmark| {
                     criteria.require.iter().all(|r| bookmark.url().contains(r))
                         && (criteria.whole.iter().any(|v| *v == bookmark.url())
                             || include_matcher.is_match(bookmark.url()))
-                });
+                },
+            );
             Ok(())
         };
 
@@ -37,9 +38,12 @@ pub fn build(
             categories
                 .storage
                 .read()
+                .unwrap()
                 .get(
                     categories
                         .selected
+                        .read()
+                        .unwrap()
                         .index()
                         .ok_or_else(|| CommandErr::Usage("no category selected".into()))?,
                 )
