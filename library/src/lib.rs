@@ -1,13 +1,13 @@
 //! Library for handling bookmarks.
 
-// #![warn(
-//     missing_copy_implementations,
-//     missing_docs,
-//     clippy::missing_errors_doc,
-//     clippy::missing_panics_doc,
-//     clippy::missing_safety_doc,
-//     rustdoc::missing_crate_level_docs
-// )]
+#![warn(
+    missing_copy_implementations, 
+    /* missing_docs, */
+    /* clippy::missing_errors_doc, */
+    /* clippy::missing_panics_doc, */
+    /* clippy::missing_safety_doc, */
+    rustdoc::missing_crate_level_docs
+)]
 
 pub mod bookmark;
 pub mod category;
@@ -110,7 +110,7 @@ pub fn run(
     let command_map = extended_commands
         .iter_mut()
         .fold(
-            CommandMap::build(
+            CommandMap::default_config(
                 bookmarks.clone(),
                 categories.clone(),
                 infos.clone(),

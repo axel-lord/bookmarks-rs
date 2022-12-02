@@ -64,7 +64,7 @@ impl Buffer {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Selected {
     index: Option<usize>,
 }
