@@ -143,7 +143,7 @@ impl<'a> CommandMap<'a> {
 }
 
 impl CommandMap<'static> {
-    pub fn build(
+    pub fn default_config(
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
