@@ -611,7 +611,6 @@ name = "derive-test"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
- "bookmark-derive",
  "bookmark-storage",
  "lazy_static",
  "regex",
