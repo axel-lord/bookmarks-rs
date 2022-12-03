@@ -74,7 +74,7 @@ impl AnyField for FieldList {
         let ident = &self.ident;
         quote! {
             #token,
-            bookmark_storage::join_with_delim(#ident),
+            bookmark_storage::pattern_match::join_with_delim(#ident),
         }
     }
 
@@ -89,7 +89,7 @@ impl AnyField for FieldList {
         quote! {
             if !self.#ident.is_empty() {
                 write!(f, #format_string)?;
-                bookmark_storage::write_list_field(f, self.#ident())?;
+                bookmark_storage::pattern_match::write_list_field(f, self.#ident())?;
             }
         }
     }
@@ -151,12 +151,12 @@ impl AnyField for FieldList {
         if index == 0 {
             quote! {
                 write!(f, "{} ", #key)?;
-                bookmark_storage::write_delim_list(f, self.#ident())?;
+                bookmark_storage::pattern_match::write_delim_list(f, self.#ident())?;
             }
         } else {
             quote! {
                 write!(f, " {} ", #key)?;
-                bookmark_storage::write_delim_list(f, self.#ident())?;
+                bookmark_storage::pattern_match::write_delim_list(f, self.#ident())?;
             }
         }
     }

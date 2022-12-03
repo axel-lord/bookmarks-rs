@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub struct Reference {
-    line: bookmark_storage::content_string::ContentString,
+    line: bookmark_storage::ContentString,
 
     name: bookmark_storage::Field,
 
@@ -176,7 +176,7 @@ impl Reference {
         info: &str,
         tags: impl 'a + Iterator<Item = impl AsRef<str>>,
     ) -> Self {
-        let mut line = bookmark_storage::content_string::ContentString::new();
+        let mut line = bookmark_storage::ContentString::new();
         Self {
             name: line.push(name).into(),
             children: line.extend(children).into(),

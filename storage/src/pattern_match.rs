@@ -61,6 +61,63 @@ pub fn substring_location(string: &str, substring: &str) -> Option<Range<usize>>
     Some(start..end)
 }
 
+/// Join and iterator of string slices into a single string delimited by [token::DELIM].
+pub fn join_with_delim(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
+    use lazy_static::lazy_static;
+    lazy_static! {
+        static ref DELIM: String = format!(" {} ", token::DELIM);
+    }
+
+    let mut out = String::new();
+
+    for i in fields.by_ref().take(1) {
+        out += i.as_ref();
+    }
+
+    for i in fields {
+        out += &DELIM;
+        out += i.as_ref();
+    }
+
+    out
+}
+
+/// Write contents of a string slice iterator delimited by [token::DELIM].
+///
+/// # Errors
+/// If a write operation failed.
+pub fn write_delim_list(
+    f: &mut std::fmt::Formatter<'_>,
+    mut iter: impl Iterator<Item = impl AsRef<str>>,
+) -> std::fmt::Result {
+    for i in iter.by_ref().take(1) {
+        write!(f, " {} ", i.as_ref())?;
+    }
+    for i in iter {
+        write!(f, "{} {} ", token::DELIM, i.as_ref())?;
+    }
+    Ok(())
+}
+
+/// Write contents of a list field.
+///
+/// # Errors
+/// If a write operation failed.
+pub fn write_list_field(
+    f: &mut std::fmt::Formatter<'_>,
+    mut iter: impl Iterator<Item = impl AsRef<str>>,
+) -> std::fmt::Result {
+    write!(f, "[")?;
+    for i in iter.by_ref().take(1) {
+        write!(f, "{}", i.as_ref())?;
+    }
+    for i in iter {
+        write!(f, ", {}", i.as_ref())?;
+    }
+    write!(f, "]")?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,7 +143,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0])
+                .map(|f| &field[Range::from(f)])
                 .collect::<Vec<_>>(),
             vec!["a", "b", "c"]
         );
@@ -101,7 +158,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0])
+                .map(|f| &field[Range::from(f)])
                 .collect::<Vec<_>>(),
             vec!["a", "b", "c"]
         );
@@ -117,7 +174,7 @@ mod tests {
         );
         assert_eq!(
             split_list_field(field)
-                .map(|f| &field[f.0])
+                .map(|f| &field[Range::from(f)])
                 .collect::<Vec<_>>(),
             Vec::<&str>::new()
         );

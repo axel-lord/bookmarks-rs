@@ -56,7 +56,7 @@ pub struct LoadAll {
 macro_rules! load_section {
     ($fmt:expr, $dest:expr, $source:expr) => {{
         let mut dest = $dest.write().unwrap();
-        let loaded = bookmark_storage::load::load_from($source.by_ref())?;
+        let loaded = bookmark_storage::load_from($source.by_ref())?;
 
         println!($fmt, loaded.len());
 
