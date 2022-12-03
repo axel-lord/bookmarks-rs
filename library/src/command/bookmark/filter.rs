@@ -4,7 +4,9 @@ use crate::{
     shared,
 };
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+use bookmark_command::Command;
+
+#[derive(Debug, Command)]
 pub struct Filter {
     bookmarks: shared::BufferStorage<Bookmark>,
 }
@@ -26,7 +28,7 @@ impl Command for Filter {
     }
 }
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct FilterInv {
     bookmarks: shared::BufferStorage<Bookmark>,
 }

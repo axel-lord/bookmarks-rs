@@ -1,7 +1,9 @@
-use bookmark_storage::{content_string::ContentString, token, Field, ListField, Section};
+use bookmark_storage::{
+    content_string::ContentString, token, Field, ListField, Section, Storeable,
+};
 use std::{collections::HashMap, error::Error};
 
-#[derive(Debug, bookmark_derive::Storeable, Default)]
+#[derive(Debug, Storeable, Default)]
 pub struct Category {
     #[line]
     line: ContentString,

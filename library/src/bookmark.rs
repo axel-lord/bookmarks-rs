@@ -1,6 +1,6 @@
-use bookmark_storage::{token, ContentString, Field, ListField, Section};
+use bookmark_storage::{token, ContentString, Field, ListField, Section, Storeable};
 
-#[derive(Debug, bookmark_derive::Storeable, Default)]
+#[derive(Debug, Storeable, Default)]
 pub struct Bookmark {
     #[line]
     line: ContentString,

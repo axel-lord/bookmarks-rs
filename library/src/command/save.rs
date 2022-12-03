@@ -1,7 +1,3 @@
-use std::{fs::File, io::BufWriter};
-
-use bookmark_storage::Listed;
-
 use crate::{
     bookmark::Bookmark,
     category::Category,
@@ -9,8 +5,11 @@ use crate::{
     info::Info,
     shared,
 };
+use bookmark_command::Command;
+use bookmark_storage::Listed;
+use std::{fs::File, io::BufWriter};
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct Save<T> {
     buffer_storage: shared::BufferStorage<T>,
 }
@@ -42,7 +41,7 @@ where
     }
 }
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct SaveAll {
     infos: shared::BufferStorage<Info>,
     categories: shared::BufferStorage<Category>,

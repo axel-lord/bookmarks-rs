@@ -232,6 +232,8 @@ pub fn join_with_delim(mut fields: impl Iterator<Item = impl AsRef<str>>) -> Str
     out
 }
 
+pub use bookmark_derive::Storeable;
+
 /// Trait used to mark a type as serializable.
 pub trait Storeable: Sized {
     /// Whether or not the type has been edited.

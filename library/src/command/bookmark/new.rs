@@ -4,7 +4,9 @@ use crate::{
     shared,
 };
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+use bookmark_command::Command;
+
+#[derive(Debug, Command)]
 pub struct New {
     bookmarks: shared::BufferStorage<Bookmark>,
 }

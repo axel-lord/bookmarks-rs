@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 mod build_command;
 mod storeable;
 
-#[proc_macro_derive(BuildCommand)]
+#[proc_macro_derive(Command)]
 pub fn build_command_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 

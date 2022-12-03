@@ -1,8 +1,3 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
-
 use crate::{
     bookmark::Bookmark,
     category::Category,
@@ -10,10 +5,14 @@ use crate::{
     info::Info,
     shared,
 };
-
+use bookmark_command::Command;
 use bookmark_storage::Listed;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct Load<T> {
     buffer_storage: shared::BufferStorage<T>,
 }
@@ -47,7 +46,7 @@ where
     }
 }
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct LoadAll {
     categories: shared::BufferStorage<Category>,
     bookmarks: shared::BufferStorage<Bookmark>,
