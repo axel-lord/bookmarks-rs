@@ -1,4 +1,4 @@
-use bookmark_storage::{content_string::ContentString, token, ListField, Section, Storeable};
+use bookmark_storage::{token, ContentString, ListField, Section, Storeable};
 
 #[derive(Debug, Storeable, Default)]
 pub struct Info {

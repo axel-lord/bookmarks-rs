@@ -1,6 +1,4 @@
-use bookmark_storage::{
-    content_string::ContentString, token, Field, ListField, Section, Storeable,
-};
+use bookmark_storage::{token, ContentString, Field, ListField, Section, Storeable};
 use std::{collections::HashMap, error::Error};
 
 #[derive(Debug, Storeable, Default)]

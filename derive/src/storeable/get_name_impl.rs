@@ -22,7 +22,7 @@ fn gen_new(
 
     quote! {
         pub fn new<'a>(#(#params)*) -> Self {
-            let mut #line = bookmark_storage::content_string::ContentString::new();
+            let mut #line = bookmark_storage::ContentString::new();
             Self {
                 #(#new_fields)*
                 #line,
