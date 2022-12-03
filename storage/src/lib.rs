@@ -308,7 +308,7 @@ pub fn write_delim_list(
     Ok(())
 }
 
-/// Writ contents of a list field.
+/// Write contents of a list field.
 ///
 /// # Errors
 /// If a write operation failed.
