@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 aho-corasick = "0.7.20"
-bookmark-derive = { path = "../derive" }
 bookmark-storage = { path = "../storage" }
 lazy_static = "1.4"
 regex = "1.7"
