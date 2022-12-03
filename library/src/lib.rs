@@ -2,10 +2,10 @@
 
 #![warn(
     missing_copy_implementations, 
-    /* missing_docs, */
-    /* clippy::missing_errors_doc, */
-    /* clippy::missing_panics_doc, */
-    /* clippy::missing_safety_doc, */
+    // missing_docs,
+    // clippy::missing_errors_doc, 
+    // clippy::missing_panics_doc, 
+    // clippy::missing_safety_doc, 
     rustdoc::missing_crate_level_docs
 )]
 

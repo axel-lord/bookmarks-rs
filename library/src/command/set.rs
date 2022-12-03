@@ -1,7 +1,8 @@
 use crate::{command::Command, shared, CommandErr};
+use bookmark_command::Command;
 use bookmark_storage::{Property, Storeable};
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct Set<T>
 where
     T: Storeable + std::fmt::Display,

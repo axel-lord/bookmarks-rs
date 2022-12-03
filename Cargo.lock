@@ -134,6 +134,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
+name = "bookmark-command"
+version = "0.1.0"
+dependencies = [
+ "bookmark-derive",
+]
+
+[[package]]
 name = "bookmark-derive"
 version = "0.1.0"
 dependencies = [
@@ -166,7 +173,7 @@ name = "bookmark-library"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
- "bookmark-derive",
+ "bookmark-command",
  "bookmark-storage",
  "lazy_static",
  "regex",
@@ -185,6 +192,7 @@ dependencies = [
 name = "bookmark-storage"
 version = "0.1.0"
 dependencies = [
+ "bookmark-derive",
  "lazy_static",
 ]
 

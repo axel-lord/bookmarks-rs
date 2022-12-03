@@ -4,7 +4,9 @@ use crate::{
     shared,
 };
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+use bookmark_command::Command;
+
+#[derive(Debug, Command)]
 pub struct Regex {
     bookmarks: shared::BufferStorage<Bookmark>,
 }
@@ -29,7 +31,7 @@ impl Command for Regex {
     }
 }
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct RegexInv {
     bookmarks: shared::BufferStorage<Bookmark>,
 }

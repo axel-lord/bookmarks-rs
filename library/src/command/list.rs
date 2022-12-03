@@ -1,9 +1,9 @@
-use bookmark_storage::Listed;
-
 use crate::{
     command::{Command, CommandErr},
     shared,
 };
+use bookmark_command::Command;
+use bookmark_storage::Listed;
 
 pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> {
     if number.unsigned_abs() > max {
@@ -19,7 +19,7 @@ pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> 
     })
 }
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct List<T>
 where
     T: Listed + std::fmt::Display,

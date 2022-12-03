@@ -1,11 +1,11 @@
-use bookmark_storage::Storeable;
-
 use crate::{
     command::{Command, CommandErr},
     shared,
 };
+use bookmark_command::Command;
+use bookmark_storage::Storeable;
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct Select<T> {
     buffer_storage: shared::BufferStorage<T>,
 }

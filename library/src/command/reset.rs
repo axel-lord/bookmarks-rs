@@ -5,8 +5,9 @@ use crate::{
     info::Info,
     shared,
 };
+use bookmark_command::Command;
 
-#[derive(Debug, bookmark_derive::BuildCommand)]
+#[derive(Debug, Command)]
 pub struct Reset {
     infos: shared::BufferStorage<Info>,
     categories: shared::BufferStorage<Category>,
