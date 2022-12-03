@@ -11,9 +11,8 @@ pub mod save;
 pub mod select;
 pub mod set;
 
+use crate::command_map::CommandMap;
 use std::error::Error;
-
-use crate::{category::IdentifierErr, command_map::CommandMap, container::GetSelectedErr};
 
 pub fn command_debug(args: &[String]) -> Result<(), CommandErr> {
     println!("{:#?}", args);
@@ -37,31 +36,35 @@ impl std::fmt::Display for CommandErr {
     }
 }
 
-impl Error for CommandErr {}
+#[derive(Debug, Clone)]
+struct CommandErrErr<'a>(&'a CommandErr);
 
-macro_rules! trivial_command_err_from {
-    ($($other:ty),*) => {
-        $(
-            impl From<$other> for CommandErr {
-                fn from(err: $other) -> Self {
-                    Self::Execution(format!("{err}"))
-                }
-            }
-        )*
-    };
-}
+// macro_rules! trivial_command_err_from {
+//     ($($other:ty),*) => {
+//         $(
+//             impl From<$other> for CommandErr {
+//                 fn from(err: $other) -> Self {
+//                     Self::Execution(format!("{err}"))
+//                 }
+//             }
+//         )*
+//     };
+// }
 
-trivial_command_err_from!(
-    bookmark_storage::ParseErr,
-    bookmark_storage::PropertyErr,
-    IdentifierErr,
-    std::io::Error,
-    GetSelectedErr
-);
+// trivial_command_err_from!(
+//     bookmark_storage::ParseErr,
+//     bookmark_storage::PropertyErr,
+//     IdentifierErr,
+//     std::io::Error,
+//     GetSelectedErr
+// );
 
-impl From<String> for CommandErr {
-    fn from(err: String) -> Self {
-        Self::Execution(err)
+impl<T> From<T> for CommandErr
+where
+    T: Error,
+{
+    fn from(err: T) -> Self {
+        Self::Execution(format!("{err}"))
     }
 }
 

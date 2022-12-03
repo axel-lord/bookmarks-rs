@@ -162,11 +162,11 @@ impl Reference {
             "<name>",
             name,
             "<children>",
-            bookmark_storage::join_with_delim(children),
+            bookmark_storage::pattern_match::join_with_delim(children),
             "<info>",
             info,
             "<tags>",
-            bookmark_storage::join_with_delim(tags),
+            bookmark_storage::pattern_match::join_with_delim(tags),
         )
     }
 
@@ -294,26 +294,26 @@ impl std::fmt::Display for Reference {
             write!(f, " {} ", self.name())?;
 
             write!(f, "{}", "<children>")?;
-            bookmark_storage::write_delim_list(f, self.children())?;
+            bookmark_storage::pattern_match::write_delim_list(f, self.children())?;
 
             write!(f, "{}", "<info>")?;
             write!(f, " {} ", self.info())?;
 
             write!(f, "{}", "<tags>")?;
-            bookmark_storage::write_delim_list(f, self.children())?;
+            bookmark_storage::pattern_match::write_delim_list(f, self.children())?;
         } else {
             write!(f, "{}:", self.name())?;
 
             if !self.children.is_empty() {
                 write!(f, "\n\tchildren: ")?;
-                bookmark_storage::write_list_field(f, self.children())?;
+                bookmark_storage::pattern_match::write_list_field(f, self.children())?;
             }
 
             write!(f, "\n\tinfo: {}", self.info())?;
 
             if !self.tags.is_empty() {
                 write!(f, "\n\ttags: ")?;
-                bookmark_storage::write_list_field(f, self.tags())?;
+                bookmark_storage::pattern_match::write_list_field(f, self.tags())?;
             }
         }
         Ok(())
@@ -328,7 +328,7 @@ fn main() {
     )
     .unwrap();
     dbg!(&item);
-    dbg!(bookmark_storage::join_with_delim(
+    dbg!(bookmark_storage::pattern_match::join_with_delim(
         ["hello", "there"].into_iter()
     ));
     dbg!(Reference::create_line(
