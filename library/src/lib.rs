@@ -16,6 +16,7 @@ pub mod command_map;
 pub mod container;
 pub mod info;
 pub mod shared;
+pub mod command_factory;
 
 mod parse_command;
 
@@ -23,72 +24,13 @@ use crate::{
     bookmark::Bookmark, category::Category, command_map::CommandMap,
     info::Info, parse_command::parse_command,
 };
-use bookmark_command::Command;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::io;
 
-pub trait CommandFactory {
-    fn name(&self) -> &'static str;
-    fn build(
-        &mut self,
-        bookmarks: shared::BufferStorage<Bookmark>,
-        categories: shared::BufferStorage<Category>,
-        infos: shared::BufferStorage<Info>,
-    ) -> Box<dyn Command>;
-    fn help(&self) -> Option<&'static str> {
-        None
-    }
-}
-
-impl<F> CommandFactory for (&'static str, F)
-where
-    F: FnMut(
-        shared::BufferStorage<Bookmark>,
-        shared::BufferStorage<Category>,
-        shared::BufferStorage<Info>,
-    ) -> Box<dyn Command>,
-{
-    fn name(&self) -> &'static str {
-        self.0
-    }
-    fn build(
-        &mut self,
-        bookmarks: shared::BufferStorage<Bookmark>,
-        categories: shared::BufferStorage<Category>,
-        infos: shared::BufferStorage<Info>,
-    ) -> Box<dyn Command> {
-        (self.1)(bookmarks, categories, infos)
-    }
-}
-
-impl<F> CommandFactory for (&'static str, &'static str, F)
-where
-    F: FnMut(
-        shared::BufferStorage<Bookmark>,
-        shared::BufferStorage<Category>,
-        shared::BufferStorage<Info>,
-    ) -> Box<dyn Command>,
-{
-    fn name(&self) -> &'static str {
-        self.0
-    }
-    fn help(&self) -> Option<&'static str> {
-        Some(self.1)
-    }
-    fn build(
-        &mut self,
-        bookmarks: shared::BufferStorage<Bookmark>,
-        categories: shared::BufferStorage<Category>,
-        infos: shared::BufferStorage<Info>,
-    ) -> Box<dyn Command> {
-        (self.2)(bookmarks, categories, infos)
-    }
-}
-
 pub fn run(
     init_commands: Option<String>,
-    mut extended_commands: Vec<Box<dyn CommandFactory>>,
+    mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,
 ) -> i32 {
     lazy_static! {
         static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
