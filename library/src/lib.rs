@@ -20,10 +20,10 @@ pub mod shared;
 mod parse_command;
 
 use crate::{
-    bookmark::Bookmark, category::Category, command::CommandErr, command_map::CommandMap,
+    bookmark::Bookmark, category::Category, command_map::CommandMap,
     info::Info, parse_command::parse_command,
 };
-use command::Command;
+use bookmark_command::Command;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::io;
@@ -137,7 +137,7 @@ pub fn run(
 
         if let Err(err) = command_map.call(command, &args[1..]) {
             match err {
-                CommandErr::Usage(ref msg) => {
+                bookmark_command::CommandErr::Usage(ref msg) => {
                     println!("incorrect usage: {msg}");
                     if let Some(help) = command_map.help(command) {
                         println!("{help}");

@@ -1,16 +1,11 @@
-use bookmark_library::{
-    bookmark::Bookmark,
-    command::{Command, CommandErr},
-    shared,
-};
+use bookmark_library::{bookmark::Bookmark, shared};
 use scraper::{Html, Selector};
-
 use std::{fs::File, io};
 
-pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
+pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_command::Command> {
     Box::new(move |args: &[String]| {
         if args.len() != 1 {
-            return Err(CommandErr::Usage(
+            return Err(bookmark_command::CommandErr::Usage(
                 "import html should be called with one argument".into(),
             ));
         }

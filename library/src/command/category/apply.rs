@@ -1,14 +1,10 @@
-use crate::{
-    bookmark::Bookmark,
-    category::Category,
-    command::{Command, CommandErr},
-    shared,
-};
+use crate::{bookmark::Bookmark, category::Category, shared};
+use bookmark_command::CommandErr;
 
 pub fn build(
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
-) -> Box<dyn Command> {
+) -> Box<dyn bookmark_command::Command> {
     Box::new(move |args: &[_]| {
         if !args.is_empty() {
             return Err(CommandErr::Usage(

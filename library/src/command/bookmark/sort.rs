@@ -1,8 +1,5 @@
-use crate::{
-    bookmark::Bookmark,
-    command::{Command, CommandErr},
-    shared,
-};
+use crate::{bookmark::Bookmark, shared};
+use bookmark_command::{Command, CommandErr};
 
 pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
     Box::new(move |args: &[_]| {
