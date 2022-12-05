@@ -28,7 +28,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::io;
 
-pub trait CommandBuilder {
+pub trait CommandFactory {
     fn name(&self) -> &'static str;
     fn build(
         &mut self,
@@ -41,7 +41,7 @@ pub trait CommandBuilder {
     }
 }
 
-impl<F> CommandBuilder for (&'static str, F)
+impl<F> CommandFactory for (&'static str, F)
 where
     F: FnMut(
         shared::BufferStorage<Bookmark>,
@@ -62,7 +62,7 @@ where
     }
 }
 
-impl<F> CommandBuilder for (&'static str, &'static str, F)
+impl<F> CommandFactory for (&'static str, &'static str, F)
 where
     F: FnMut(
         shared::BufferStorage<Bookmark>,
@@ -88,7 +88,7 @@ where
 
 pub fn run(
     init_commands: Option<String>,
-    mut extended_commands: Vec<Box<dyn CommandBuilder>>,
+    mut extended_commands: Vec<Box<dyn CommandFactory>>,
 ) -> i32 {
     lazy_static! {
         static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
