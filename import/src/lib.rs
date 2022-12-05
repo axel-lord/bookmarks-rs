@@ -19,7 +19,7 @@ use bookmark_library::{bookmark::Bookmark, command_map::CommandMapBuilder, share
 #[derive(Debug, Clone, Copy)]
 pub struct Import;
 
-impl bookmark_library::CommandBuilder for Import {
+impl bookmark_library::CommandFactory for Import {
     fn name(&self) -> &'static str {
         "import"
     }
