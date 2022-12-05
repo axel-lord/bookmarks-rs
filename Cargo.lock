@@ -161,6 +161,7 @@ dependencies = [
 name = "bookmark-import"
 version = "0.1.0"
 dependencies = [
+ "bookmark-command",
  "bookmark-library",
  "bookmark-storage",
  "scraper",

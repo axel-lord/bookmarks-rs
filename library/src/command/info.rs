@@ -4,15 +4,15 @@ use std::{
     rc::{Rc, Weak},
 };
 
+use bookmark_command::args_are_empty;
+
 use crate::{
     category::Category,
-    command::{self, load},
+    command::load,
     command_map::{CommandMap, CommandMapBuilder},
     info::Info,
     shared,
 };
-
-use super::CommandErr;
 
 #[derive(Default)]
 struct CatNode {
@@ -61,7 +61,7 @@ pub fn build(
                 let categories = categories;
                 let infos = infos.clone();
                 Box::new(move |args: &[_]| {
-                    command::args_are_empty(args)?;
+                    args_are_empty(args)?;
 
                     let mut map = CatMap::new();
                     for cat in categories.read().unwrap().storage.iter() {
@@ -111,7 +111,9 @@ pub fn build(
                 let infos = infos;
                 Box::new(move |args: &[_]| {
                     if !args.is_empty() {
-                        return Err(CommandErr::Execution("no info loaded".into()));
+                        return Err(bookmark_command::CommandErr::Execution(
+                            "no info loaded".into(),
+                        ));
                     }
 
                     for (i, info) in infos.read().unwrap().storage.iter().enumerate() {

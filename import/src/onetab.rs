@@ -1,17 +1,13 @@
-use bookmark_library::{
-    bookmark::Bookmark,
-    command::{Command, CommandErr},
-    shared,
-};
+use bookmark_library::{bookmark::Bookmark, shared};
 use std::{
     fs::File,
     io::{prelude::*, BufReader},
 };
 
-pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
+pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_command::Command> {
     Box::new(move |args: &[String]| {
         if args.len() != 1 {
-            return Err(CommandErr::Usage(
+            return Err(bookmark_command::CommandErr::Usage(
                 "import onetab should be called with a single argument".into(),
             ));
         }

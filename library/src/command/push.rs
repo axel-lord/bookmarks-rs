@@ -1,11 +1,8 @@
+use crate::shared;
+use bookmark_command::CommandErr;
 use bookmark_storage::{Property, Storeable};
 
-use crate::{
-    command::{Command, CommandErr},
-    shared,
-};
-
-pub fn build<T>(buffer_storage: shared::BufferStorage<T>) -> Box<dyn Command>
+pub fn build<T>(buffer_storage: shared::BufferStorage<T>) -> Box<dyn bookmark_command::Command>
 where
     T: Storeable + std::fmt::Display + 'static,
 {

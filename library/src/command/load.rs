@@ -1,11 +1,5 @@
-use crate::{
-    bookmark::Bookmark,
-    category::Category,
-    command::{Command, CommandErr},
-    info::Info,
-    shared,
-};
-use bookmark_command::Command;
+use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
+use bookmark_command::{Command, CommandErr};
 use bookmark_storage::Listed;
 use std::{
     fs::File,

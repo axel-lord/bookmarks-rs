@@ -1,10 +1,5 @@
-use crate::{
-    bookmark::Bookmark,
-    command::{Command, CommandErr},
-    shared,
-};
-
-use bookmark_command::Command;
+use crate::{bookmark::Bookmark, shared};
+use bookmark_command::{Command, CommandErr};
 
 #[derive(Debug, Command)]
 pub struct Filter {

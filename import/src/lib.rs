@@ -28,7 +28,7 @@ impl bookmark_library::CommandBuilder for Import {
         bookmarks: BufferStorage<Bookmark>,
         _categories: BufferStorage<bookmark_library::category::Category>,
         _infos: BufferStorage<bookmark_library::info::Info>,
-    ) -> Box<dyn bookmark_library::command::Command> {
+    ) -> Box<dyn bookmark_command::Command> {
         Box::new(
             CommandMapBuilder::new()
                 .name("import".into())

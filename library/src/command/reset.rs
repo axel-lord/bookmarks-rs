@@ -1,10 +1,4 @@
-use crate::{
-    bookmark::Bookmark,
-    category::Category,
-    command::{Command, CommandErr},
-    info::Info,
-    shared,
-};
+use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
 use bookmark_command::Command;
 
 #[derive(Debug, Command)]
@@ -15,9 +9,9 @@ pub struct Reset {
 }
 
 impl Command for Reset {
-    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), bookmark_command::CommandErr> {
         if !args.is_empty() {
-            return Err(CommandErr::Execution(
+            return Err(bookmark_command::CommandErr::Execution(
                 "reset should be used without any arguments".into(),
             ));
         }

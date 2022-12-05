@@ -1,12 +1,6 @@
+use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
+use bookmark_command::{Command, CommandErr};
 use std::{cell::RefCell, collections::HashMap, fmt::Debug, iter::FromIterator};
-
-use crate::{
-    bookmark::Bookmark,
-    category::Category,
-    command::{self, Command, CommandErr},
-    info::Info,
-    shared,
-};
 
 struct CommandEntry {
     command: RefCell<Box<dyn Command>>,
@@ -147,7 +141,7 @@ impl CommandMap<'static> {
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
     ) -> CommandMapBuilder<'static> {
-        use command::*;
+        use crate::command::*;
         CommandMapBuilder::new()
             .lookup_backup(Some("bookmark".into()))
             .push(
@@ -181,5 +175,17 @@ impl CommandMap<'static> {
                 save::SaveAll::build(infos, categories, bookmarks),
             )
             .push("debug", None, Box::new(command_debug))
+    }
+}
+
+impl<'a> Command for CommandMap<'a> {
+    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+        CommandMap::call(
+            self,
+            args.get(0).ok_or_else(|| {
+                CommandErr::Execution("needs to be called with a subcommand".into())
+            })?,
+            &args[1..],
+        )
     }
 }

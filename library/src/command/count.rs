@@ -1,7 +1,4 @@
-use crate::{
-    command::{Command, CommandErr},
-    shared,
-};
+use crate::shared;
 use bookmark_command::Command;
 use bookmark_storage::Storeable;
 
@@ -17,9 +14,9 @@ impl<T> Command for Count<T>
 where
     T: Storeable,
 {
-    fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+    fn call(&mut self, args: &[String]) -> Result<(), bookmark_command::CommandErr> {
         if !args.is_empty() {
-            return Err(CommandErr::Execution(
+            return Err(bookmark_command::CommandErr::Execution(
                 "count should be used without any arguments".into(),
             ));
         }

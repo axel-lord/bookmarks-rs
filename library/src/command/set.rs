@@ -1,5 +1,5 @@
-use crate::{command::Command, shared, CommandErr};
-use bookmark_command::Command;
+use crate::shared;
+use bookmark_command::{Command, CommandErr};
 use bookmark_storage::{Property, Storeable};
 
 #[derive(Debug, Command)]
