@@ -1,3 +1,16 @@
+pub mod bookmark;
+pub mod category;
+pub mod count;
+pub mod info;
+pub mod list;
+pub mod load;
+pub mod print;
+pub mod push;
+pub mod reset;
+pub mod save;
+pub mod select;
+pub mod set;
+
 use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
 use bookmark_command::{Command, CommandErr};
 use std::{cell::RefCell, collections::HashMap, fmt::Debug, iter::FromIterator};
@@ -141,7 +154,6 @@ impl CommandMap<'static> {
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
     ) -> CommandMapBuilder<'static> {
-        use crate::command::*;
         CommandMapBuilder::new()
             .lookup_backup(Some("bookmark".into()))
             .push(
@@ -174,7 +186,14 @@ impl CommandMap<'static> {
                 None,
                 save::SaveAll::build(infos, categories, bookmarks),
             )
-            .push("debug", None, Box::new(command_debug))
+            .push(
+                "debug",
+                None,
+                Box::new(|args: &[String]| {
+                    println!("{:#?}", args);
+                    Ok(())
+                }),
+            )
     }
 }
 
