@@ -8,8 +8,7 @@ use bookmark_command::args_are_empty;
 
 use crate::{
     category::Category,
-    command::load,
-    command_map::{CommandMap, CommandMapBuilder},
+    command_map::{load, CommandMap, CommandMapBuilder},
     info::Info,
     shared,
 };

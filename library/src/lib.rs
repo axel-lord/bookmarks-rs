@@ -11,7 +11,6 @@
 
 pub mod bookmark;
 pub mod category;
-pub mod command;
 pub mod command_map;
 pub mod container;
 pub mod info;

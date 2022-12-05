@@ -3,8 +3,9 @@ pub mod apply;
 use crate::{
     bookmark::Bookmark,
     category::Category,
-    command::{count, list, load, print, push, save, select, set},
-    command_map::{CommandMap, CommandMapBuilder},
+    command_map::{
+        count, list, load, print, push, save, select, set, CommandMap, CommandMapBuilder,
+    },
     shared,
 };
 

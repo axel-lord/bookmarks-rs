@@ -6,8 +6,9 @@ pub mod unique;
 
 use crate::{
     bookmark::Bookmark,
-    command::{count, list, load, print, push, save, select, set},
-    command_map::{CommandMap, CommandMapBuilder},
+    command_map::{
+        count, list, load, print, push, save, select, set, CommandMap, CommandMapBuilder,
+    },
     shared,
 };
 
