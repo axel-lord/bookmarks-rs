@@ -1,15 +1,18 @@
-pub mod bookmark;
-pub mod category;
-pub mod count;
-pub mod info;
-pub mod list;
-pub mod load;
-pub mod print;
-pub mod push;
-pub mod reset;
-pub mod save;
-pub mod select;
-pub mod set;
+//! Command maps are the main way to organizze commands, they can be nested due to themselves
+//! implementing the [Command] trait.
+
+mod bookmark;
+mod category;
+mod count;
+mod info;
+mod list;
+mod load;
+mod print;
+mod push;
+mod reset;
+mod save;
+mod select;
+mod set;
 
 use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
 use bookmark_command::{Command, CommandErr};
@@ -39,6 +42,7 @@ impl Debug for CommandEntry {
     }
 }
 
+/// Builder for [CommandMap].
 #[derive(Debug, Default)]
 pub struct CommandMapBuilder<'a> {
     commands: Vec<(&'a str, CommandEntry)>,
@@ -47,25 +51,31 @@ pub struct CommandMapBuilder<'a> {
 }
 
 impl<'a> CommandMapBuilder<'a> {
+    /// Create a new [CommandMapBuilder] same as [CommandMapBuilder::default].
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Push a [Command] to be used by the built [CommandMap].
     pub fn push(mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) -> Self {
         self.commands.push((name, CommandEntry::new(command, help)));
         self
     }
 
+    /// Set the name of the [CommandMap].
     pub fn name(mut self, name: String) -> Self {
         self.name = name;
         self
     }
 
+    /// Set a backup, if the the [Command] requested of the [CommandMap] does not exist it will
+    /// forward it to this subcommand.
     pub fn lookup_backup(mut self, backup: Option<String>) -> Self {
         self.fallback = backup;
         self
     }
 
+    /// Build a [CommandMap] consuming the [CommandMapBuilder].
     pub fn build(self) -> CommandMap<'a> {
         CommandMap {
             commands: HashMap::from_iter(self.commands.into_iter()),
@@ -75,6 +85,8 @@ impl<'a> CommandMapBuilder<'a> {
     }
 }
 
+/// A map of commands to be called, the command map itself also implements [Command] allowing for
+/// nested commands.
 #[derive(Default, Debug)]
 pub struct CommandMap<'a> {
     commands: HashMap<&'a str, CommandEntry>,
@@ -83,10 +95,13 @@ pub struct CommandMap<'a> {
 }
 
 impl<'a> CommandMap<'a> {
+    /// Gives the name of the [CommandMap].
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Call a command in the [CommandMap] and pass ite the given arguments, this is the main
+    /// purpose of the [CommandMap].
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
         match name {
             "help" => match args.len() {
@@ -135,6 +150,8 @@ impl<'a> CommandMap<'a> {
         }
     }
 
+    /// Get the hel message for a command, the message is given if the command exists and it has a
+    /// help message.
     pub fn help(&self, name: &str) -> Option<String> {
         if name == "help" {
             Some(if self.name.is_empty() {
@@ -149,6 +166,8 @@ impl<'a> CommandMap<'a> {
 }
 
 impl CommandMap<'static> {
+    /// Get a default config of the [CommandMapBuilder] this includes all default commands for
+    /// handling bookmarks, categories, and info.
     pub fn default_config(
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,

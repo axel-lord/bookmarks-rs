@@ -13,21 +13,21 @@ mod html;
 mod json;
 mod onetab;
 
-use bookmark_library::{bookmark::Bookmark, command_map::CommandMapBuilder, shared::BufferStorage};
+use bookmark_library::{command_map::CommandMapBuilder, shared::BufferStorage};
 
 /// Type used to build import command.
 #[derive(Debug, Clone, Copy)]
 pub struct Import;
 
-impl bookmark_library::command_factory::CommandFactory for Import {
+impl bookmark_library::CommandFactory for Import {
     fn name(&self) -> &'static str {
         "import"
     }
     fn build(
         &mut self,
-        bookmarks: BufferStorage<Bookmark>,
-        _categories: BufferStorage<bookmark_library::category::Category>,
-        _infos: BufferStorage<bookmark_library::info::Info>,
+        bookmarks: BufferStorage<bookmark_library::Bookmark>,
+        _categories: BufferStorage<bookmark_library::Category>,
+        _infos: BufferStorage<bookmark_library::Info>,
     ) -> Box<dyn bookmark_command::Command> {
         Box::new(
             CommandMapBuilder::new()

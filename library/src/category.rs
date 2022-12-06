@@ -1,6 +1,14 @@
 use bookmark_storage::{token, ContentString, Field, ListField, Section, Storeable};
 use std::{collections::HashMap, error::Error};
 
+/// Type representing a category.
+///
+/// Categories are used to filter bookmarks based on some simple conditions, such
+/// as whether the bookmark contains a substring.
+///
+/// The conditions can be both required, meaning all bookmarks in the category must fullfill them,
+/// inclusive, meaning the bookmark may include it or another inclusive requirement, or meaning the
+/// requirement is a perfect match with the bookmark.
 #[derive(Debug, Storeable, Default)]
 pub struct Category {
     #[line]
@@ -28,6 +36,7 @@ pub struct Category {
     subcategories: ListField,
 }
 
+/// Error type for issues creatin an [IdentifierContainer].
 #[derive(Clone, Debug)]
 pub struct IdentifierErr(String);
 
@@ -39,14 +48,19 @@ impl std::fmt::Display for IdentifierErr {
 
 impl Error for IdentifierErr {}
 
+/// Type for representing the different requirement of a category.
 #[derive(Clone, Debug, Default)]
 pub struct IdentifierContainer<'a> {
+    /// The required requirements.
     pub require: Vec<&'a str>,
+    /// The full match requirements.
     pub whole: Vec<&'a str>,
+    /// The optional requirements.
     pub include: Vec<&'a str>,
 }
 
 impl<'a> IdentifierContainer<'a> {
+    /// Tally how many of each kind of requirement exist.
     pub fn tally(&self) -> HashMap<char, usize> {
         HashMap::from([
             ('(', self.include.len()),
@@ -57,6 +71,7 @@ impl<'a> IdentifierContainer<'a> {
 }
 
 impl Category {
+    /// Get the requirements of a category.
     pub fn identifier_container<'a>(&'a self) -> Result<IdentifierContainer<'a>, IdentifierErr> {
         let mut identifier_container: IdentifierContainer<'a> = Default::default();
 

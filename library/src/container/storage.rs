@@ -1,18 +1,23 @@
+/// The storage of a type, used to limit the amount of available operations
+/// to mutate the size storage.
 #[derive(Clone, Debug, Default)]
 pub struct Storage<T> {
     content: Vec<T>,
 }
 
 impl<T> Storage<T> {
+    /// Push a value into the storage.
     pub fn push(&mut self, value: T) -> &mut Self {
         self.content.push(value);
         self
     }
+    /// Extend the storage with an [Iterator] of values.
     pub fn extend(&mut self, iter: impl Iterator<Item = T>) -> &mut Self {
         self.content.extend(iter);
         self
     }
 
+    /// Remove neighboring duplicates in the storage
     pub fn dedup_by(&mut self, same_bucket: impl FnMut(&mut T, &mut T) -> bool) {
         self.content.dedup_by(same_bucket);
     }

@@ -1,5 +1,5 @@
 use bookmark_command::CommandErr;
-use bookmark_library::{bookmark::Bookmark, shared};
+use bookmark_library::{shared, Bookmark};
 use std::{fs::File, io::BufReader};
 
 pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_command::Command> {

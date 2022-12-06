@@ -1,3 +1,5 @@
+//! Container and access types are useful for unified behaviour accross different commands.
+
 mod buffer;
 mod buffer_storage;
 mod selected;

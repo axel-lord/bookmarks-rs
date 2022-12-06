@@ -18,8 +18,10 @@ impl FieldList {
         let ident = &self.ident;
         let single_ident = &self.singular;
         let push_ident = self.get_push_ident();
+        let doc_str = format!("Push a value to the contents of the {ident} field, roughly equivalent to using push(\"{single_ident}\", {single_ident}).");
 
         quote! {
+            #[doc = #doc_str]
             pub fn #push_ident(&mut self, #single_ident: &str) -> &mut Self {
                 self.#ident.push(self.#line.push(#single_ident).into());
 
@@ -30,8 +32,12 @@ impl FieldList {
 
     fn get_get_method(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
+        let doc_str = format!(
+            "Get the contents of the {ident} field, roughly equivalent to using get(\"{ident}\")."
+        );
 
         quote! {
+            #[doc = #doc_str]
             pub fn #ident(&self) -> impl Iterator<Item = &str> {
                 self.#ident.get(&self.#line)
             }
@@ -41,8 +47,10 @@ impl FieldList {
     fn get_set_method(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
         let set_ident = self.get_set_ident();
+        let doc_str = format!("Set the contents of the {ident} field, roughly equivalent to using set(\"{ident}\", {ident}).");
 
         quote! {
+            #[doc = #doc_str]
             pub fn #set_ident<'a>(
                 &mut self,
                 #ident: impl Iterator<Item = impl AsRef<str>>,
