@@ -37,7 +37,7 @@ pub trait Storeable: Sized {
     ///
     /// # Errors
     /// If the string slice cannot be parsed to the type.
-    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, ParseErr> {
+    fn with_str(line: impl Into<String>, line_num: Option<usize>) -> Result<Self, ParseErr> {
         Self::with_string(line.into(), line_num)
     }
 }

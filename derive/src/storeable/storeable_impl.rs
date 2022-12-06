@@ -104,9 +104,6 @@ fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> Tok
                 ..Default::default()
             })
         }
-        fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
-            Self::with_string(line.into(), line_num)
-        }
     }
 }
 
