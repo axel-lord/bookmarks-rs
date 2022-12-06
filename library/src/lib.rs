@@ -19,31 +19,25 @@ pub mod command_factory;
 
 mod parse_command;
 
-use crate::{
-    bookmark::Bookmark, category::Category, command_map::CommandMap,
-    info::Info, parse_command::parse_command,
-};
-use lazy_static::lazy_static;
 use regex::Regex;
-use std::io;
 
 pub fn run(
     init_commands: Option<String>,
     mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,
 ) -> i32 {
-    lazy_static! {
+    lazy_static::lazy_static! {
         static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
         static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
     }
 
-    let bookmarks = shared::BufferStorage::<Bookmark>::default();
-    let categories = shared::BufferStorage::<Category>::default();
-    let infos = shared::BufferStorage::<Info>::default();
+    let bookmarks = shared::BufferStorage::<bookmark::Bookmark>::default();
+    let categories = shared::BufferStorage::<category::Category>::default();
+    let infos = shared::BufferStorage::<info::Info>::default();
 
     let command_map = extended_commands
         .iter_mut()
         .fold(
-            CommandMap::default_config(
+            command_map::CommandMap::default_config(
                 bookmarks.clone(),
                 categories.clone(),
                 infos.clone(),
@@ -65,7 +59,7 @@ pub fn run(
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
         let command = command.trim();
 
-        let Some(args) = parse_command(command) else {
+        let Some(args) = parse_command::parse_command(command) else {
             println!("could not parse \"{command}\"");
             return Ok(());
         };
@@ -112,7 +106,7 @@ pub fn run(
         command.clear();
         println!("enter command:");
 
-        match io::stdin().read_line(&mut command) {
+        match std::io::stdin().read_line(&mut command) {
             Err(err) => {
                 eprintln!("failed to read from stdin: {}", err);
                 break 1;
