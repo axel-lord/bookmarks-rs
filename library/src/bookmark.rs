@@ -1,5 +1,7 @@
 use bookmark_storage::{token, ContentString, Field, ListField, Section, Storeable};
 
+/// Type representing a bookmark.
+/// Easily responsible for the most important data.
 #[derive(Debug, Storeable, Default)]
 pub struct Bookmark {
     #[line]

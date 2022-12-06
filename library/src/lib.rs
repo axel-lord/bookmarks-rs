@@ -2,25 +2,37 @@
 
 #![warn(
     missing_copy_implementations, 
-    // missing_docs,
+    missing_docs,
     // clippy::missing_errors_doc, 
     // clippy::missing_panics_doc, 
     // clippy::missing_safety_doc, 
     rustdoc::missing_crate_level_docs
 )]
 
-pub mod bookmark;
-pub mod category;
 pub mod command_map;
 pub mod container;
-pub mod info;
-pub mod shared;
-pub mod command_factory;
+
+/// More easily use shared [container::BufferStorage].
+pub mod shared {
+    /// Since a lot of commands need access to reference counted storag, this type is used as a
+    /// conveniance to simplify their signatures.
+    pub type BufferStorage<T> = std::sync::Arc<std::sync::RwLock<super::container::BufferStorage<T>>>;
+}
+
+pub use bookmark::Bookmark;
+pub use category::{Category, IdentifierErr, IdentifierContainer};
+pub use command_factory::CommandFactory;
+pub use info::Info;
 
 mod parse_command;
+mod bookmark;
+mod category;
+mod info;
+mod command_factory; 
 
 use regex::Regex;
 
+/// Run a command line bookmark manager.
 pub fn run(
     init_commands: Option<String>,
     mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,

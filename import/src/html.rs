@@ -1,4 +1,4 @@
-use bookmark_library::{bookmark::Bookmark, shared};
+use bookmark_library::{shared, Bookmark};
 use scraper::{Html, Selector};
 use std::{fs::File, io};
 

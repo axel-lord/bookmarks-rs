@@ -1,4 +1,4 @@
-use bookmark_library::{bookmark::Bookmark, shared};
+use bookmark_library::{shared, Bookmark};
 use std::{
     fs::File,
     io::{prelude::*, BufReader},

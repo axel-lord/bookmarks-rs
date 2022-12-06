@@ -19,8 +19,10 @@ fn gen_new(
     params: &Vec<TokenStream2>,
 ) -> TokenStream2 {
     let new_fields = store_fields.iter().map(|f| f.get_new_init(line));
+    let doc_str = "Create a new instance with provided fields.";
 
     quote! {
+        #[doc = #doc_str]
         pub fn new<'a>(#(#params)*) -> Self {
             let mut #line = bookmark_storage::ContentString::new();
             Self {
@@ -44,7 +46,11 @@ fn gen_create_line(
         .collect::<Vec<_>>()
         .join(" ");
 
+    let doc_str =
+        "create a line of text based on how an instance of this struct would look when stored.";
+
     quote! {
+        #[doc = #doc_str]
         pub fn create_line<'a>(#(#params)*) -> String {
             format!(#format_string, #(#format_params)*)
         }

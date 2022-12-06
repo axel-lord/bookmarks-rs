@@ -18,8 +18,12 @@ impl FieldSingle {
 
     fn get_get_method(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
+        let doc_str = format!(
+            "Get the contents of the {ident} field, roughly equivalent to using get(\"{ident}\")."
+        );
 
         quote! {
+            #[doc = #doc_str]
             pub fn #ident(&self) -> &str {
                 self.#ident.get(&self.#line)
             }
@@ -29,8 +33,10 @@ impl FieldSingle {
     fn get_set_method(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
         let set_ident = self.get_set_ident();
+        let doc_str = format!("Set the contents of the {ident} field, roughly equivalent to using set(\"{ident}\", {ident}).");
 
         quote! {
+            #[doc = #doc_str]
             pub fn #set_ident(&mut self, #ident: &str) -> &mut Self {
                 self.#ident = self.#line.push(#ident).into();
 
