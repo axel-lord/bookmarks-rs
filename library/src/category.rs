@@ -1,4 +1,5 @@
-use bookmark_storage::{token, ContentString, Field, ListField, Section, Storeable};
+use crate::token;
+use bookmark_storage::{ContentString, Field, ListField, Section, Storeable};
 use std::{collections::HashMap, error::Error};
 
 /// Type representing a category.
