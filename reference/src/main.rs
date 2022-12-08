@@ -93,10 +93,6 @@ impl bookmark_storage::Storeable for Reference {
         })
     }
 
-    fn with_str(line: &str, line_num: Option<usize>) -> Result<Self, bookmark_storage::ParseErr> {
-        Self::with_string(line.into(), line_num)
-    }
-
     fn to_line(&self) -> String {
         Self::create_line(self.name(), self.children(), self.info(), self.tags())
     }

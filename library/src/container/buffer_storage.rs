@@ -58,40 +58,52 @@ impl<T> BufferStorage<T> {
     }
 
     /// Get the currently selected item in the [Storage] based on the [Selected].
+    ///
+    /// # Errors
+    /// If nothing is selected or if the selected index is out of bounds.
     pub fn get_selected(&self) -> Result<&T, GetSelectedErr> {
-        self.storage
-            .get(self.selected.index().ok_or(GetSelectedErr::Empty)?)
-            .ok_or_else(|| GetSelectedErr::Index(self.selected.index().unwrap()))
+        let index = self.selected.index().ok_or(GetSelectedErr::Empty)?;
+        self.storage.get(index).ok_or(GetSelectedErr::Index(index))
     }
 
     /// Get the currently selected item as mutable in the [Storage] based on the [Selected].
+    ///
+    /// # Errors
+    /// If nothing is selected or if the selected index is out of bounds.
     pub fn get_selected_mut(&mut self) -> Result<&mut T, GetSelectedErr> {
+        let index = self.selected.index().ok_or(GetSelectedErr::Empty)?;
         self.storage
-            .get_mut(self.selected.index().ok_or(GetSelectedErr::Empty)?)
-            .ok_or_else(|| GetSelectedErr::Index(self.selected.index().unwrap()))
+            .get_mut(index)
+            .ok_or(GetSelectedErr::Index(index))
     }
 
     /// Get the currently selected item in the [Storage] based on the [Selected], also gets the
     /// index of the item.
+    ///
+    /// # Errors
+    /// If nothing is selected or if the selected index is out of bounds.
     pub fn get_index_and_selected_and(&self) -> Result<(usize, &T), GetSelectedErr> {
         let index = self.selected.index().ok_or(GetSelectedErr::Empty)?;
         Ok((
             index,
             self.storage
                 .get(self.selected.index().ok_or(GetSelectedErr::Empty)?)
-                .ok_or_else(|| GetSelectedErr::Index(self.selected.index().unwrap()))?,
+                .ok_or(GetSelectedErr::Index(index))?,
         ))
     }
 
     /// Get the currently selected item as mutable in the [Storage] based on the [Selected], also gets the
     /// index of the item.
+    ///
+    /// # Errors
+    /// If nothing is selected or if the selected index is out of bounds.
     pub fn get_index_and_selected_mut(&mut self) -> Result<(usize, &mut T), GetSelectedErr> {
         let index = self.selected.index().ok_or(GetSelectedErr::Empty)?;
         Ok((
             index,
             self.storage
                 .get_mut(index)
-                .ok_or_else(|| GetSelectedErr::Index(self.selected.index().unwrap()))?,
+                .ok_or(GetSelectedErr::Index(index))?,
         ))
     }
 }

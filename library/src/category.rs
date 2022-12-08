@@ -72,6 +72,9 @@ impl<'a> IdentifierContainer<'a> {
 
 impl Category {
     /// Get the requirements of a category.
+    ///
+    /// # Errors
+    /// If one of the requirements is malformed.
     pub fn identifier_container<'a>(&'a self) -> Result<IdentifierContainer<'a>, IdentifierErr> {
         let mut identifier_container: IdentifierContainer<'a> = Default::default();
 
