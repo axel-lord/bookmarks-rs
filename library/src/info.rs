@@ -1,4 +1,5 @@
-use bookmark_storage::{token, ContentString, ListField, Section, Storeable};
+use crate::token;
+use bookmark_storage::{ContentString, ListField, Section, Storeable};
 
 /// Used for storing info relevant for all bookmarks and categories, such as top level categories
 /// and available tags.

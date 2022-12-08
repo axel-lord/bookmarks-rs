@@ -11,6 +11,7 @@
 
 pub mod command_map;
 pub mod container;
+pub mod token;
 
 /// More easily use shared [container::BufferStorage].
 pub mod shared {
