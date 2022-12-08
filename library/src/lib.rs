@@ -1,11 +1,11 @@
 //! Library for handling bookmarks.
 
 #![warn(
-    missing_copy_implementations, 
+    missing_copy_implementations,
     missing_docs,
-    // clippy::missing_errors_doc, 
-    // clippy::missing_panics_doc, 
-    // clippy::missing_safety_doc, 
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -16,19 +16,20 @@ pub mod container;
 pub mod shared {
     /// Since a lot of commands need access to reference counted storag, this type is used as a
     /// conveniance to simplify their signatures.
-    pub type BufferStorage<T> = std::sync::Arc<std::sync::RwLock<super::container::BufferStorage<T>>>;
+    pub type BufferStorage<T> =
+        std::sync::Arc<std::sync::RwLock<super::container::BufferStorage<T>>>;
 }
 
 pub use bookmark::Bookmark;
-pub use category::{Category, IdentifierErr, IdentifierContainer};
+pub use category::{Category, IdentifierContainer, IdentifierErr};
 pub use command_factory::CommandFactory;
 pub use info::Info;
 
-mod parse_command;
 mod bookmark;
 mod category;
+mod command_factory;
 mod info;
-mod command_factory; 
+mod parse_command;
 
 use regex::Regex;
 
@@ -58,11 +59,7 @@ pub fn run(
                 map.push(
                     builder.name(),
                     builder.help(),
-                    builder.build(
-                        bookmarks.clone(),
-                        categories.clone(),
-                        infos.clone(),
-                    ),
+                    builder.build(bookmarks.clone(), categories.clone(), infos.clone()),
                 )
             },
         )

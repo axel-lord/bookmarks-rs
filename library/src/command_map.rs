@@ -102,6 +102,9 @@ impl<'a> CommandMap<'a> {
 
     /// Call a command in the [CommandMap] and pass ite the given arguments, this is the main
     /// purpose of the [CommandMap].
+    ///
+    /// # Errors
+    /// If the command fails in some way, or if it does not exist.
     pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
         match name {
             "help" => match args.len() {
