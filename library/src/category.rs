@@ -25,7 +25,7 @@ pub struct Category {
     name: Field,
 
     #[string]
-    #[token(token::category::DESCRIPTION)]
+    #[token(token::category::DESC)]
     description: Field,
 
     #[composite(identifier)]
@@ -33,7 +33,7 @@ pub struct Category {
     identifiers: ListField,
 
     #[composite(subcategory)]
-    #[token(token::category::SUBCATEGORY)]
+    #[token(token::category::SUB)]
     subcategories: ListField,
 }
 
@@ -115,6 +115,6 @@ impl Category {
 
 impl Section for Category {
     const ITEM_NAME: &'static str = "category";
-    const TOKEN_END: &'static str = token::CATEGORY_END;
-    const TOKEN_BEGIN: &'static str = token::CATEGORY_BEGIN;
+    const TOKEN_END: &'static str = token::category::END;
+    const TOKEN_BEGIN: &'static str = token::category::BEGIN;
 }

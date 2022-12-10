@@ -9,3 +9,4 @@ bookmark-storage = { path = "../storage" }
 bookmark-command = { path = "../command" }
 aho-corasick = "0.7.20"
 regex = "1.7.0"
+paste = "1.0.9"

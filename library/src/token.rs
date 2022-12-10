@@ -1,28 +1,35 @@
 //! Tokens used to parse bookmarks, info and categories.
-#![allow(missing_docs)]
 
-pub mod info {
-    pub const CATEGORY: &str = "<category>";
-    pub const TAG: &str = "<tag>";
+use paste::paste;
+macro_rules! field_idents {
+    ($($mod_name:ident {$($field_name:ident),* $(,)?}),* $(,)?) => {
+        paste! {
+        $(
+        #[doc = "Constants for the \"" $mod_name "\" section of an input file."]
+        pub mod $mod_name {
+            $(
+            #[doc = "Prefixed to the\"" $field_name "\" section of a line."]
+            pub const [<$field_name:upper>]: &str = concat!("<", stringify!($field_name), ">");
+            )*
+
+            #[doc = "Section begins after a line matching this."]
+            pub const BEGIN: &str = concat!("#", stringify!([<$mod_name:upper _BEGIN>]));
+            #[doc = "Section ends on a line matching this."]
+            pub const END: &str = concat!("#", stringify!([<$mod_name:upper _END>]));
+        }
+        )*
+        }
+    };
 }
 
-pub mod unsorted {
-    pub const URL: &str = "<url>";
-    pub const DESCRIPTION: &str = "<info>";
-    pub const TAG: &str = "<tag>";
-}
-
-pub mod category {
-    pub const ID: &str = "<id>";
-    pub const DESCRIPTION: &str = "<desc>";
-    pub const NAME: &str = "<name>";
-    pub const IDENTIFIER: &str = "<identifier>";
-    pub const SUBCATEGORY: &str = "<sub>";
-}
-
-pub const UNSORTED_BEGIN: &str = "#UNSORTED_BEGIN";
-pub const UNSORTED_END: &str = "#UNSORTED_END";
-pub const CATEGORY_BEGIN: &str = "#CATEGORY_BEGIN";
-pub const CATEGORY_END: &str = "#CATEGORY_END";
-pub const INFO_BEGIN: &str = "#INFO_BEGIN";
-pub const INFO_END: &str = "#INFO_END";
+field_idents!(
+    info { category, tag },
+    unsorted { url, info, tag },
+    category {
+        id,
+        desc,
+        name,
+        identifier,
+        sub,
+    },
+);

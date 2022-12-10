@@ -19,6 +19,6 @@ pub struct Info {
 
 impl Section for Info {
     const ITEM_NAME: &'static str = "info";
-    const TOKEN_END: &'static str = token::INFO_END;
-    const TOKEN_BEGIN: &'static str = token::INFO_BEGIN;
+    const TOKEN_END: &'static str = token::info::END;
+    const TOKEN_BEGIN: &'static str = token::info::BEGIN;
 }
