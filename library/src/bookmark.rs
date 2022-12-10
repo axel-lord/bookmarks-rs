@@ -14,7 +14,7 @@ pub struct Bookmark {
 
     #[string]
     #[title]
-    #[token(token::unsorted::DESCRIPTION)]
+    #[token(token::unsorted::INFO)]
     description: Field,
 
     #[composite(tag)]
@@ -24,6 +24,6 @@ pub struct Bookmark {
 
 impl Section for Bookmark {
     const ITEM_NAME: &'static str = "bookmark";
-    const TOKEN_END: &'static str = token::UNSORTED_END;
-    const TOKEN_BEGIN: &'static str = token::UNSORTED_BEGIN;
+    const TOKEN_END: &'static str = token::unsorted::END;
+    const TOKEN_BEGIN: &'static str = token::unsorted::BEGIN;
 }
