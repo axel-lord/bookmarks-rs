@@ -7,5 +7,8 @@ edition = "2021"
 
 [dependencies]
 bookmark-library = { path = "../library" }
+bookmark-command = { path = "../command" }
 clap = { version = "4.0.29", features = ["derive"] }
 iced = "0.6"
+iced_native = "0.7.0"
+open = "3.2.0"
