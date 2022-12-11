@@ -111,4 +111,11 @@ impl<T> BufferStorage<T> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.buffer.iter().map_while(|i| self.storage.get(i))
     }
+
+    /// Get an [Iterator] over all items in storage selected by buffer and their indices.
+    pub fn iter_indexed(&self) -> impl Iterator<Item = (usize, &T)> {
+        self.buffer
+            .iter()
+            .map_while(|i| Some((i, self.storage.get(i)?)))
+    }
 }
