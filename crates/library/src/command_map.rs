@@ -105,7 +105,7 @@ impl<'a> CommandMap<'a> {
     ///
     /// # Errors
     /// If the command fails in some way, or if it does not exist.
-    pub fn call(&self, name: &str, args: &[String]) -> Result<(), CommandErr> {
+    pub fn call(&self, name: &str, args: &[String]) -> Result<&Self, CommandErr> {
         match name {
             "help" => match args.len() {
                 0 => {
@@ -117,13 +117,13 @@ impl<'a> CommandMap<'a> {
                             println!("- {command}");
                         }
                     }
-                    Ok(())
+                    Ok(self)
                 }
                 1 => {
                     let command = &args[0];
                     if let Some(help) = self.help(command) {
                         println!("{help}");
-                        Ok(())
+                        Ok(self)
                     } else {
                         Err(CommandErr::Execution(format!(
                             "found no help for {command}"
@@ -136,7 +136,7 @@ impl<'a> CommandMap<'a> {
             },
             _ => {
                 if let Some(command) = self.commands.get(name) {
-                    command.command.borrow_mut().call(args)
+                    command.command.borrow_mut().call(args).map(|()| self)
                 } else if let Some(ref lookup_backup) = self.fallback {
                     let Some(command) = self.commands.get(lookup_backup.as_str()) else {
                         return Err(CommandErr::Lookup);
@@ -145,7 +145,11 @@ impl<'a> CommandMap<'a> {
                     let mut forward_args = vec![name.into()];
                     forward_args.extend(args.iter().cloned());
 
-                    command.command.borrow_mut().call(&forward_args)
+                    command
+                        .command
+                        .borrow_mut()
+                        .call(&forward_args)
+                        .map(|()| self)
                 } else {
                     Err(CommandErr::Lookup)
                 }
@@ -228,5 +232,6 @@ impl<'a> Command for CommandMap<'a> {
             })?,
             &args[1..],
         )
+        .map(|_| ())
     }
 }
