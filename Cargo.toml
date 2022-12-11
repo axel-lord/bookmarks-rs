@@ -1,15 +1,10 @@
 [workspace]
+resolver = "2"
+
 members = [
-	"library",
-	"application",
-	"derive",
-	"derive-test",
-	"storage",
-	"reference",
-	"gui",
-	"command",
+	"crates/*"
 ]
 
 default-members = [
-	"application"
+	"crates/gui"
 ]

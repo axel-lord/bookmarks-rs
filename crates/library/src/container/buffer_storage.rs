@@ -106,4 +106,9 @@ impl<T> BufferStorage<T> {
                 .ok_or(GetSelectedErr::Index(index))?,
         ))
     }
+
+    /// Get an [Iterator] over all items in storage selected by buffer.
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.buffer.iter().map_while(|i| self.storage.get(i))
+    }
 }
