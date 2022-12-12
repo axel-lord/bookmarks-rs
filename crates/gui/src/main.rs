@@ -28,6 +28,48 @@ enum Msg {
     Reset,
 }
 
+fn category_column<'a, Renderer>(
+    categories: impl IntoIterator<Item = (usize, impl AsRef<Category>)>,
+) -> Column<'a, Msg, Renderer>
+where
+    Renderer: 'a + iced_native::text::Renderer,
+    <Renderer as iced_native::Renderer>::Theme: iced::widget::text::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: iced::widget::button::StyleSheet,
+{
+    categories.into_iter().fold(
+        Column::new()
+            .push(text("Categories:"))
+            .push(button("Reset").on_press(Msg::Reset)),
+        |r, (i, c)| {
+            r.push(row![
+                button("Apply").on_press(Msg::CategoryClicked(i)),
+                text(c.as_ref().name().to_string()),
+            ])
+        },
+    )
+}
+
+fn bookmark_column<'a, Renderer>(
+    bookmarks: impl IntoIterator<Item = (usize, impl AsRef<Bookmark>)>,
+) -> Column<'a, Msg, Renderer>
+where
+    Renderer: 'a + iced_native::text::Renderer,
+    <Renderer as iced_native::Renderer>::Theme: iced::widget::text::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: iced::widget::button::StyleSheet,
+{
+    bookmarks
+        .into_iter()
+        .take(100)
+        .fold(Column::new().push(text("Bookmarks:")), |r, (i, b)| {
+            r.push(row![
+                button("Goto").on_press(Msg::BookmarkClicked(i)),
+                text(b.as_ref().description()),
+                widget::Space::new(50.into(), 0.into()),
+                text(b.as_ref().url())
+            ])
+        })
+}
+
 impl Application for App {
     type Executor = executor::Default;
     type Flags = Self;
@@ -81,30 +123,8 @@ impl Application for App {
         let categories = self.categories.read().unwrap();
 
         row![
-            scrollable(
-                categories.iter_indexed().fold(
-                    Column::new()
-                        .push(text("Categories:"))
-                        .push(button("Reset").on_press(Msg::Reset)),
-                    |r, (i, c)| {
-                        r.push(row![
-                            button("Apply").on_press(Msg::CategoryClicked(i)),
-                            text(c.name()),
-                        ])
-                    }
-                )
-            ),
-            scrollable(bookmarks.iter_indexed().take(100).fold(
-                Column::new().push(text("Bookmarks:")),
-                |r, (i, b)| {
-                    r.push(row![
-                        button("Goto").on_press(Msg::BookmarkClicked(i)),
-                        text(b.description()),
-                        widget::Space::new(50.into(), 0.into()),
-                        text(b.url())
-                    ])
-                },
-            ))
+            scrollable(category_column(categories.iter_indexed())),
+            scrollable(bookmark_column(bookmarks.iter_indexed()))
         ]
         .into()
     }

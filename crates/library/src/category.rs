@@ -49,6 +49,12 @@ impl std::fmt::Display for IdentifierErr {
 
 impl Error for IdentifierErr {}
 
+impl std::convert::AsRef<Category> for Category {
+    fn as_ref(&self) -> &Category {
+        self
+    }
+}
+
 /// Type for representing the different requirement of a category.
 #[derive(Clone, Debug, Default)]
 pub struct IdentifierContainer<'a> {

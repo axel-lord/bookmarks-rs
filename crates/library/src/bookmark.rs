@@ -22,6 +22,12 @@ pub struct Bookmark {
     tags: ListField,
 }
 
+impl AsRef<Bookmark> for Bookmark {
+    fn as_ref(&self) -> &Bookmark {
+        self
+    }
+}
+
 impl Section for Bookmark {
     const ITEM_NAME: &'static str = "bookmark";
     const TOKEN_END: &'static str = token::unsorted::END;
