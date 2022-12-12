@@ -1,15 +1,10 @@
 use bookmark_command::CommandErr;
 use bookmark_library::{command_map::CommandMap, shared, Bookmark, Category};
 use clap::Parser;
-use iced::{
-    executor,
-    widget::{
-        self, button, column, horizontal_rule, horizontal_space, row, scrollable, text,
-        vertical_rule, Column,
-    },
-    Application, Length, Theme,
-};
+use iced::{executor, Application, Theme};
 use std::path::PathBuf;
+
+mod view;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -26,54 +21,10 @@ struct App {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Msg {
+pub enum Msg {
     BookmarkClicked(usize),
     CategoryClicked(usize),
     Reset,
-}
-
-fn category_column<'a, Renderer>(
-    categories: impl IntoIterator<Item = (usize, impl AsRef<Category>)>,
-) -> Column<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: widget::text::StyleSheet,
-    <Renderer as iced_native::Renderer>::Theme: widget::button::StyleSheet,
-{
-    categories
-        .into_iter()
-        .fold(Column::new().push(text("Categories:")), |r, (i, c)| {
-            r.push(row![
-                button("Apply").on_press(Msg::CategoryClicked(i)),
-                horizontal_space(Length::Units(10)),
-                text(c.as_ref().name().to_string()),
-            ])
-        })
-}
-
-fn bookmark_column<'a, Renderer>(
-    bookmarks: impl IntoIterator<Item = (usize, impl AsRef<Bookmark>)>,
-) -> Column<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: widget::text::StyleSheet,
-    <Renderer as iced_native::Renderer>::Theme: widget::button::StyleSheet,
-    <Renderer as iced_native::Renderer>::Theme: widget::rule::StyleSheet,
-{
-    bookmarks
-        .into_iter()
-        .take(100)
-        .fold(Column::new().push(text("Bookmarks:")), |r, (i, b)| {
-            r.push(row![
-                button("Goto")
-                    .on_press(Msg::BookmarkClicked(i))
-                    .width(Length::Shrink),
-                horizontal_space(Length::Units(10)),
-                text(b.as_ref().description()).width(Length::Fill),
-                horizontal_space(Length::Units(10)),
-                text(b.as_ref().url()).width(Length::Fill)
-            ])
-        })
 }
 
 impl Application for App {
@@ -127,20 +78,8 @@ impl Application for App {
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
         let bookmarks = self.bookmarks.read().unwrap();
         let categories = self.categories.read().unwrap();
-        column![
-            row![
-                button("Reset").on_press(Msg::Reset),
-                horizontal_space(Length::Fill),
-                text(&self.status)
-            ],
-            horizontal_rule(3),
-            row![
-                scrollable(category_column(categories.iter_indexed()).width(Length::Shrink)),
-                vertical_rule(3),
-                scrollable(bookmark_column(bookmarks.iter_indexed()).width(Length::Fill))
-            ]
-        ]
-        .into()
+
+        view::application_view(&bookmarks, &categories, &self.status).into()
     }
 }
 
