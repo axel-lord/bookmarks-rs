@@ -3,8 +3,11 @@ use bookmark_library::{command_map::CommandMap, shared, Bookmark, Category};
 use clap::Parser;
 use iced::{
     executor,
-    widget::{self, button, row, scrollable, text, Column},
-    Application, Theme,
+    widget::{
+        self, button, column, horizontal_rule, horizontal_space, row, scrollable, text,
+        vertical_rule, Column,
+    },
+    Application, Length, Theme,
 };
 use std::path::PathBuf;
 
@@ -19,6 +22,7 @@ struct App {
     command_map: CommandMap<'static>,
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
+    status: Box<str>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -33,20 +37,18 @@ fn category_column<'a, Renderer>(
 ) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: iced::widget::text::StyleSheet,
-    <Renderer as iced_native::Renderer>::Theme: iced::widget::button::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: widget::text::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: widget::button::StyleSheet,
 {
-    categories.into_iter().fold(
-        Column::new()
-            .push(text("Categories:"))
-            .push(button("Reset").on_press(Msg::Reset)),
-        |r, (i, c)| {
+    categories
+        .into_iter()
+        .fold(Column::new().push(text("Categories:")), |r, (i, c)| {
             r.push(row![
                 button("Apply").on_press(Msg::CategoryClicked(i)),
+                horizontal_space(Length::Units(10)),
                 text(c.as_ref().name().to_string()),
             ])
-        },
-    )
+        })
 }
 
 fn bookmark_column<'a, Renderer>(
@@ -54,18 +56,22 @@ fn bookmark_column<'a, Renderer>(
 ) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: iced::widget::text::StyleSheet,
-    <Renderer as iced_native::Renderer>::Theme: iced::widget::button::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: widget::text::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: widget::button::StyleSheet,
+    <Renderer as iced_native::Renderer>::Theme: widget::rule::StyleSheet,
 {
     bookmarks
         .into_iter()
         .take(100)
         .fold(Column::new().push(text("Bookmarks:")), |r, (i, b)| {
             r.push(row![
-                button("Goto").on_press(Msg::BookmarkClicked(i)),
-                text(b.as_ref().description()),
-                widget::Space::new(50.into(), 0.into()),
-                text(b.as_ref().url())
+                button("Goto")
+                    .on_press(Msg::BookmarkClicked(i))
+                    .width(Length::Shrink),
+                horizontal_space(Length::Units(10)),
+                text(b.as_ref().description()).width(Length::Fill),
+                horizontal_space(Length::Units(10)),
+                text(b.as_ref().url()).width(Length::Fill)
             ])
         })
 }
@@ -121,10 +127,18 @@ impl Application for App {
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
         let bookmarks = self.bookmarks.read().unwrap();
         let categories = self.categories.read().unwrap();
-
-        row![
-            scrollable(category_column(categories.iter_indexed())),
-            scrollable(bookmark_column(bookmarks.iter_indexed()))
+        column![
+            row![
+                button("Reset").on_press(Msg::Reset),
+                horizontal_space(Length::Fill),
+                text(&self.status)
+            ],
+            horizontal_rule(3),
+            row![
+                scrollable(category_column(categories.iter_indexed()).width(Length::Shrink)),
+                vertical_rule(3),
+                scrollable(bookmark_column(bookmarks.iter_indexed()).width(Length::Fill))
+            ]
         ]
         .into()
     }
@@ -153,6 +167,7 @@ fn main() {
             command_map,
             bookmarks,
             categories,
+            status: "started application".into(),
         },
         ..Default::default()
     })
