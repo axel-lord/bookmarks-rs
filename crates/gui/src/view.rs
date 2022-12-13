@@ -24,10 +24,8 @@ where
     row![
         button("Reset").on_press(Msg::Reset),
         text("Shown bookmarks:"),
-        text_input("...", shown_bookmarks, |s| Msg::ShownBookmarksChanged(
-            s.into()
-        ))
-        .width(Length::Units(50)),
+        text_input("...", shown_bookmarks, |s| Msg::UpdateStatus(s.into()))
+            .width(Length::Units(50)),
         horizontal_space(Length::Fill),
         text(status),
     ]

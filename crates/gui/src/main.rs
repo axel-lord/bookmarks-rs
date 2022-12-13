@@ -24,9 +24,9 @@ struct App {
 
 #[derive(Debug, Clone)]
 pub enum Msg {
-    BookmarkClicked(usize),
-    CategoryClicked(usize),
-    ShownBookmarksChanged(Box<str>),
+    GotoBookmarkLocation(usize),
+    ApplyCategory(usize),
+    UpdateStatus(Box<str>),
     Reset,
 }
 
@@ -46,7 +46,7 @@ impl Application for App {
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
-            Msg::BookmarkClicked(i) => {
+            Msg::GotoBookmarkLocation(i) => {
                 let bookmarks = self.bookmarks.read().unwrap();
                 match open::that(bookmarks.storage[i].url()) {
                     Ok(()) => {
@@ -60,7 +60,7 @@ impl Application for App {
                 }
             }
 
-            Msg::CategoryClicked(i) => {
+            Msg::ApplyCategory(i) => {
                 let mut call_chain = || -> Result<(), CommandErr> {
                     self.command_map
                         .call("category", &["select".into(), i.to_string()])?
@@ -79,7 +79,7 @@ impl Application for App {
                 }
             }
 
-            Msg::ShownBookmarksChanged(amount) => {
+            Msg::UpdateStatus(amount) => {
                 if let Ok(new_amount) = amount.parse() {
                     self.shown_bookmarks_count = new_amount;
                     self.shown_bookmarks = amount;
