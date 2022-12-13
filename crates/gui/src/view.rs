@@ -47,9 +47,9 @@ where
         rule::StyleSheet + scrollable::StyleSheet + text::StyleSheet + button::StyleSheet,
 {
     row![
-        scrollable(category_column(categories.iter_indexed()).width(Length::Shrink)),
+        category_column(categories.iter_indexed()).width(Length::Shrink),
         vertical_rule(3),
-        scrollable(bookmark_column(bookmarks.iter_indexed(), bookmark_range).width(Length::Fill))
+        bookmark_column(bookmarks.iter_indexed(), bookmark_range).width(Length::Fill)
     ]
     .align_items(iced::Alignment::Start)
 }
