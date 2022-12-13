@@ -26,7 +26,7 @@ where
                     r.push(
                         row![
                             button("Goto")
-                                .on_press(Msg::BookmarkClicked(i))
+                                .on_press(Msg::GotoBookmarkLocation(i))
                                 .width(Length::Shrink),
                             text(b.as_ref().description()).width(Length::Fill),
                             text(b.as_ref().url()).width(Length::Fill)

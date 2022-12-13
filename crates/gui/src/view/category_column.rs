@@ -17,7 +17,7 @@ where
                 .fold(Column::new(), |r, (i, c)| {
                     r.push(
                         row![
-                            button("Apply").on_press(Msg::CategoryClicked(i)),
+                            button("Apply").on_press(Msg::ApplyCategory(i)),
                             text(c.as_ref().name().to_string()),
                         ]
                         .spacing(3)
