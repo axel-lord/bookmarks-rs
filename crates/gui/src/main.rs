@@ -18,12 +18,15 @@ struct App {
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
     status: Box<str>,
+    shown_bookmarks: Box<str>,
+    shown_bookmarks_count: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Msg {
     BookmarkClicked(usize),
     CategoryClicked(usize),
+    ShownBookmarksChanged(Box<str>),
     Reset,
 }
 
@@ -46,7 +49,11 @@ impl Application for App {
             Msg::BookmarkClicked(i) => {
                 let bookmarks = self.bookmarks.read().unwrap();
                 match open::that(bookmarks.storage[i].url()) {
-                    Ok(()) => println!("Successfully opened: {}", bookmarks.storage[i].url()),
+                    Ok(()) => {
+                        println!("Successfully opened: {}", bookmarks.storage[i].url());
+                        self.status =
+                            format!("opened bookmark [{}]", bookmarks.storage[i].url()).into();
+                    }
                     Err(err) => {
                         eprintln!("Failed to open: {}, {}", bookmarks.storage[i].url(), err)
                     }
@@ -54,10 +61,16 @@ impl Application for App {
             }
 
             Msg::CategoryClicked(i) => {
-                let call_chain = || -> Result<(), CommandErr> {
+                let mut call_chain = || -> Result<(), CommandErr> {
                     self.command_map
                         .call("category", &["select".into(), i.to_string()])?
                         .call("category", &["apply".into()])?;
+
+                    self.status = format!(
+                        "applied category <{}>",
+                        self.categories.read().unwrap().storage[i].name()
+                    )
+                    .into();
                     Ok(())
                 };
 
@@ -66,10 +79,24 @@ impl Application for App {
                 }
             }
 
+            Msg::ShownBookmarksChanged(amount) => {
+                if let Ok(new_amount) = amount.parse() {
+                    self.shown_bookmarks_count = new_amount;
+                    self.shown_bookmarks = amount;
+                    self.status =
+                        format!("changed shown bookmarks to \"{}\"", self.shown_bookmarks).into();
+                } else if amount.is_empty() {
+                    self.shown_bookmarks_count = 0;
+                    self.shown_bookmarks = amount;
+                    self.status = "changed shown bookmarks to none".into();
+                }
+            }
+
             Msg::Reset => {
                 if let Err(err) = self.command_map.call("reset", &[]) {
                     println!("{err}");
                 }
+                self.status = "reset bookmark filters".into();
             }
         }
         iced::Command::none()
@@ -79,7 +106,14 @@ impl Application for App {
         let bookmarks = self.bookmarks.read().unwrap();
         let categories = self.categories.read().unwrap();
 
-        view::application_view(&bookmarks, &categories, &self.status).into()
+        view::application_view(
+            &bookmarks,
+            &categories,
+            &self.status,
+            &self.shown_bookmarks,
+            0..self.shown_bookmarks_count,
+        )
+        .into()
     }
 }
 
@@ -107,6 +141,8 @@ fn main() {
             bookmarks,
             categories,
             status: "started application".into(),
+            shown_bookmarks: "100".into(),
+            shown_bookmarks_count: 100,
         },
         ..Default::default()
     })
