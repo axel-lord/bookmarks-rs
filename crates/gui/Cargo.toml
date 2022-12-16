@@ -12,3 +12,4 @@ clap = { version = "4.0.29", features = ["derive"] }
 iced = "0.6"
 iced_native = "0.7.0"
 open = "3.2.0"
+unicode-segmentation = "1.10.0"

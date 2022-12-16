@@ -2,7 +2,7 @@ use bookmark_command::CommandErr;
 use bookmark_library::{command_map::CommandMap, shared, Bookmark, Category};
 use clap::Parser;
 use iced::{executor, Application, Theme};
-use std::{fmt::Display, ops::Deref, path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
 mod view;
 
@@ -12,102 +12,114 @@ struct Cli {
     files: Option<Vec<PathBuf>>,
 }
 
-#[derive(Debug, Clone)]
-pub struct ParsedStr<V> {
-    string: Box<str>,
-    val: V,
-}
+mod parsed_str {
+    use std::{fmt::Display, ops::Deref, str::FromStr};
 
-impl<V> Default for ParsedStr<V>
-where
-    V: Default,
-{
-    fn default() -> Self {
-        Self {
-            string: "".into(),
-            val: Default::default(),
+    #[derive(Debug, Clone)]
+    pub struct ParsedStr<V> {
+        string: Box<str>,
+        val: Option<V>,
+    }
+
+    impl<V> Default for ParsedStr<V> {
+        fn default() -> Self {
+            Self {
+                string: "".into(),
+                val: None,
+            }
+        }
+    }
+
+    impl<V> AsRef<str> for ParsedStr<V> {
+        fn as_ref(&self) -> &str {
+            &self.string
+        }
+    }
+
+    impl<V> Deref for ParsedStr<V> {
+        type Target = str;
+        fn deref(&self) -> &Self::Target {
+            self.as_ref()
+        }
+    }
+
+    impl<V> From<V> for ParsedStr<V>
+    where
+        V: ToString,
+    {
+        fn from(value: V) -> Self {
+            Self {
+                string: value.to_string().into(),
+                val: Some(value),
+            }
+        }
+    }
+
+    impl<V> FromStr for ParsedStr<V>
+    where
+        V: FromStr,
+    {
+        type Err = <V as FromStr>::Err;
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            if s.is_empty() {
+                Ok(Self {
+                    string: "".into(),
+                    val: None,
+                })
+            } else {
+                let val = s.parse()?;
+                Ok(Self {
+                    string: s.into(),
+                    val: Some(val),
+                })
+            }
+        }
+    }
+
+    impl<V> ParsedStr<V>
+    where
+        V: ToString,
+    {
+        pub fn value(&self) -> &Option<V> {
+            &self.val
+        }
+
+        pub fn set_value(&mut self, val: Option<V>) {
+            self.string = val
+                .as_ref()
+                .map(|v| v.to_string().into())
+                .unwrap_or_else(|| "".into());
+            self.val = val;
+        }
+    }
+
+    impl<V> ParsedStr<V>
+    where
+        V: FromStr + Display,
+    {
+        pub fn parse_with_message(
+            &mut self,
+            from: impl Into<Box<str>>,
+            msg: &str,
+        ) -> Result<Box<str>, <V as FromStr>::Err> {
+            let string = from.into();
+            let out_msg;
+
+            (self.val, out_msg) = if string.is_empty() {
+                (None, format!("changed {msg} to none").into())
+            } else {
+                let val = string.parse()?;
+                let out_msg = format!("changed {msg} to {val}").into();
+                (Some(val), out_msg)
+            };
+
+            self.string = string;
+
+            Ok(out_msg)
         }
     }
 }
-
-impl<V> AsRef<str> for ParsedStr<V> {
-    fn as_ref(&self) -> &str {
-        &self.string
-    }
-}
-
-impl<V> Deref for ParsedStr<V> {
-    type Target = str;
-    fn deref(&self) -> &Self::Target {
-        self.as_ref()
-    }
-}
-
-impl<V> From<V> for ParsedStr<V>
-where
-    V: ToString,
-{
-    fn from(value: V) -> Self {
-        Self {
-            string: value.to_string().into(),
-            val: value,
-        }
-    }
-}
-
-impl<V> FromStr for ParsedStr<V>
-where
-    V: FromStr,
-{
-    type Err = <V as FromStr>::Err;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let val = s.parse()?;
-        Ok(Self {
-            string: s.into(),
-            val,
-        })
-    }
-}
-
-impl<V> ParsedStr<V>
-where
-    V: ToString,
-{
-    pub fn value(&self) -> &V {
-        &self.val
-    }
-
-    pub fn set_value(&mut self, val: V) {
-        self.string = val.to_string().into();
-        self.val = val;
-    }
-}
-
-impl<V> ParsedStr<V>
-where
-    V: FromStr + Default + Display,
-{
-    pub fn parse_with_message(
-        &mut self,
-        from: impl Into<Box<str>>,
-        msg: &str,
-    ) -> Result<Box<str>, <V as FromStr>::Err> {
-        let string = from.into();
-        let out_msg;
-
-        (self.val, out_msg) = if string.is_empty() {
-            (Default::default(), format!("changed {msg} to none").into())
-        } else {
-            let val = string.parse()?;
-            let out_msg = format!("changed {msg} to {val}").into();
-            (val, out_msg)
-        };
-
-        self.string = string;
-
-        Ok(out_msg)
-    }
-}
+pub use parsed_str::ParsedStr;
 
 #[derive(Debug, Default)]
 struct App {
@@ -125,6 +137,8 @@ pub enum Msg {
     GotoBookmarkLocation(usize),
     ApplyCategory(usize),
     UpdateStatus(Box<str>),
+    UpdateUrlWidth(Box<str>),
+    UpdateDescWidth(Box<str>),
     Reset,
 }
 
@@ -186,6 +200,18 @@ impl Application for App {
                 }
             }
 
+            Msg::UpdateUrlWidth(w) => {
+                if let Ok(msg) = self.url_width.parse_with_message(w, "url width") {
+                    self.status = msg;
+                }
+            }
+
+            Msg::UpdateDescWidth(w) => {
+                if let Ok(msg) = self.desc_width.parse_with_message(w, "desc width") {
+                    self.status = msg;
+                }
+            }
+
             Msg::Reset => {
                 if let Err(err) = self.command_map.call("reset", &[]) {
                     println!("{err}");
@@ -205,7 +231,9 @@ impl Application for App {
             &categories,
             &self.status,
             &self.shown_bookmarks,
-            0..*self.shown_bookmarks.value(),
+            0..self.shown_bookmarks.value().unwrap_or(0),
+            &self.url_width,
+            &self.desc_width,
         )
         .into()
     }
@@ -236,8 +264,8 @@ fn main() {
             categories,
             status: "started application".into(),
             shown_bookmarks: 512.into(),
-            url_width: 20.into(),
-            desc_width: 20.into(),
+            url_width: 75.into(),
+            desc_width: 50.into(),
         },
         ..Default::default()
     })

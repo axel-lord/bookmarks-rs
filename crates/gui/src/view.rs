@@ -3,7 +3,7 @@ mod category_column;
 
 use std::ops::Range;
 
-use crate::Msg;
+use crate::{Msg, ParsedStr};
 use bookmark_library::{container::BufferStorage, Bookmark, Category};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
@@ -15,7 +15,12 @@ use iced::{
     Length,
 };
 
-fn tool_row<'a, Renderer>(status: &str, shown_bookmarks: &str) -> Row<'a, Msg, Renderer>
+fn tool_row<'a, Renderer>(
+    status: &str,
+    shown_bookmarks: &str,
+    url_width: &str,
+    desc_width: &str,
+) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
     <Renderer as iced_native::Renderer>::Theme:
@@ -26,6 +31,10 @@ where
         text("Shown bookmarks:"),
         text_input("...", shown_bookmarks, |s| Msg::UpdateStatus(s.into()))
             .width(Length::Units(50)),
+        text("Info width:"),
+        text_input("...", desc_width, |s| Msg::UpdateDescWidth(s.into())).width(Length::Units(50)),
+        text("URL width:"),
+        text_input("...", url_width, |s| Msg::UpdateUrlWidth(s.into())).width(Length::Units(50)),
         horizontal_space(Length::Fill),
         text(status),
     ]
@@ -38,6 +47,8 @@ fn content_row<'a, Renderer>(
     bookmarks: &BufferStorage<Bookmark>,
     categories: &BufferStorage<Category>,
     bookmark_range: Range<usize>,
+    url_width: Option<usize>,
+    desc_width: Option<usize>,
 ) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -47,7 +58,13 @@ where
     row![
         category_column(categories.iter_indexed()).width(Length::Shrink),
         vertical_rule(3),
-        bookmark_column(bookmarks.iter_indexed(), bookmark_range).width(Length::Fill)
+        bookmark_column(
+            bookmarks.iter_indexed(),
+            bookmark_range,
+            url_width,
+            desc_width
+        )
+        .width(Length::Fill)
     ]
     .align_items(iced::Alignment::Start)
 }
@@ -58,6 +75,8 @@ pub fn application_view<'a, Renderer>(
     status: &str,
     shown_bookmarks: &str,
     bookmark_range: Range<usize>,
+    url_width: &ParsedStr<usize>,
+    desc_width: &ParsedStr<usize>,
 ) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -68,8 +87,14 @@ where
         + text_input::StyleSheet,
 {
     column![
-        tool_row(status, shown_bookmarks),
+        tool_row(status, shown_bookmarks, url_width, desc_width),
         horizontal_rule(3),
-        content_row(bookmarks, categories, bookmark_range)
+        content_row(
+            bookmarks,
+            categories,
+            bookmark_range,
+            *url_width.value(),
+            *desc_width.value()
+        )
     ]
 }
