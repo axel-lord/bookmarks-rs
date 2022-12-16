@@ -148,6 +148,7 @@ dependencies = [
  "iced",
  "iced_native",
  "open",
+ "unicode-segmentation",
 ]
 
 [[package]]
