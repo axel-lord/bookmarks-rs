@@ -127,6 +127,7 @@ struct App {
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
     status: Box<str>,
+    filter: Box<str>,
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
     url_width: ParsedStr<usize>,
@@ -236,13 +237,7 @@ impl Application for App {
             )),
 
             Msg::FilterBookmarks(m) => {
-                if let Err(err) = self
-                    .command_map
-                    .call("bookmark", &["filter".into(), m.into()])
-                {
-                    println!("{err}");
-                }
-                self.status = "filtered bookmarks".into();
+                self.filter = m;
             }
         }
         iced::Command::none()
@@ -264,6 +259,7 @@ impl Application for App {
             ),
             &self.url_width,
             &self.desc_width,
+            &self.filter,
         )
         .into()
     }
@@ -293,6 +289,7 @@ fn main() {
             bookmarks,
             categories,
             status: "started application".into(),
+            filter: "".into(),
             shown_bookmarks: 512.into(),
             shown_from: 0.into(),
             url_width: 75.into(),
