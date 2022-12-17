@@ -128,6 +128,7 @@ struct App {
     categories: shared::BufferStorage<Category>,
     status: Box<str>,
     shown_bookmarks: ParsedStr<usize>,
+    shown_from: ParsedStr<usize>,
     url_width: ParsedStr<usize>,
     desc_width: ParsedStr<usize>,
 }
@@ -136,9 +137,12 @@ struct App {
 pub enum Msg {
     GotoBookmarkLocation(usize),
     ApplyCategory(usize),
-    UpdateStatus(Box<str>),
+    UpdateShownBookmarks(Box<str>),
+    UpdateShownFrom(Box<str>),
+    UpdateShownFromSteps(isize),
     UpdateUrlWidth(Box<str>),
     UpdateDescWidth(Box<str>),
+    FilterBookmarks(Box<str>),
     Reset,
 }
 
@@ -191,11 +195,17 @@ impl Application for App {
                 }
             }
 
-            Msg::UpdateStatus(amount) => {
+            Msg::UpdateShownBookmarks(amount) => {
                 if let Ok(msg) = self
                     .shown_bookmarks
                     .parse_with_message(amount, "shown bookmarks")
                 {
+                    self.status = msg;
+                }
+            }
+
+            Msg::UpdateShownFrom(f) => {
+                if let Ok(msg) = self.shown_from.parse_with_message(f, "shown from") {
                     self.status = msg;
                 }
             }
@@ -218,6 +228,22 @@ impl Application for App {
                 }
                 self.status = "reset bookmark filters".into();
             }
+
+            Msg::UpdateShownFromSteps(value) => self.shown_from.set_value(Some(
+                self.shown_from.value().unwrap_or(0).saturating_add_signed(
+                    (self.shown_bookmarks.value().unwrap_or(0) as isize).saturating_mul(value),
+                ),
+            )),
+
+            Msg::FilterBookmarks(m) => {
+                if let Err(err) = self
+                    .command_map
+                    .call("bookmark", &["filter".into(), m.into()])
+                {
+                    println!("{err}");
+                }
+                self.status = "filtered bookmarks".into();
+            }
         }
         iced::Command::none()
     }
@@ -231,7 +257,11 @@ impl Application for App {
             &categories,
             &self.status,
             &self.shown_bookmarks,
-            0..self.shown_bookmarks.value().unwrap_or(0),
+            &self.shown_from,
+            (
+                self.shown_from.value().unwrap_or(0),
+                self.shown_bookmarks.value().unwrap_or(0),
+            ),
             &self.url_width,
             &self.desc_width,
         )
@@ -264,6 +294,7 @@ fn main() {
             categories,
             status: "started application".into(),
             shown_bookmarks: 512.into(),
+            shown_from: 0.into(),
             url_width: 75.into(),
             desc_width: 50.into(),
         },

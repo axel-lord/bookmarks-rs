@@ -1,8 +1,6 @@
 mod bookmarks_column;
 mod category_column;
 
-use std::ops::Range;
-
 use crate::{Msg, ParsedStr};
 use bookmark_library::{container::BufferStorage, Bookmark, Category};
 use bookmarks_column::bookmark_column;
@@ -18,8 +16,9 @@ use iced::{
 fn tool_row<'a, Renderer>(
     status: &str,
     shown_bookmarks: &str,
-    url_width: &str,
-    desc_width: &str,
+    shown_from: &str,
+    url_width_str: &str,
+    desc_width_str: &str,
 ) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -28,13 +27,21 @@ where
 {
     row![
         button("Reset").on_press(Msg::Reset),
-        text("Shown bookmarks:"),
-        text_input("...", shown_bookmarks, |s| Msg::UpdateStatus(s.into()))
-            .width(Length::Units(50)),
         text("Info width:"),
-        text_input("...", desc_width, |s| Msg::UpdateDescWidth(s.into())).width(Length::Units(50)),
+        text_input("...", desc_width_str, |s| Msg::UpdateDescWidth(s.into()))
+            .width(Length::Units(50)),
         text("URL width:"),
-        text_input("...", url_width, |s| Msg::UpdateUrlWidth(s.into())).width(Length::Units(50)),
+        text_input("...", url_width_str, |s| Msg::UpdateUrlWidth(s.into()))
+            .width(Length::Units(50)),
+        text("Shown:"),
+        text_input("...", shown_bookmarks, |s| Msg::UpdateShownBookmarks(
+            s.into()
+        ))
+        .width(Length::Units(50)),
+        text("From:"),
+        text_input("...", shown_from, |s| Msg::UpdateShownFrom(s.into())).width(Length::Units(50)),
+        button("Prev").on_press(Msg::UpdateShownFromSteps(-1)),
+        button("Next").on_press(Msg::UpdateShownFromSteps(1)),
         horizontal_space(Length::Fill),
         text(status),
     ]
@@ -46,7 +53,7 @@ where
 fn content_row<'a, Renderer>(
     bookmarks: &BufferStorage<Bookmark>,
     categories: &BufferStorage<Category>,
-    bookmark_range: Range<usize>,
+    bookmark_range: (usize, usize),
     url_width: Option<usize>,
     desc_width: Option<usize>,
 ) -> Row<'a, Msg, Renderer>
@@ -69,12 +76,14 @@ where
     .align_items(iced::Alignment::Start)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn application_view<'a, Renderer>(
     bookmarks: &BufferStorage<Bookmark>,
     categories: &BufferStorage<Category>,
     status: &str,
     shown_bookmarks: &str,
-    bookmark_range: Range<usize>,
+    shown_from: &str,
+    bookmark_range: (usize, usize),
     url_width: &ParsedStr<usize>,
     desc_width: &ParsedStr<usize>,
 ) -> Column<'a, Msg, Renderer>
@@ -87,7 +96,7 @@ where
         + text_input::StyleSheet,
 {
     column![
-        tool_row(status, shown_bookmarks, url_width, desc_width),
+        tool_row(status, shown_bookmarks, shown_from, url_width, desc_width),
         horizontal_rule(3),
         content_row(
             bookmarks,

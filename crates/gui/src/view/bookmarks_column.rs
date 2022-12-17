@@ -1,5 +1,3 @@
-use std::ops::Range;
-
 use crate::Msg;
 use bookmark_library::Bookmark;
 use iced::{
@@ -67,7 +65,7 @@ where
 
 pub fn bookmark_column<'a, Renderer>(
     bookmarks: impl IntoIterator<Item = (usize, impl AsRef<bookmark_library::Bookmark>)>,
-    bookmark_range: Range<usize>,
+    bookmark_range: (usize, usize),
     url_width: Option<usize>,
     desc_width: Option<usize>,
 ) -> Column<'a, Msg, Renderer>
@@ -81,8 +79,8 @@ where
         scrollable(
             bookmarks
                 .into_iter()
-                .skip(bookmark_range.start)
-                .take(bookmark_range.count())
+                .skip(bookmark_range.0)
+                .take(bookmark_range.1)
                 .fold(Column::new(), |r, (i, b)| {
                     r.push(bookmark_row(i, url_width, desc_width, b.as_ref()))
                 })
