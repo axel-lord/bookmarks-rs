@@ -68,6 +68,7 @@ pub fn bookmark_column<'a, Renderer>(
     bookmark_range: (usize, usize),
     url_width: Option<usize>,
     desc_width: Option<usize>,
+    filter: &str,
 ) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -79,6 +80,9 @@ where
         scrollable(
             bookmarks
                 .into_iter()
+                .filter(|b| filter.is_empty()
+                    || b.1.as_ref().description().contains(filter)
+                    || b.1.as_ref().url().contains(filter))
                 .skip(bookmark_range.0)
                 .take(bookmark_range.1)
                 .fold(Column::new(), |r, (i, b)| {

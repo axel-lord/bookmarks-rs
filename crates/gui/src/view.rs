@@ -19,6 +19,7 @@ fn tool_row<'a, Renderer>(
     shown_from: &str,
     url_width_str: &str,
     desc_width_str: &str,
+    filter: &str,
 ) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -42,6 +43,8 @@ where
         text_input("...", shown_from, |s| Msg::UpdateShownFrom(s.into())).width(Length::Units(50)),
         button("Prev").on_press(Msg::UpdateShownFromSteps(-1)),
         button("Next").on_press(Msg::UpdateShownFromSteps(1)),
+        text("Filter:"),
+        text_input("...", filter, |s| Msg::FilterBookmarks(s.into())),
         horizontal_space(Length::Fill),
         text(status),
     ]
@@ -56,6 +59,7 @@ fn content_row<'a, Renderer>(
     bookmark_range: (usize, usize),
     url_width: Option<usize>,
     desc_width: Option<usize>,
+    filter: &str,
 ) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -69,7 +73,8 @@ where
             bookmarks.iter_indexed(),
             bookmark_range,
             url_width,
-            desc_width
+            desc_width,
+            filter,
         )
         .width(Length::Fill)
     ]
@@ -86,6 +91,7 @@ pub fn application_view<'a, Renderer>(
     bookmark_range: (usize, usize),
     url_width: &ParsedStr<usize>,
     desc_width: &ParsedStr<usize>,
+    filter: &str,
 ) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
@@ -96,14 +102,22 @@ where
         + text_input::StyleSheet,
 {
     column![
-        tool_row(status, shown_bookmarks, shown_from, url_width, desc_width),
+        tool_row(
+            status,
+            shown_bookmarks,
+            shown_from,
+            url_width,
+            desc_width,
+            filter
+        ),
         horizontal_rule(3),
         content_row(
             bookmarks,
             categories,
             bookmark_range,
             *url_width.value(),
-            *desc_width.value()
+            *desc_width.value(),
+            filter,
         )
     ]
 }
