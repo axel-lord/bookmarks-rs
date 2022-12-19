@@ -44,6 +44,7 @@ where
         button("Next").on_press(Msg::UpdateShownFromSteps(1)),
         text("Filter:"),
         text_input("...", app_view.filter.1, |s| Msg::FilterBookmarks(s.into())),
+        button("Apply").on_press(Msg::ApplyFilter),
         horizontal_space(Length::Fill),
         text(app_view.status),
     ]

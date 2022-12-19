@@ -214,6 +214,17 @@ impl Application for App {
                 self.filter_str = m;
                 self.update_filter();
             }
+
+            Msg::ApplyFilter => {
+                if !self.filter_str.is_empty() {
+                    self.command_map
+                        .call(
+                            "bookmark",
+                            &["filter".into(), self.filter_str.as_ref().to_string()],
+                        )
+                        .unwrap();
+                }
+            }
         }
         iced::Command::none()
     }
