@@ -216,13 +216,10 @@ impl Application for App {
             }
 
             Msg::ApplyFilter => {
-                if !self.filter_str.is_empty() {
-                    self.command_map
-                        .call(
-                            "bookmark",
-                            &["filter".into(), self.filter_str.as_ref().to_string()],
-                        )
-                        .unwrap();
+                if let Some(ref filter) = self.filter {
+                    self.bookmarks.write().unwrap().filter_in_place(|b| {
+                        filter.is_match(b.url()) || filter.is_match(b.description())
+                    });
                 }
             }
         }
