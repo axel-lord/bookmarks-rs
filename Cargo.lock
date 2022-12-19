@@ -142,8 +142,10 @@ dependencies = [
 name = "bookmark-gui"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
  "bookmark-command",
  "bookmark-library",
+ "bookmark-storage",
  "clap",
  "iced",
  "iced_native",

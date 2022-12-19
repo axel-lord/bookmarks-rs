@@ -1,4 +1,4 @@
-use crate::Msg;
+use crate::{AppView, Msg};
 use bookmark_library::Category;
 use iced::widget::{button, column, row, scrollable, text, Column, Row};
 
@@ -15,9 +15,7 @@ where
     .align_items(iced::Alignment::Center)
 }
 
-pub fn category_column<'a, Renderer>(
-    categories: impl IntoIterator<Item = (usize, impl AsRef<bookmark_library::Category>)>,
-) -> Column<'a, Msg, Renderer>
+pub fn category_column<'a, Renderer>(app_view: AppView) -> Column<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
     <Renderer as iced_native::Renderer>::Theme:
@@ -26,11 +24,10 @@ where
     column![
         text("Categories: "),
         scrollable(
-            categories
-                .into_iter()
-                .fold(Column::new(), |r, (i, c)| {
-                    r.push(category_row(i, c.as_ref()))
-                })
+            app_view
+                .categories
+                .iter_indexed()
+                .fold(Column::new(), |r, (i, c)| { r.push(category_row(i, c)) })
                 .spacing(3)
         )
     ]
