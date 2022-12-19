@@ -1,4 +1,5 @@
 use crate::{bookmark::Bookmark, shared};
+use aho_corasick::AhoCorasickBuilder;
 use bookmark_command::{Command, CommandErr};
 
 #[derive(Debug, Command)]
@@ -14,10 +15,21 @@ impl Command for Filter {
             ));
         }
 
-        self.bookmarks
-            .write()
-            .unwrap()
-            .filter_in_place(|bookmark| args.iter().all(|arg| bookmark.url().contains(arg)));
+        let filters = args
+            .iter()
+            .map(|s| {
+                AhoCorasickBuilder::new()
+                    .auto_configure(&[s])
+                    .ascii_case_insensitive(true)
+                    .build([s])
+            })
+            .collect::<Vec<_>>();
+
+        self.bookmarks.write().unwrap().filter_in_place(|bookmark| {
+            filters
+                .iter()
+                .all(|f| f.is_match(bookmark.url()) || f.is_match(bookmark.description()))
+        });
 
         Ok(())
     }

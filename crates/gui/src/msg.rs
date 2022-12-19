@@ -8,5 +8,6 @@ pub enum Msg {
     UpdateUrlWidth(Box<str>),
     UpdateDescWidth(Box<str>),
     FilterBookmarks(Box<str>),
+    ApplyFilter,
     Reset,
 }
