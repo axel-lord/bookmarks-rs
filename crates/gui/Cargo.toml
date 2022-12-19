@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 bookmark-library = { path = "../library" }
 bookmark-command = { path = "../command" }
+bookmark-storage = { path = "../storage" }
 clap = { version = "4.0.29", features = ["derive"] }
 iced = "0.6"
 iced_native = "0.7.0"
 open = "3.2.0"
 unicode-segmentation = "1.10.0"
+aho-corasick = "0.7.20"
