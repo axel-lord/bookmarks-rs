@@ -19,7 +19,8 @@ where
     row![
         button("Goto")
             .on_press(Msg::GotoBookmarkLocation(index))
-            .width(Length::Shrink),
+            .width(Length::Shrink)
+            .padding(3),
         text(if desc_width != 0 {
             let val = bookmark.description();
             let letters = val
@@ -82,9 +83,26 @@ where
             .map(|(i, b)| bookmark_row(i, app_view.url_width.0, app_view.desc_width.0, b).into()),
     );
 
+    let header = row![
+        button("Prev")
+            .on_press(Msg::UpdateShownFromSteps(-1))
+            .padding(3),
+        button("Next")
+            .on_press(Msg::UpdateShownFromSteps(1))
+            .padding(3),
+        text(format!(
+            "Bookmarks ({}~{}/{}):",
+            app_view.shown_from.0,
+            bookmarks.len().saturating_add(app_view.shown_from.0),
+            app_view.bookmarks.storage.len(),
+        )),
+    ]
+    .spacing(3)
+    .align_items(iced::Alignment::Center);
+
     column![
-        text(format!("Bookmarks ({}):", bookmarks.len())),
-        scrollable(Column::with_children(bookmarks).spacing(3))
+        header,
+        scrollable(Column::with_children(bookmarks).spacing(3)),
     ]
     .padding(3)
     .spacing(3)

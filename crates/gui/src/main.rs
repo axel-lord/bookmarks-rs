@@ -21,6 +21,8 @@ fn main() {
 
     App::run(iced::Settings {
         flags: args.files.unwrap_or_default(),
+        text_multithreading: true,
+        default_text_size: 18,
         ..Default::default()
     })
     .unwrap();
