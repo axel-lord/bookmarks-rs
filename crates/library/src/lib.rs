@@ -21,6 +21,8 @@ pub mod shared {
         std::sync::Arc<std::sync::RwLock<super::container::BufferStorage<T>>>;
 }
 
+use std::collections::HashMap;
+
 pub use bookmark::Bookmark;
 pub use category::{Category, IdentifierContainer, IdentifierErr};
 pub use command_factory::CommandFactory;
@@ -31,6 +33,98 @@ mod category;
 mod command_factory;
 mod info;
 mod parse_command;
+
+use thiserror::Error;
+
+/// Enum for Graph related errors.
+#[derive(Debug, Error, Clone, Copy)]
+pub enum GraphError {
+    /// Value used when access to an invalid node is attempted.
+    #[error("Invalid Node Index (value {value:?}, max {max:?})")]
+    InvalidNode {
+        /// The invalid node.
+        value: usize,
+        /// The max value a node can be.
+        max: usize,
+    },
+}
+
+/// Used to represent a graph.
+pub struct Graph {
+    data: Box<[bool]>,
+    node_count: usize,
+}
+
+impl Graph {
+    /// Check if there is an edge between give nodes.
+    ///
+    /// # Errors
+    /// If a node index is invalid.
+    pub fn is_edge(&self, from: usize, to: usize) -> Result<bool, GraphError> {
+        if from > self.node_count {
+            Err(GraphError::InvalidNode {
+                value: from,
+                max: self.node_count,
+            })
+        } else if to > self.node_count {
+            Err(GraphError::InvalidNode {
+                value: to,
+                max: self.node_count,
+            })
+        } else {
+            Ok(self.data[from * self.node_count + to])
+        }
+    }
+
+    /// Set and edge between two nodes.
+    ///
+    /// # Errors
+    /// If to or from is not a node in graph.
+    pub fn set_edge(&mut self, from: usize, to: usize, value: bool) -> Result<(), GraphError> {
+        if from > self.node_count {
+            Err(GraphError::InvalidNode {
+                value: from,
+                max: self.node_count,
+            })
+        } else if to > self.node_count {
+            Err(GraphError::InvalidNode {
+                value: to,
+                max: self.node_count,
+            })
+        } else {
+            self.data[from * self.node_count + to] = value;
+            Ok(())
+        }
+    }
+}
+
+impl From<&[Category]> for Graph {
+    fn from(value: &[Category]) -> Self {
+        let mut graph = Self {
+            data: vec![false; value.len() * value.len()].into_boxed_slice(),
+            node_count: value.len(),
+        };
+
+        let mut cat_map = HashMap::new();
+        for (i, category) in value.iter().enumerate() {
+            cat_map.insert(Box::new(category.id()), i);
+        }
+
+        for (i, category) in value.iter().enumerate() {
+            for child in category.subcategories() {
+                let Some(sub_i) = cat_map.get(&Box::new(child)) else {
+                    continue;
+                };
+
+                if let Err(err) = graph.set_edge(i, *sub_i, true) {
+                    eprintln!("{err}");
+                };
+            }
+        }
+
+        graph
+    }
+}
 
 use regex::Regex;
 
