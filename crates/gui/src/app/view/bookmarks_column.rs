@@ -65,29 +65,26 @@ where
     <Renderer as iced_native::Renderer>::Theme:
         text::StyleSheet + button::StyleSheet + scrollable::StyleSheet,
 {
-    column![
-        text("Bookmarks:"),
-        scrollable(
-            app_view
-                .bookmarks
-                .iter_indexed()
-                .filter(|b| app_view
+    let mut bookmarks = Vec::with_capacity(app_view.shown_bookmarks.0);
+    bookmarks.extend(
+        app_view
+            .bookmarks
+            .iter_indexed()
+            .filter(|b| {
+                app_view
                     .filter
                     .0
                     .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
-                    .unwrap_or(true))
-                .skip(app_view.shown_from.0)
-                .take(app_view.shown_bookmarks.0)
-                .fold(Column::new(), |r, (i, b)| {
-                    r.push(bookmark_row(
-                        i,
-                        app_view.url_width.0,
-                        app_view.desc_width.0,
-                        b,
-                    ))
-                })
-                .spacing(3)
-        )
+                    .unwrap_or(true)
+            })
+            .skip(app_view.shown_from.0)
+            .take(app_view.shown_bookmarks.0)
+            .map(|(i, b)| bookmark_row(i, app_view.url_width.0, app_view.desc_width.0, b).into()),
+    );
+
+    column![
+        text(format!("Bookmarks ({}):", bookmarks.len())),
+        scrollable(Column::with_children(bookmarks).spacing(3))
     ]
     .padding(3)
     .spacing(3)
