@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{AppView, Msg};
 use bookmark_library::Category;
 use iced::{
-    widget::{button, column, horizontal_space, row, scrollable, text, Column, Row},
+    widget::{button, column, container, horizontal_space, row, scrollable, text, Column, Row},
     Length,
 };
 
@@ -18,7 +18,9 @@ where
 {
     row![
         horizontal_space(Length::Units(level.saturating_mul(24))),
-        button("Apply").on_press(Msg::ApplyCategory(index)),
+        button("Apply")
+            .on_press(Msg::ApplyCategory(index))
+            .padding(3),
         text(category.name()),
     ]
     .spacing(3)
@@ -29,7 +31,7 @@ pub fn category_column<'a, Renderer>(app_view: AppView) -> Column<'a, Msg, Rende
 where
     Renderer: 'a + iced_native::text::Renderer,
     <Renderer as iced_native::Renderer>::Theme:
-        text::StyleSheet + button::StyleSheet + scrollable::StyleSheet,
+        text::StyleSheet + button::StyleSheet + scrollable::StyleSheet + container::StyleSheet,
 {
     let cat_map = app_view
         .categories
@@ -66,8 +68,10 @@ where
         }
     }
 
+    let header = row![container(text(format!("Categories ({}): ", cat_iter.len()))).padding(3),];
+
     column![
-        text("Categories: "),
+        header,
         scrollable(
             cat_iter
                 .into_iter()
@@ -75,7 +79,7 @@ where
                     r.push(category_row(i, l, c))
                 })
                 .spacing(3)
-        )
+        ),
     ]
     .padding(3)
     .spacing(3)
