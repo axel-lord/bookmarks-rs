@@ -20,7 +20,7 @@ where
         button("Goto")
             .on_press(Msg::GotoBookmarkLocation(index))
             .width(Length::Shrink),
-        text(if desc_width == 0 {
+        text(if desc_width != 0 {
             let val = bookmark.description();
             let letters = val
                 .grapheme_indices(true)
@@ -37,7 +37,7 @@ where
             bookmark.description().to_string()
         })
         .width(Length::Fill),
-        text(if url_width == 0 {
+        text(if url_width != 0 {
             let val = bookmark.url();
             let letters = val
                 .grapheme_indices(true)
