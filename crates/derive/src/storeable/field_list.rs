@@ -38,7 +38,7 @@ impl FieldList {
 
         quote! {
             #[doc = #doc_str]
-            pub fn #ident(&self) -> impl Iterator<Item = &str> {
+            pub fn #ident(&self) -> impl DoubleEndedIterator<Item = &str> {
                 self.#ident.get(&self.#line)
             }
         }

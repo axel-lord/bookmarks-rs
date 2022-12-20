@@ -56,7 +56,7 @@ impl ListField {
 
     /// Get an iterator of the contained values of a [ListField] as
     /// string slices existing in another string slice.
-    pub fn get<'a>(&'a self, from: &'a str) -> impl Iterator<Item = &'a str> {
+    pub fn get<'a>(&'a self, from: &'a str) -> impl DoubleEndedIterator<Item = &'a str> {
         self.0.iter().map(|f| f.get(from))
     }
 }

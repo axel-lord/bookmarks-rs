@@ -2,14 +2,22 @@ use std::collections::HashMap;
 
 use crate::{AppView, Msg};
 use bookmark_library::Category;
-use iced::widget::{button, column, row, scrollable, text, Column, Row};
+use iced::{
+    widget::{button, column, horizontal_space, row, scrollable, text, Column, Row},
+    Length,
+};
 
-fn category_row<'a, Renderer>(index: usize, category: &Category) -> Row<'a, Msg, Renderer>
+fn category_row<'a, Renderer>(
+    index: usize,
+    level: u16,
+    category: &Category,
+) -> Row<'a, Msg, Renderer>
 where
     Renderer: 'a + iced_native::text::Renderer,
     <Renderer as iced_native::Renderer>::Theme: text::StyleSheet + button::StyleSheet,
 {
     row![
+        horizontal_space(Length::Units(level.saturating_mul(24))),
         button("Apply").on_press(Msg::ApplyCategory(index)),
         text(category.name()),
     ]
@@ -35,26 +43,21 @@ where
         .infos
         .storage
         .iter()
-        .flat_map(|i| {
-            i.categories()
-                .collect::<Vec<_>>()
-                .into_iter()
-                .rev()
-                .map(|id| (0usize, <Box<str>>::from(id)))
-        })
+        .flat_map(|i| i.categories().rev().map(|id| (0u16, <Box<str>>::from(id))))
         .collect::<Vec<_>>();
 
     let mut cat_iter = Vec::new();
     while !cat_stack.is_empty() {
         let (level, cat_id) = cat_stack.pop().unwrap();
+        if level >= 12 {
+            continue;
+        }
 
         if let Some(i) = cat_map.get(&cat_id) {
             let cat = &app_view.categories.storage[*i];
 
             cat_stack.extend(
                 cat.subcategories()
-                    .collect::<Vec<_>>()
-                    .into_iter()
                     .rev()
                     .map(|id| (level + 1, <Box<str>>::from(id))),
             );
@@ -68,8 +71,8 @@ where
         scrollable(
             cat_iter
                 .into_iter()
-                .fold(Column::new(), |r, (i, _l, c)| {
-                    r.push(category_row(i, c))
+                .fold(Column::new(), |r, (i, l, c)| {
+                    r.push(category_row(i, l, c))
                 })
                 .spacing(3)
         )
