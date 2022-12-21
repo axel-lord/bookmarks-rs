@@ -135,6 +135,13 @@ impl Application for App {
         "Application".into()
     }
 
+    fn theme(&self) -> Self::Theme {
+        match dark_light::detect() {
+            dark_light::Mode::Dark => Theme::Dark,
+            dark_light::Mode::Light => Theme::Light,
+        }
+    }
+
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             Msg::GotoBookmarkLocation(i) => {

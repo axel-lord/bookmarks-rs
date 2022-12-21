@@ -48,7 +48,7 @@ fn bookmark_row<'a>(
             } else {
                 bookmark.url().to_string()
             })
-            .style(theme::Text::Color(Color::from_rgb8(64, 0, 255)))
+            .style(theme::Text::Color(Color::from_rgb8(96, 64, 255)))
             .width(Length::Fill),
         ]
         .spacing(3)
