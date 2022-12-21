@@ -3,36 +3,28 @@ use std::collections::HashMap;
 use crate::{AppView, Msg};
 use bookmark_library::Category;
 use iced::{
-    widget::{button, column, container, horizontal_space, row, scrollable, text, Column, Row},
-    Length,
+    theme,
+    widget::{button, column, container, horizontal_space, row, scrollable, text, Column},
+    Element, Length,
 };
 
-fn category_row<'a, Renderer>(
-    index: usize,
-    level: u16,
-    category: &Category,
-) -> Row<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: text::StyleSheet + button::StyleSheet,
-{
+fn category_row<'a>(index: usize, level: u16, category: &Category) -> Element<'a, Msg> {
     row![
         horizontal_space(Length::Units(level.saturating_mul(24))),
-        button("Apply")
+        // button("Apply")
+        //     .on_press(Msg::ApplyCategory(index))
+        //     .padding(3),
+        button(text(category.name()))
             .on_press(Msg::ApplyCategory(index))
+            .style(theme::Button::Text)
             .padding(3),
-        text(category.name()),
     ]
     .spacing(3)
     .align_items(iced::Alignment::Center)
+    .into()
 }
 
-pub fn category_column<'a, Renderer>(app_view: AppView) -> Column<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme:
-        text::StyleSheet + button::StyleSheet + scrollable::StyleSheet + container::StyleSheet,
-{
+pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
     let cat_map = app_view
         .categories
         .storage
@@ -83,4 +75,6 @@ where
     ]
     .padding(3)
     .spacing(3)
+    .width(Length::Shrink)
+    .into()
 }

@@ -5,20 +5,14 @@ use crate::{AppView, Msg};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
+    theme,
     widget::{
-        button, column, horizontal_rule, horizontal_space, row, rule, scrollable, text, text_input,
-        vertical_rule, Column, Row,
+        button, column, horizontal_rule, horizontal_space, row, text, text_input, vertical_rule,
     },
-    Length,
+    Element, Length,
 };
-use iced_native::widget::container;
 
-fn tool_row<'a, Renderer>(app_view: AppView) -> Row<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme:
-        text::StyleSheet + button::StyleSheet + text_input::StyleSheet,
-{
+fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     row![
         text("Info width:"),
         text_input("...", app_view.desc_width.1, |s| Msg::UpdateDescWidth(
@@ -46,47 +40,38 @@ where
         .width(Length::Units(50)),
         text("Filter:"),
         text_input("...", app_view.filter.1, |s| Msg::FilterBookmarks(s.into())).padding(3),
-        button("Apply").on_press(Msg::ApplyFilter).padding(3),
-        button("Reset").on_press(Msg::Reset).padding(3),
+        button("Apply")
+            .on_press(Msg::ApplyFilter)
+            .padding(3)
+            .style(theme::Button::Positive),
+        button("Reset")
+            .on_press(Msg::Reset)
+            .padding(3)
+            .style(theme::Button::Destructive),
         horizontal_space(Length::Fill),
         text(app_view.status),
     ]
     .align_items(iced::Alignment::Center)
     .spacing(3)
     .padding(3)
+    .into()
 }
 
-fn content_row<'a, Renderer>(app_view: AppView) -> Row<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: rule::StyleSheet
-        + scrollable::StyleSheet
-        + text::StyleSheet
-        + button::StyleSheet
-        + container::StyleSheet,
-{
+fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     row![
-        category_column(app_view).width(Length::Shrink),
+        category_column(app_view),
         vertical_rule(3),
-        bookmark_column(app_view).width(Length::Fill)
+        bookmark_column(app_view)
     ]
     .align_items(iced::Alignment::Start)
+    .into()
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn application_view<'a, Renderer>(app_view: AppView) -> Column<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: text::StyleSheet
-        + button::StyleSheet
-        + rule::StyleSheet
-        + scrollable::StyleSheet
-        + text_input::StyleSheet
-        + container::StyleSheet,
-{
+pub fn application_view<'a>(app_view: AppView<'_>) -> Element<'a, Msg> {
     column![
         tool_row(app_view),
         horizontal_rule(3),
         content_row(app_view)
     ]
+    .into()
 }

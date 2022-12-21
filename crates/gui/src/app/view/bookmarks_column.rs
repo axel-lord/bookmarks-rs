@@ -1,71 +1,66 @@
 use crate::{AppView, Msg};
 use bookmark_library::Bookmark;
 use iced::{
-    widget::{button, column, row, scrollable, text, Column, Row},
-    Length,
+    theme,
+    widget::{button, column, row, scrollable, text, Column},
+    Color, Element, Length,
 };
 use unicode_segmentation::UnicodeSegmentation;
 
-fn bookmark_row<'a, Renderer>(
+fn bookmark_row<'a>(
     index: usize,
     url_width: usize,
     desc_width: usize,
     bookmark: &Bookmark,
-) -> Row<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme: button::StyleSheet + text::StyleSheet,
-{
-    row![
-        button("Goto")
-            .on_press(Msg::GotoBookmarkLocation(index))
-            .width(Length::Shrink)
-            .padding(3),
-        text(if desc_width != 0 {
-            let val = bookmark.description();
-            let letters = val
-                .grapheme_indices(true)
-                .take(desc_width + 1)
-                .map(|(i, _)| i)
-                .collect::<Vec<_>>();
+) -> Element<'a, Msg> {
+    button(
+        row![
+            text(if desc_width != 0 {
+                let val = bookmark.description();
+                let letters = val
+                    .grapheme_indices(true)
+                    .take(desc_width + 1)
+                    .map(|(i, _)| i)
+                    .collect::<Vec<_>>();
 
-            if letters.len() == desc_width + 1 {
-                format!("{}...", &val[0..letters[desc_width.saturating_sub(3)]])
+                if letters.len() == desc_width + 1 {
+                    format!("{}...", &val[0..letters[desc_width.saturating_sub(3)]])
+                } else {
+                    val.to_string()
+                }
             } else {
-                val.to_string()
-            }
-        } else {
-            bookmark.description().to_string()
-        })
-        .width(Length::Fill),
-        text(if url_width != 0 {
-            let val = bookmark.url();
-            let letters = val
-                .grapheme_indices(true)
-                .take(url_width + 1)
-                .map(|(i, _)| i)
-                .collect::<Vec<_>>();
+                bookmark.description().to_string()
+            })
+            .width(Length::Fill),
+            text(if url_width != 0 {
+                let val = bookmark.url();
+                let letters = val
+                    .grapheme_indices(true)
+                    .take(url_width + 1)
+                    .map(|(i, _)| i)
+                    .collect::<Vec<_>>();
 
-            if letters.len() == url_width + 1 {
-                format!("{}...", &val[0..letters[url_width.saturating_sub(3)]])
+                if letters.len() == url_width + 1 {
+                    format!("{}...", &val[0..letters[url_width.saturating_sub(3)]])
+                } else {
+                    val.to_string()
+                }
             } else {
-                val.to_string()
-            }
-        } else {
-            bookmark.url().to_string()
-        })
-        .width(Length::Fill),
-    ]
-    .spacing(3)
-    .align_items(iced::Alignment::Center)
+                bookmark.url().to_string()
+            })
+            .style(theme::Text::Color(Color::from_rgb8(64, 0, 255)))
+            .width(Length::Fill),
+        ]
+        .spacing(3)
+        .align_items(iced::Alignment::Center),
+    )
+    .on_press(Msg::GotoBookmarkLocation(index))
+    .style(theme::Button::Text)
+    .padding(0)
+    .into()
 }
 
-pub fn bookmark_column<'a, Renderer>(app_view: AppView) -> Column<'a, Msg, Renderer>
-where
-    Renderer: 'a + iced_native::text::Renderer,
-    <Renderer as iced_native::Renderer>::Theme:
-        text::StyleSheet + button::StyleSheet + scrollable::StyleSheet,
-{
+pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
     let mut bookmarks = Vec::with_capacity(app_view.shown_bookmarks.0);
     bookmarks.extend(
         app_view
@@ -80,7 +75,7 @@ where
             })
             .skip(app_view.shown_from.0)
             .take(app_view.shown_bookmarks.0)
-            .map(|(i, b)| bookmark_row(i, app_view.url_width.0, app_view.desc_width.0, b).into()),
+            .map(|(i, b)| bookmark_row(i, app_view.url_width.0, app_view.desc_width.0, b)),
     );
 
     let header = row![
@@ -106,4 +101,6 @@ where
     ]
     .padding(3)
     .spacing(3)
+    .width(Length::Fill)
+    .into()
 }
