@@ -222,8 +222,14 @@ impl Application for App {
                     });
                 }
             }
+
+            Msg::Tick => (),
         }
         iced::Command::none()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        iced::time::every(std::time::Duration::from_millis(500)).map(|_| Msg::Tick)
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {

@@ -10,4 +10,5 @@ pub enum Msg {
     FilterBookmarks(Box<str>),
     ApplyFilter,
     Reset,
+    Tick,
 }
