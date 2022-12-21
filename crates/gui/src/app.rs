@@ -8,9 +8,9 @@ use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bookmark_command::CommandErr;
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
-use iced::{executor, widget::column, Application, Theme};
+use iced::{executor, Application, Theme};
 
-use crate::{Msg, ParsedStr};
+use crate::{MainContent, Msg, ParsedStr};
 
 mod view;
 
@@ -27,6 +27,7 @@ pub struct App {
     shown_from: ParsedStr<usize>,
     status: Box<str>,
     url_width: ParsedStr<usize>,
+    main_content: MainContent,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -40,6 +41,7 @@ pub struct AppView<'a> {
     pub shown_bookmarks: (usize, &'a str),
     pub shown_from: (usize, &'a str),
     pub url_width: (usize, &'a str),
+    pub main_content: MainContent,
 }
 
 fn load_section<T>(
@@ -122,6 +124,7 @@ impl Application for App {
             shown_from: 0.into(),
             url_width: 75.into(),
             desc_width: 50.into(),
+            main_content: MainContent::Bookmarks,
         };
 
         for file in flags {
@@ -230,6 +233,8 @@ impl Application for App {
                 }
             }
 
+            Msg::SwitchMainTo(main_content) => self.main_content = main_content,
+
             Msg::Tick => (),
         }
         iced::Command::none()
@@ -244,7 +249,7 @@ impl Application for App {
         let categories = self.categories.read().unwrap();
         let infos = self.infos.read().unwrap();
 
-        column![view::application_view(AppView {
+        view::application_view(AppView {
             bookmarks: &bookmarks,
             categories: &categories,
             infos: &infos,
@@ -254,7 +259,7 @@ impl Application for App {
             shown_bookmarks: self.shown_bookmarks.as_tuple(),
             shown_from: self.shown_from.as_tuple(),
             url_width: self.url_width.as_tuple(),
-        })]
-        .into()
+            main_content: self.main_content,
+        })
     }
 }

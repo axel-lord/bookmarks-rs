@@ -4,23 +4,23 @@ use crate::{AppView, Msg};
 use bookmark_library::Category;
 use iced::{
     theme,
-    widget::{button, column, container, horizontal_space, row, scrollable, text, Column},
-    Element, Length,
+    widget::{button, column, horizontal_space, row, scrollable, text, vertical_space, Column},
+    Alignment, Element, Length,
 };
 
 fn category_row<'a>(index: usize, level: u16, category: &Category) -> Element<'a, Msg> {
-    row![
-        horizontal_space(Length::Units(level.saturating_mul(24))),
-        // button("Apply")
-        //     .on_press(Msg::ApplyCategory(index))
-        //     .padding(3),
-        button(text(category.name()))
-            .on_press(Msg::ApplyCategory(index))
-            .style(theme::Button::Text)
-            .padding(3),
-    ]
-    .spacing(3)
-    .align_items(iced::Alignment::Center)
+    button(
+        row![
+            horizontal_space(Length::Units(level.saturating_mul(24))),
+            text(category.name())
+        ]
+        .align_items(iced::Alignment::Fill)
+        .spacing(0)
+        .padding(0),
+    )
+    .on_press(Msg::ApplyCategory(index))
+    .style(theme::Button::Text)
+    .padding(0)
     .into()
 }
 
@@ -60,7 +60,15 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         }
     }
 
-    let header = row![container(text(format!("Categories ({}): ", cat_iter.len()))).padding(3),];
+    let header = row![
+        button("Reset")
+            .on_press(Msg::Reset)
+            .style(theme::Button::Destructive)
+            .padding(3),
+        text(format!("Categories ({}): ", cat_iter.len())),
+    ]
+    .align_items(Alignment::Center)
+    .spacing(3);
 
     column![
         header,
@@ -70,11 +78,14 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
                 .fold(Column::new(), |r, (i, l, c)| {
                     r.push(category_row(i, l, c))
                 })
+                .align_items(Alignment::Fill)
                 .spacing(3)
         ),
+        vertical_space(Length::Fill),
     ]
-    .padding(3)
+    .align_items(Alignment::Fill)
     .spacing(3)
+    .padding(3)
     .width(Length::Shrink)
     .into()
 }
