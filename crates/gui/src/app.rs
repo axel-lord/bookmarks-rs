@@ -8,7 +8,7 @@ use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bookmark_command::CommandErr;
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
-use iced::{executor, Application, Theme};
+use iced::{executor, widget::column, Application, Theme};
 
 use crate::{Msg, ParsedStr};
 
@@ -232,12 +232,12 @@ impl Application for App {
         iced::time::every(std::time::Duration::from_millis(500)).map(|_| Msg::Tick)
     }
 
-    fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
+    fn view(&self) -> iced::Element<Msg> {
         let bookmarks = self.bookmarks.read().unwrap();
         let categories = self.categories.read().unwrap();
         let infos = self.infos.read().unwrap();
 
-        view::application_view(AppView {
+        column![view::application_view(AppView {
             bookmarks: &bookmarks,
             categories: &categories,
             infos: &infos,
@@ -247,7 +247,7 @@ impl Application for App {
             shown_bookmarks: self.shown_bookmarks.as_tuple(),
             shown_from: self.shown_from.as_tuple(),
             url_width: self.url_width.as_tuple(),
-        })
+        })]
         .into()
     }
 }
