@@ -1,3 +1,5 @@
+use crate::MainContent;
+
 #[derive(Debug, Clone)]
 pub enum Msg {
     GotoBookmarkLocation(usize),
@@ -8,6 +10,7 @@ pub enum Msg {
     UpdateUrlWidth(Box<str>),
     UpdateDescWidth(Box<str>),
     FilterBookmarks(Box<str>),
+    SwitchMainTo(MainContent),
     ApplyFilter,
     Reset,
     Tick,

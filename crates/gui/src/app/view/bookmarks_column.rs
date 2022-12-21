@@ -1,8 +1,8 @@
-use crate::{AppView, Msg};
+use crate::{AppView, MainContent, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
-    widget::{button, column, row, scrollable, text, Column},
+    widget::{button, column, container, horizontal_space, row, scrollable, text, Column},
     Color, Element, Length,
 };
 use unicode_segmentation::UnicodeSegmentation;
@@ -13,7 +13,7 @@ fn bookmark_row<'a>(
     desc_width: usize,
     bookmark: &Bookmark,
 ) -> Element<'a, Msg> {
-    button(
+    button(container(
         row![
             text(if desc_width != 0 {
                 let val = bookmark.description();
@@ -48,12 +48,12 @@ fn bookmark_row<'a>(
             } else {
                 bookmark.url().to_string()
             })
-            .style(theme::Text::Color(Color::from_rgb8(96, 64, 255)))
+            .style(theme::Text::Color(Color::from_rgb8(64, 96, 255)))
             .width(Length::Fill),
         ]
         .spacing(3)
         .align_items(iced::Alignment::Center),
-    )
+    ))
     .on_press(Msg::GotoBookmarkLocation(index))
     .style(theme::Button::Text)
     .padding(0)
@@ -91,6 +91,11 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
             bookmarks.len().saturating_add(app_view.shown_from.0),
             app_view.bookmarks.storage.len(),
         )),
+        horizontal_space(Length::Fill),
+        button("Bookmarks").padding(3),
+        button("Settings")
+            .on_press(Msg::SwitchMainTo(MainContent::Settings))
+            .padding(3)
     ]
     .spacing(3)
     .align_items(iced::Alignment::Center);

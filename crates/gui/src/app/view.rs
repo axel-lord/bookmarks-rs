@@ -1,19 +1,60 @@
 mod bookmarks_column;
 mod category_column;
 
-use crate::{AppView, Msg};
+use crate::{AppView, MainContent, Msg};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
     theme,
     widget::{
         button, column, horizontal_rule, horizontal_space, row, text, text_input, vertical_rule,
+        vertical_space,
     },
-    Element, Length,
+    Alignment, Element, Length,
 };
 
 fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
+    let filter = row![
+        text("Filter:"),
+        text_input("...", app_view.filter.1, |s| Msg::FilterBookmarks(s.into())).padding(3),
+        button("Apply")
+            .on_press(Msg::ApplyFilter)
+            .padding(3)
+            .style(theme::Button::Positive),
+        button("Reset")
+            .on_press(Msg::Reset)
+            .padding(3)
+            .style(theme::Button::Destructive),
+    ]
+    .padding(0)
+    .spacing(3)
+    .align_items(Alignment::Center);
+
     row![
+        horizontal_space(Length::Fill),
+        filter.width(Length::Fill),
+        horizontal_space(Length::Fill),
+    ]
+    .align_items(iced::Alignment::Center)
+    .spacing(3)
+    .padding(3)
+    .into()
+}
+
+fn settings_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+    let header = row![
+        text("Settings:"),
+        horizontal_space(Length::Fill),
+        button("Bookmarks")
+            .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
+            .padding(3),
+        button("Settings").padding(3),
+    ]
+    .padding(0)
+    .spacing(3)
+    .align_items(Alignment::Center);
+
+    let number_row = row![
         text("Info width:"),
         text_input("...", app_view.desc_width.1, |s| Msg::UpdateDescWidth(
             s.into()
@@ -38,40 +79,40 @@ fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
         ))
         .padding(3)
         .width(Length::Units(50)),
-        text("Filter:"),
-        text_input("...", app_view.filter.1, |s| Msg::FilterBookmarks(s.into())).padding(3),
-        button("Apply")
-            .on_press(Msg::ApplyFilter)
-            .padding(3)
-            .style(theme::Button::Positive),
-        button("Reset")
-            .on_press(Msg::Reset)
-            .padding(3)
-            .style(theme::Button::Destructive),
         horizontal_space(Length::Fill),
-        text(app_view.status),
     ]
-    .align_items(iced::Alignment::Center)
     .spacing(3)
-    .padding(3)
-    .into()
+    .align_items(iced::Alignment::Center);
+
+    column![header, number_row, vertical_space(Length::Fill),]
+        .padding(3)
+        .spacing(3)
+        .into()
 }
 
 fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
-    row![
-        category_column(app_view),
-        vertical_rule(3),
-        bookmark_column(app_view)
-    ]
-    .align_items(iced::Alignment::Start)
-    .into()
+    let main_content = match app_view.main_content {
+        MainContent::Settings => settings_column(app_view),
+        MainContent::Bookmarks => bookmark_column(app_view),
+    };
+
+    row![category_column(app_view), vertical_rule(3), main_content,]
+        .height(Length::Fill)
+        .align_items(iced::Alignment::Start)
+        .into()
 }
 
 pub fn application_view<'a>(app_view: AppView<'_>) -> Element<'a, Msg> {
+    let status = row![horizontal_space(Length::Fill), text(app_view.status),]
+        .padding(3)
+        .align_items(iced::Alignment::Center);
+
     column![
         tool_row(app_view),
         horizontal_rule(3),
-        content_row(app_view)
+        content_row(app_view),
+        horizontal_rule(3),
+        status,
     ]
     .into()
 }

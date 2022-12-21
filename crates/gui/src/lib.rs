@@ -9,6 +9,12 @@ pub use app::{App, AppView};
 pub use msg::Msg;
 pub use parsed_str::ParsedStr;
 
+#[derive(Clone, Copy, Debug)]
+pub enum MainContent {
+    Settings,
+    Bookmarks,
+}
+
 pub fn run(starting_files: Vec<PathBuf>) {
     App::run(iced::Settings {
         flags: starting_files,
