@@ -161,8 +161,8 @@ impl Application for App {
                 }
             }
 
-            Msg::ApplyCategory(i) => {
-                let mut call_chain = || -> Result<(), CommandErr> {
+            Msg::ApplyCategory(category_ids) => {
+                let mut call_chain = |i: usize| -> Result<(), CommandErr> {
                     self.command_map
                         .call("category", &["select".into(), i.to_string()])?
                         .call("category", &["apply".into()])?;
@@ -175,8 +175,11 @@ impl Application for App {
                     Ok(())
                 };
 
-                if let Err(err) = call_chain() {
-                    println!("{err}");
+                for i in category_ids.iter() {
+                    if let Err(err) = call_chain(*i) {
+                        println!("{err}");
+                        break;
+                    }
                 }
             }
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::{AppView, Msg};
 use bookmark_library::Category;
@@ -8,17 +8,17 @@ use iced::{
     Alignment, Element, Length,
 };
 
-fn category_row<'a>(index: usize, level: u16, category: &Category) -> Element<'a, Msg> {
+fn category_row<'a>(level: Rc<[usize]>, category: &Category) -> Element<'a, Msg> {
     button(
         row![
-            horizontal_space(Length::Units(level.saturating_mul(24))),
+            horizontal_space(Length::Units((level.len() as u16 - 1) * 24)),
             text(category.name())
         ]
         .align_items(iced::Alignment::Fill)
         .spacing(0)
         .padding(0),
     )
-    .on_press(Msg::ApplyCategory(index))
+    .on_press(Msg::ApplyCategory(level.iter().cloned().collect()))
     .style(theme::Button::Text)
     .padding(0)
     .into()
@@ -37,26 +37,38 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         .infos
         .storage
         .iter()
-        .flat_map(|i| i.categories().rev().map(|id| (0u16, <Box<str>>::from(id))))
+        .flat_map(|i| {
+            i.categories().rev().map(|id| {
+                (
+                    std::iter::empty().collect::<Rc<[usize]>>(),
+                    <Box<str>>::from(id),
+                )
+            })
+        })
         .collect::<Vec<_>>();
 
     let mut cat_iter = Vec::new();
     while !cat_stack.is_empty() {
         let (level, cat_id) = cat_stack.pop().unwrap();
-        if level >= 12 {
+        if level.len() >= 12 {
             continue;
         }
 
         if let Some(i) = cat_map.get(&cat_id) {
             let cat = &app_view.categories.storage[*i];
+            let this_level = level
+                .iter()
+                .cloned()
+                .chain(std::iter::once(*i))
+                .collect::<Rc<[usize]>>();
 
             cat_stack.extend(
                 cat.subcategories()
                     .rev()
-                    .map(|id| (level + 1, <Box<str>>::from(id))),
+                    .map(|id| (this_level.clone(), <Box<str>>::from(id))),
             );
 
-            cat_iter.push((*i, level, cat))
+            cat_iter.push((this_level, cat))
         }
     }
 
@@ -75,9 +87,7 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         scrollable(
             cat_iter
                 .into_iter()
-                .fold(Column::new(), |r, (i, l, c)| {
-                    r.push(category_row(i, l, c))
-                })
+                .fold(Column::new(), |r, (l, c)| { r.push(category_row(l, c)) })
                 .align_items(Alignment::Fill)
                 .spacing(3)
         ),
