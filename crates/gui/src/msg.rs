@@ -3,7 +3,7 @@ use crate::MainContent;
 #[derive(Debug, Clone)]
 pub enum Msg {
     GotoBookmarkLocation(usize),
-    ApplyCategory(usize),
+    ApplyCategory(Box<[usize]>),
     UpdateShownBookmarks(Box<str>),
     UpdateShownFrom(Box<str>),
     UpdateShownFromSteps(isize),
