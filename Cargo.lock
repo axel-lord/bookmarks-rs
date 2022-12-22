@@ -253,6 +253,7 @@ dependencies = [
  "dark-light",
  "iced",
  "iced_native",
+ "lazy_static",
  "open",
  "time",
  "unicode-segmentation",

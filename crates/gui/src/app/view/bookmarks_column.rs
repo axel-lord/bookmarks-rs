@@ -1,4 +1,4 @@
-use crate::{AppView, MainContent, Msg};
+use crate::{AppView, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
@@ -92,10 +92,7 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
             app_view.bookmarks.storage.len(),
         )),
         horizontal_space(Length::Fill),
-        button("Bookmarks").padding(3),
-        button("Settings")
-            .on_press(Msg::SwitchMainTo(MainContent::Settings))
-            .padding(3)
+        app_view.main_content.choice_row(),
     ]
     .spacing(3)
     .align_items(iced::Alignment::Center);
