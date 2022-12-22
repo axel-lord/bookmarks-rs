@@ -43,12 +43,12 @@ fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
 
 fn settings_column<'a>(app_view: AppView) -> Element<'a, Msg> {
     let header = row![
+        button("Default")
+            .padding(3)
+            .style(theme::Button::Destructive),
         text("Settings:"),
         horizontal_space(Length::Fill),
-        button("Bookmarks")
-            .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
-            .padding(3),
-        button("Settings").padding(3),
+        app_view.main_content.choice_row(),
     ]
     .padding(0)
     .spacing(3)
