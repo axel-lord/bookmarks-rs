@@ -1,4 +1,4 @@
-use crate::token;
+use crate::{container::BufferStorage, token, Bookmark};
 use bookmark_storage::{ContentString, Field, ListField, Section, Storeable};
 use std::{collections::HashMap, error::Error};
 
@@ -116,6 +116,27 @@ impl Category {
         }
 
         Ok(identifier_container)
+    }
+
+    /// Apply the category to a [BufferStorage] of bookmarks.
+    ///
+    /// # Errors
+    /// If the Category cirteria are malformed.
+    pub fn apply(&self, bookmarks: &mut BufferStorage<Bookmark>) -> Result<(), IdentifierErr> {
+        let criteria = self.identifier_container()?;
+
+        let include_matcher = aho_corasick::AhoCorasickBuilder::new()
+            .ascii_case_insensitive(true)
+            .auto_configure(&criteria.include)
+            .build(&criteria.include);
+
+        bookmarks.filter_in_place(|bookmark| {
+            criteria.require.iter().all(|r| bookmark.url().contains(r))
+                && (criteria.whole.iter().any(|w| *w == bookmark.url())
+                    || include_matcher.is_match(bookmark.url()))
+        });
+
+        Ok(())
     }
 }
 
