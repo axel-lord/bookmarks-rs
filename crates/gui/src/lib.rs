@@ -16,6 +16,7 @@ pub use parsed_str::ParsedStr;
 pub enum MainContent {
     Bookmarks,
     Settings,
+    Log,
 }
 
 impl Display for MainContent {
@@ -25,7 +26,11 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    pub const MEMBERS: [MainContent; 2] = [MainContent::Bookmarks, MainContent::Settings];
+    pub const MEMBERS: [MainContent; 3] = [
+        MainContent::Bookmarks,
+        MainContent::Settings,
+        MainContent::Log,
+    ];
 
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
         Self::MEMBERS
