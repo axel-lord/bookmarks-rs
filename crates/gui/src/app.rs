@@ -28,6 +28,7 @@ pub struct App {
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
     status_msg: RefCell<Box<str>>,
+    status_log: RefCell<Vec<Box<str>>>,
     url_width: ParsedStr<usize>,
     main_content: MainContent,
     category_tree: Box<[Box<[usize]>]>,
@@ -41,6 +42,7 @@ pub struct AppView<'a> {
     pub desc_width: (usize, &'a str),
     pub filter: (Option<&'a AhoCorasick>, &'a str),
     pub status: &'a str,
+    pub status_log: &'a [Box<str>],
     pub shown_bookmarks: (usize, &'a str),
     pub shown_from: (usize, &'a str),
     pub url_width: (usize, &'a str),
@@ -48,43 +50,47 @@ pub struct AppView<'a> {
     pub category_tree: &'a [Box<[usize]>],
 }
 
-fn load_section<T>(
-    source: impl Iterator<Item = (usize, Result<String, io::Error>)>,
-    dest: &mut container::BufferStorage<T>,
-) where
-    T: Listed,
-{
-    match bookmark_storage::load_from(source) {
-        Ok(v) => {
-            dest.storage.extend(v.into_iter());
-        }
-        Err(err) => {
-            eprintln!("{err}");
-        }
-    };
-}
-
 impl App {
     pub fn set_status(&self, msg: impl Into<Box<str>>) {
         let msg = msg.into();
         println!("status: {msg}");
+        self.status_log.borrow_mut().push(msg.clone());
         self.status_msg.replace(msg);
     }
 
+    fn load_section<T>(
+        &self,
+        source: impl Iterator<Item = (usize, Result<String, io::Error>)>,
+        dest: &mut container::BufferStorage<T>,
+    ) where
+        T: Listed,
+    {
+        self.set_status(match bookmark_storage::load_from(source) {
+            Ok(v) => {
+                dest.storage.extend(v.into_iter());
+                format!("loaded section [{}]", T::ITEM_NAME)
+            }
+            Err(err) => {
+                format!("failed to load section [{}], {err}", T::ITEM_NAME)
+            }
+        });
+    }
     fn load_file(&mut self, path: std::path::PathBuf) -> &mut Self {
-        let file = match fs::File::open(path) {
+        let file = match fs::File::open(path.clone()) {
             Ok(file) => file,
             Err(err) => {
-                eprintln!("{err}");
+                self.set_status(format!("failed to open file \"{}\", {err}", path.display()));
                 return self;
             }
         };
 
         let mut reader = io::BufReader::new(file).lines().enumerate();
 
-        load_section(reader.by_ref(), &mut self.infos.write().unwrap());
-        load_section(reader.by_ref(), &mut self.categories.write().unwrap());
-        load_section(reader.by_ref(), &mut self.bookmarks.write().unwrap());
+        self.load_section(reader.by_ref(), &mut self.infos.write().unwrap());
+        self.load_section(reader.by_ref(), &mut self.categories.write().unwrap());
+        self.load_section(reader.by_ref(), &mut self.bookmarks.write().unwrap());
+
+        self.set_status(format!("loaded file \"{}\"", path.display()));
 
         self
     }
@@ -184,6 +190,7 @@ impl Application for App {
             categories,
             infos,
             status_msg: Default::default(),
+            status_log: Default::default(),
             filter: None,
             filter_str: "".into(),
             shown_bookmarks: 512.into(),
@@ -331,6 +338,7 @@ impl Application for App {
         let categories = self.categories.read().unwrap();
         let infos = self.infos.read().unwrap();
         let status = self.status_msg.borrow();
+        let status_log = self.status_log.borrow();
 
         view::application_view(AppView {
             bookmarks: &bookmarks,
@@ -339,6 +347,7 @@ impl Application for App {
             desc_width: self.desc_width.as_tuple(),
             filter: (self.filter.as_ref(), &self.filter_str),
             status: &status,
+            status_log: &status_log,
             shown_bookmarks: self.shown_bookmarks.as_tuple(),
             shown_from: self.shown_from.as_tuple(),
             url_width: self.url_width.as_tuple(),
