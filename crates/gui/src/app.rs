@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     fs,
     io::{self, BufRead},
@@ -7,11 +8,7 @@ use std::{
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use bookmark_library::{
-    command_map::CommandMap,
-    container::{self, BufferStorage},
-    shared, Bookmark, Category, IdentifierErr, Info,
-};
+use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
 use iced::{executor, Application, Theme};
 
@@ -30,7 +27,7 @@ pub struct App {
     filter_str: Box<str>,
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
-    status: Box<str>,
+    status_msg: RefCell<Box<str>>,
     url_width: ParsedStr<usize>,
     main_content: MainContent,
     category_tree: Box<[Box<[usize]>]>,
@@ -68,6 +65,12 @@ fn load_section<T>(
 }
 
 impl App {
+    pub fn set_status(&self, msg: impl Into<Box<str>>) {
+        let msg = msg.into();
+        println!("status: {msg}");
+        self.status_msg.replace(msg);
+    }
+
     fn load_file(&mut self, path: std::path::PathBuf) -> &mut Self {
         let file = match fs::File::open(path) {
             Ok(file) => file,
@@ -180,7 +183,7 @@ impl Application for App {
             bookmarks,
             categories,
             infos,
-            status: "started application".into(),
+            status_msg: Default::default(),
             filter: None,
             filter_str: "".into(),
             shown_bookmarks: 512.into(),
@@ -190,6 +193,8 @@ impl Application for App {
             main_content: MainContent::Bookmarks,
             category_tree: Default::default(),
         };
+
+        app.set_status("Created application");
 
         for file in flags {
             app.load_file(file);
@@ -214,46 +219,46 @@ impl Application for App {
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             Msg::GotoBookmarkLocation(i) => {
-                let bookmarks = self.bookmarks.read().unwrap();
-                match open::that(bookmarks.storage[i].url()) {
-                    Ok(()) => {
-                        println!("Successfully opened: {}", bookmarks.storage[i].url());
-                        self.status =
-                            format!("opened bookmark [{}]", bookmarks.storage[i].url()).into();
+                self.set_status({
+                    let bookmarks = self.bookmarks.read().unwrap();
+                    match open::that(bookmarks.storage[i].url()) {
+                        Ok(()) => {
+                            format!("opened bookmark [{}]", bookmarks.storage[i].url())
+                        }
+                        Err(err) => {
+                            format!("Failed to open: {}, {}", bookmarks.storage[i].url(), err)
+                        }
                     }
-                    Err(err) => {
-                        eprintln!("Failed to open: {}, {}", bookmarks.storage[i].url(), err)
-                    }
-                }
+                });
             }
 
             Msg::ApplyCategory(category_indices) => {
-                let mut call_chain = |category_index: usize,
-                                      categories: &BufferStorage<Category>,
-                                      bookmarks: &mut BufferStorage<Bookmark>|
-                 -> Result<(), IdentifierErr> {
-                    let category = &categories.storage[category_index];
+                let messages = {
+                    let categories = self.categories.read().unwrap();
+                    let mut bookmarks = self.bookmarks.write().unwrap();
 
-                    let (msg, result) = match category.apply(bookmarks) {
-                        Ok(_) => (format!("applied category <{}>", category.name()), Ok(())),
-                        Err(err) => (
-                            format!("failed to apply category <{}>", category.name()),
-                            Err(err),
-                        ),
-                    };
+                    category_indices
+                        .iter()
+                        .cloned()
+                        .map(|i| {
+                            let category = &categories.storage[i];
 
-                    self.status = msg.into();
-                    result
+                            match category.apply(&mut bookmarks) {
+                                Ok(_) => format!("applied category <{}>", category.name()),
+                                Err(err) => {
+                                    format!(
+                                        "failed to apply category <{}>, {}",
+                                        category.name(),
+                                        err
+                                    )
+                                }
+                            }
+                        })
+                        .collect::<Vec<_>>()
                 };
 
-                let categories = self.categories.read().unwrap();
-                let mut bookmarks = self.bookmarks.write().unwrap();
-
-                for i in category_indices.iter().cloned() {
-                    if let Err(err) = call_chain(i, &categories, &mut bookmarks) {
-                        println!("{err}");
-                        break;
-                    }
+                for message in messages {
+                    self.set_status(message);
                 }
             }
 
@@ -262,25 +267,25 @@ impl Application for App {
                     .shown_bookmarks
                     .parse_with_message(amount, "shown bookmarks")
                 {
-                    self.status = msg;
+                    self.set_status(msg);
                 }
             }
 
             Msg::UpdateShownFrom(f) => {
                 if let Ok(msg) = self.shown_from.parse_with_message(f, "shown from") {
-                    self.status = msg;
+                    self.set_status(msg);
                 }
             }
 
             Msg::UpdateUrlWidth(w) => {
                 if let Ok(msg) = self.url_width.parse_with_message(w, "url width") {
-                    self.status = msg;
+                    self.set_status(msg);
                 }
             }
 
             Msg::UpdateDescWidth(w) => {
                 if let Ok(msg) = self.desc_width.parse_with_message(w, "desc width") {
-                    self.status = msg;
+                    self.set_status(msg);
                 }
             }
 
@@ -288,7 +293,7 @@ impl Application for App {
                 if let Err(err) = self.command_map.call("reset", &[]) {
                     println!("{err}");
                 }
-                self.status = "reset bookmark filters".into();
+                self.set_status("reset bookmark filters");
             }
 
             Msg::UpdateShownFromSteps(value) => self.shown_from.set_value(Some(
@@ -325,6 +330,7 @@ impl Application for App {
         let bookmarks = self.bookmarks.read().unwrap();
         let categories = self.categories.read().unwrap();
         let infos = self.infos.read().unwrap();
+        let status = self.status_msg.borrow();
 
         view::application_view(AppView {
             bookmarks: &bookmarks,
@@ -332,7 +338,7 @@ impl Application for App {
             infos: &infos,
             desc_width: self.desc_width.as_tuple(),
             filter: (self.filter.as_ref(), &self.filter_str),
-            status: &self.status,
+            status: &status,
             shown_bookmarks: self.shown_bookmarks.as_tuple(),
             shown_from: self.shown_from.as_tuple(),
             url_width: self.url_width.as_tuple(),
