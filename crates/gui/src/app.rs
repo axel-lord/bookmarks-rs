@@ -1,7 +1,9 @@
 use std::{
+    collections::HashMap,
     fs,
     io::{self, BufRead},
     path::PathBuf,
+    rc::Rc,
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
@@ -28,6 +30,7 @@ pub struct App {
     status: Box<str>,
     url_width: ParsedStr<usize>,
     main_content: MainContent,
+    category_tree: Box<[Box<[usize]>]>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -42,6 +45,7 @@ pub struct AppView<'a> {
     pub shown_from: (usize, &'a str),
     pub url_width: (usize, &'a str),
     pub main_content: MainContent,
+    pub category_tree: &'a [Box<[usize]>],
 }
 
 fn load_section<T>(
@@ -94,6 +98,62 @@ impl App {
                 .build(patterns),
         )
     }
+
+    fn update_category_tree(&mut self) {
+        let categories = self.categories.read().unwrap();
+        let infos = self.infos.read().unwrap();
+
+        let cat_map = categories
+            .storage
+            .iter()
+            .enumerate()
+            .map(|(i, category)| (<Box<str>>::from(category.id()), i))
+            .collect::<HashMap<_, _>>();
+
+        let mut cat_stack = infos
+            .storage
+            .iter()
+            .flat_map(|info| {
+                info.categories().rev().map(|id| {
+                    (
+                        std::iter::empty().collect::<Rc<[usize]>>(),
+                        <Box<str>>::from(id),
+                    )
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut cat_iter = Vec::new();
+        while !cat_stack.is_empty() {
+            let (depend, cat_id) = cat_stack.pop().unwrap();
+
+            if depend.len() >= 12 {
+                continue;
+            }
+
+            if let Some(i) = cat_map.get(&cat_id) {
+                let category = &categories.storage[*i];
+                let this_depend = depend
+                    .iter()
+                    .cloned()
+                    .chain(std::iter::once(*i))
+                    .collect::<Vec<usize>>();
+
+                let sub_depend = Rc::<[usize]>::from(this_depend.clone());
+
+                cat_stack.extend(
+                    category
+                        .subcategories()
+                        .rev()
+                        .map(|id| (sub_depend.clone(), <Box<str>>::from(id))),
+                );
+
+                cat_iter.push(this_depend.into());
+            }
+        }
+
+        self.category_tree = cat_iter.into();
+    }
 }
 
 impl Application for App {
@@ -125,11 +185,14 @@ impl Application for App {
             url_width: 75.into(),
             desc_width: 50.into(),
             main_content: MainContent::Bookmarks,
+            category_tree: Default::default(),
         };
 
         for file in flags {
             app.load_file(file);
         }
+
+        app.update_category_tree();
 
         (app, iced::Command::none())
     }
@@ -263,6 +326,7 @@ impl Application for App {
             shown_from: self.shown_from.as_tuple(),
             url_width: self.url_width.as_tuple(),
             main_content: self.main_content,
+            category_tree: &self.category_tree,
         })
     }
 }
