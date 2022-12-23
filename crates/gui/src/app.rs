@@ -7,8 +7,11 @@ use std::{
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
-use bookmark_command::CommandErr;
-use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
+use bookmark_library::{
+    command_map::CommandMap,
+    container::{self, BufferStorage},
+    shared, Bookmark, Category, IdentifierErr, Info,
+};
 use bookmark_storage::Listed;
 use iced::{executor, Application, Theme};
 
@@ -224,22 +227,30 @@ impl Application for App {
                 }
             }
 
-            Msg::ApplyCategory(category_ids) => {
-                let mut call_chain = |i: usize| -> Result<(), CommandErr> {
-                    self.command_map
-                        .call("category", &["select".into(), i.to_string()])?
-                        .call("category", &["apply".into()])?;
+            Msg::ApplyCategory(category_indices) => {
+                let mut call_chain = |category_index: usize,
+                                      categories: &BufferStorage<Category>,
+                                      bookmarks: &mut BufferStorage<Bookmark>|
+                 -> Result<(), IdentifierErr> {
+                    let category = &categories.storage[category_index];
 
-                    self.status = format!(
-                        "applied category <{}>",
-                        self.categories.read().unwrap().storage[i].name()
-                    )
-                    .into();
-                    Ok(())
+                    let (msg, result) = match category.apply(bookmarks) {
+                        Ok(_) => (format!("applied category <{}>", category.name()), Ok(())),
+                        Err(err) => (
+                            format!("failed to apply category <{}>", category.name()),
+                            Err(err),
+                        ),
+                    };
+
+                    self.status = msg.into();
+                    result
                 };
 
-                for i in category_ids.iter() {
-                    if let Err(err) = call_chain(*i) {
+                let categories = self.categories.read().unwrap();
+                let mut bookmarks = self.bookmarks.write().unwrap();
+
+                for i in category_indices.iter().cloned() {
+                    if let Err(err) = call_chain(i, &categories, &mut bookmarks) {
                         println!("{err}");
                         break;
                     }
