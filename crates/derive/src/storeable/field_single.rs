@@ -105,12 +105,7 @@ impl AnyField for FieldSingle {
     fn get_capture_extract(&self, line: &syn::Ident) -> TokenStream2 {
         let ident = &self.ident;
         quote! {
-            let #ident =
-                unsafe {
-                    bookmark_storage::pattern_match::substring_location(
-                        &#line, &#line[start..end].trim()
-                    )
-                }.ok_or_else(err)?.into();
+            let #ident = bookmark_storage::pattern_match::range_trim(&#line, start..end).into();
         }
     }
 
