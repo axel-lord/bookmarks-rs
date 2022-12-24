@@ -67,6 +67,7 @@ impl App {
     {
         self.set_status(match bookmark_storage::load_from(source) {
             Ok(v) => {
+                dest.storage.as_mut().reserve(v.len());
                 dest.storage.extend(v);
                 format!("loaded section [{}]", T::ITEM_NAME)
             }

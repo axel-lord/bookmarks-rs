@@ -23,6 +23,18 @@ impl<T> Storage<T> {
     }
 }
 
+impl<T> AsRef<Vec<T>> for Storage<T> {
+    fn as_ref(&self) -> &Vec<T> {
+        &self.content
+    }
+}
+
+impl<T> AsMut<Vec<T>> for Storage<T> {
+    fn as_mut(&mut self) -> &mut Vec<T> {
+        &mut self.content
+    }
+}
+
 impl<T> std::ops::Deref for Storage<T> {
     type Target = [T];
 
