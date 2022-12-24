@@ -67,7 +67,7 @@ impl App {
     {
         self.set_status(match bookmark_storage::load_from(source) {
             Ok(v) => {
-                dest.storage.extend(v.into_iter());
+                dest.storage.extend(v);
                 format!("loaded section [{}]", T::ITEM_NAME)
             }
             Err(err) => {

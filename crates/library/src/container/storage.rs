@@ -11,9 +11,9 @@ impl<T> Storage<T> {
         self.content.push(value);
         self
     }
-    /// Extend the storage with an [Iterator] of values.
-    pub fn extend(&mut self, iter: impl Iterator<Item = T>) -> &mut Self {
-        self.content.extend(iter);
+    /// Extend the storage with an [IntoIterator] of values.
+    pub fn extend(&mut self, iter: impl IntoIterator<Item = T>) -> &mut Self {
+        self.content.extend(iter.into_iter());
         self
     }
 
