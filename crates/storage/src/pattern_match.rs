@@ -68,6 +68,14 @@ pub unsafe fn substring_location(string: &str, substring: &str) -> Option<Range<
     Some(start..end)
 }
 
+/// Narrow a range of a string by whitespace.
+///
+/// # Panics
+/// If the given range is out of bounds.
+pub fn range_trim(source: &str, location: Range<usize>) -> Range<usize> {
+    unsafe { substring_location(source, source[location].trim()) }.unwrap()
+}
+
 /// Join and iterator of string slices into a single string delimited by [token::DELIM].
 pub fn join_with_delim(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
     use lazy_static::lazy_static;
