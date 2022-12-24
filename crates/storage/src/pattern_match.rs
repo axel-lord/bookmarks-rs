@@ -12,7 +12,7 @@ pub fn split_by_delim_to_ranges(list: &str) -> Vec<Range<usize>> {
             if trimmed.is_empty() {
                 None
             } else {
-                Some(substring_location(list, trimmed).unwrap())
+                Some(unsafe { substring_location(list, trimmed) }.unwrap())
             }
         })
         .collect()
@@ -28,7 +28,11 @@ pub fn split_list_field(list_field: &'_ str) -> impl '_ + Iterator<Item = Field>
         if trimmed.is_empty() {
             None
         } else {
-            Some(substring_location(list_field, trimmed).unwrap().into())
+            Some(
+                unsafe { substring_location(list_field, trimmed) }
+                    .unwrap()
+                    .into(),
+            )
         }
     })
 }
@@ -38,7 +42,10 @@ pub fn split_list_field(list_field: &'_ str) -> impl '_ + Iterator<Item = Field>
 /// The position is by pointer offset and as such while O(n) only works if the
 /// slice is a subslice. Some meassures have been taken to detect invalid use
 /// and return None in such a case, however no guarantees are given.
-pub fn substring_location(string: &str, substring: &str) -> Option<Range<usize>> {
+///
+/// # Safety
+/// Behaviour may be undefined if the substring is not part of the string.
+pub unsafe fn substring_location(string: &str, substring: &str) -> Option<Range<usize>> {
     let string_ptr = string.as_ptr();
     let substring_ptr = substring.as_ptr();
 
@@ -125,9 +132,18 @@ mod tests {
     #[test]
     pub fn substring_location_basic() {
         let string = "Hello there! Nice to meet you!";
-        assert_eq!(substring_location(string, &string[0..5]), Some(0..5));
-        assert_eq!(substring_location(string, &string[2..5]), Some(2..5));
-        assert_eq!(substring_location(string, &string[2..7]), Some(2..7));
+        assert_eq!(
+            unsafe { substring_location(string, &string[0..5]) },
+            Some(0..5)
+        );
+        assert_eq!(
+            unsafe { substring_location(string, &string[2..5]) },
+            Some(2..5)
+        );
+        assert_eq!(
+            unsafe { substring_location(string, &string[2..7]) },
+            Some(2..7)
+        );
     }
 
     #[test]

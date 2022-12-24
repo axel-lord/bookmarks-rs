@@ -106,9 +106,11 @@ impl AnyField for FieldSingle {
         let ident = &self.ident;
         quote! {
             let #ident =
-                bookmark_storage::pattern_match::substring_location(&#line, &#line[start..end].trim())
-                    .ok_or_else(err)?
-                    .into();
+                unsafe {
+                    bookmark_storage::pattern_match::substring_location(
+                        &#line, &#line[start..end].trim()
+                    )
+                }.ok_or_else(err)?.into();
         }
     }
 
