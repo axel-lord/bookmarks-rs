@@ -26,7 +26,7 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    pub const MEMBERS: [MainContent; 3] = [
+    const MEMBERS: [MainContent; 3] = [
         MainContent::Bookmarks,
         MainContent::Settings,
         MainContent::Log,
