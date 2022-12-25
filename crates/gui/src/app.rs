@@ -24,14 +24,14 @@ pub struct App {
     command_map: CommandMap<'static>,
     desc_width: ParsedStr<usize>,
     filter: Option<AhoCorasick>,
-    filter_str: Box<str>,
+    filter_str: String,
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
-    status_msg: RefCell<Box<str>>,
-    status_log: RefCell<Vec<Box<str>>>,
+    status_msg: RefCell<String>,
+    status_log: RefCell<Vec<String>>,
     url_width: ParsedStr<usize>,
     main_content: MainContent,
-    category_tree: Box<[Box<[usize]>]>,
+    category_tree: Vec<Vec<usize>>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -42,16 +42,16 @@ pub struct AppView<'a> {
     pub desc_width: (usize, &'a str),
     pub filter: (Option<&'a AhoCorasick>, &'a str),
     pub status: &'a str,
-    pub status_log: &'a [Box<str>],
+    pub status_log: &'a [String],
     pub shown_bookmarks: (usize, &'a str),
     pub shown_from: (usize, &'a str),
     pub url_width: (usize, &'a str),
     pub main_content: MainContent,
-    pub category_tree: &'a [Box<[usize]>],
+    pub category_tree: &'a [Vec<usize>],
 }
 
 impl App {
-    pub fn set_status(&self, msg: impl Into<Box<str>>) {
+    pub fn set_status(&self, msg: impl Into<String>) {
         let msg = msg.into();
         println!("status: {msg}");
         self.status_log.borrow_mut().push(msg.clone());
@@ -126,7 +126,7 @@ impl App {
             .storage
             .iter()
             .enumerate()
-            .map(|(i, category)| (<Box<str>>::from(category.id()), i))
+            .map(|(i, category)| (<String>::from(category.id()), i))
             .collect::<HashMap<_, _>>();
 
         let mut cat_stack = infos
@@ -136,7 +136,7 @@ impl App {
                 info.categories().rev().map(|id| {
                     (
                         std::iter::empty().collect::<Rc<[usize]>>(),
-                        <Box<str>>::from(id),
+                        <String>::from(id),
                     )
                 })
             })
@@ -164,14 +164,14 @@ impl App {
                     category
                         .subcategories()
                         .rev()
-                        .map(|id| (sub_depend.clone(), <Box<str>>::from(id))),
+                        .map(|id| (sub_depend.clone(), <String>::from(id))),
                 );
 
-                cat_iter.push(this_depend.into());
+                cat_iter.push(this_depend);
             }
         }
 
-        self.category_tree = cat_iter.into();
+        self.category_tree = cat_iter;
     }
 }
 
