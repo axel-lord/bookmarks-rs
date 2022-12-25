@@ -87,11 +87,17 @@ impl App {
 
         let mut reader = io::BufReader::new(file).lines().enumerate();
 
+        let before = std::time::Instant::now();
         self.load_section(reader.by_ref(), &mut self.infos.write().unwrap());
         self.load_section(reader.by_ref(), &mut self.categories.write().unwrap());
         self.load_section(reader.by_ref(), &mut self.bookmarks.write().unwrap());
+        let duration = std::time::Instant::now().duration_since(before);
 
-        self.set_status(format!("loaded file \"{}\"", path.display()));
+        self.set_status(format!(
+            "loaded file \"{}\" in {} milliseconds",
+            path.display(),
+            duration.as_millis()
+        ));
 
         self
     }
