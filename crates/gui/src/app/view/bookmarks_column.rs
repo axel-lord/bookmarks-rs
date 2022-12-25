@@ -2,7 +2,7 @@ use crate::{AppView, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
-    widget::{button, column, container, horizontal_space, row, scrollable, text, tooltip, Column},
+    widget::{button, column, container, horizontal_space, row, scrollable, text, Column},
     Color, Element, Length,
 };
 use unicode_segmentation::UnicodeSegmentation;
@@ -13,55 +13,50 @@ fn bookmark_row<'a>(
     desc_width: usize,
     bookmark: &Bookmark,
 ) -> Element<'a, Msg> {
-    tooltip(
-        button(container(
-            row![
-                text(if desc_width != 0 {
-                    let val = bookmark.description();
-                    let letters = val
-                        .grapheme_indices(true)
-                        .take(desc_width + 1)
-                        .map(|(i, _)| i)
-                        .collect::<Vec<_>>();
+    button(container(
+        row![
+            text(if desc_width != 0 {
+                let val = bookmark.description();
+                let letters = val
+                    .grapheme_indices(true)
+                    .take(desc_width + 1)
+                    .map(|(i, _)| i)
+                    .collect::<Vec<_>>();
 
-                    if letters.len() == desc_width + 1 {
-                        format!("{}...", &val[0..letters[desc_width.saturating_sub(3)]])
-                    } else {
-                        val.to_string()
-                    }
+                if letters.len() == desc_width + 1 {
+                    format!("{}...", &val[0..letters[desc_width.saturating_sub(3)]])
                 } else {
-                    bookmark.description().to_string()
-                })
-                .width(Length::Fill),
-                text(if url_width != 0 {
-                    let val = bookmark.url();
-                    let letters = val
-                        .grapheme_indices(true)
-                        .take(url_width + 1)
-                        .map(|(i, _)| i)
-                        .collect::<Vec<_>>();
+                    val.to_string()
+                }
+            } else {
+                bookmark.description().to_string()
+            })
+            .width(Length::Fill),
+            text(if url_width != 0 {
+                let val = bookmark.url();
+                let letters = val
+                    .grapheme_indices(true)
+                    .take(url_width + 1)
+                    .map(|(i, _)| i)
+                    .collect::<Vec<_>>();
 
-                    if letters.len() == url_width + 1 {
-                        format!("{}...", &val[0..letters[url_width.saturating_sub(3)]])
-                    } else {
-                        val.to_string()
-                    }
+                if letters.len() == url_width + 1 {
+                    format!("{}...", &val[0..letters[url_width.saturating_sub(3)]])
                 } else {
-                    bookmark.url().to_string()
-                })
-                .style(theme::Text::Color(Color::from_rgb8(64, 96, 255)))
-                .width(Length::Fill),
-            ]
-            .spacing(3)
-            .align_items(iced::Alignment::Center),
-        ))
-        .on_press(Msg::GotoBookmarkLocation(index))
-        .style(theme::Button::Text)
-        .padding(0),
-        format!("Visit: {}", bookmark.url()),
-        tooltip::Position::FollowCursor,
-    )
-    .style(theme::Container::Box)
+                    val.to_string()
+                }
+            } else {
+                bookmark.url().to_string()
+            })
+            .style(theme::Text::Color(Color::from_rgb8(64, 96, 255)))
+            .width(Length::Fill),
+        ]
+        .spacing(3)
+        .align_items(iced::Alignment::Center),
+    ))
+    .on_press(Msg::GotoBookmarkLocation(index))
+    .style(theme::Button::Text)
+    .padding(0)
     .into()
 }
 
