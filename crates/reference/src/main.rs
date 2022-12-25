@@ -39,10 +39,7 @@ impl bookmark_storage::Storeable for Reference {
         }
 
         // unique for every match, single field pattern
-        let name =
-            bookmark_storage::pattern_match::substring_location(&line, line[start..end].trim())
-                .ok_or_else(err)?
-                .into();
+        let name = bookmark_storage::pattern_match::range_trim(&line, start..end).into();
 
         // completely repeatable
         let (i, mat) = iter.next().ok_or_else(err)?;
@@ -66,10 +63,7 @@ impl bookmark_storage::Storeable for Reference {
         }
 
         // unique for every match, single field pattern
-        let info =
-            bookmark_storage::pattern_match::substring_location(&line, line[start..end].trim())
-                .ok_or_else(err)?
-                .into();
+        let info = bookmark_storage::pattern_match::range_trim(&line, start..end).into();
 
         // completely repeatable
         let (i, mat) = iter.next().ok_or_else(err)?;
