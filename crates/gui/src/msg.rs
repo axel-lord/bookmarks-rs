@@ -1,3 +1,7 @@
+use std::sync::{Arc, Mutex};
+
+use bookmark_library::Bookmark;
+
 use crate::MainContent;
 
 #[derive(Debug, Clone)]
@@ -11,6 +15,7 @@ pub enum Msg {
     UpdateDescWidth(Box<str>),
     FilterBookmarks(Box<str>),
     SwitchMainTo(MainContent),
+    AddBookmarks(Arc<Mutex<Option<Vec<Bookmark>>>>),
     ApplyFilter,
     Reset,
     Tick,
