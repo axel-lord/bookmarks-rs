@@ -332,6 +332,14 @@ impl Application for App {
             Msg::SwitchMainTo(main_content) => self.main_content = main_content,
 
             Msg::Tick => (),
+
+            Msg::AddBookmarks(bookmarks) => {
+                if let Ok(mut bookmarks) = bookmarks.lock() {
+                    if let Some(bookmarks) = bookmarks.take() {
+                        self.bookmarks.write().unwrap().storage.extend(bookmarks);
+                    }
+                }
+            }
         }
         iced::Command::none()
     }
