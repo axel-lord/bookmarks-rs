@@ -16,7 +16,7 @@ use iced::{
 fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     let filter = row![
         text("Filter:"),
-        text_input("...", app_view.filter.1, |s| Msg::FilterBookmarks(s.into())).padding(3),
+        text_input("...", app_view.filter.1, Msg::FilterBookmarks).padding(3),
         button("Apply")
             .on_press(Msg::ApplyFilter)
             .padding(3)
@@ -56,29 +56,21 @@ fn settings_column<'a>(app_view: AppView) -> Element<'a, Msg> {
 
     let number_row = row![
         text("Info width:"),
-        text_input("...", app_view.desc_width.1, |s| Msg::UpdateDescWidth(
-            s.into()
-        ))
-        .padding(3)
-        .width(Length::Units(50)),
+        text_input("...", app_view.desc_width.1, Msg::UpdateDescWidth)
+            .padding(3)
+            .width(Length::Units(50)),
         text("URL width:"),
-        text_input("...", app_view.url_width.1, |s| Msg::UpdateUrlWidth(
-            s.into()
-        ))
-        .padding(3)
-        .width(Length::Units(50)),
+        text_input("...", app_view.url_width.1, Msg::UpdateUrlWidth)
+            .padding(3)
+            .width(Length::Units(50)),
         text("Shown:"),
-        text_input("...", app_view.shown_bookmarks.1, |s| {
-            Msg::UpdateShownBookmarks(s.into())
-        })
-        .padding(3)
-        .width(Length::Units(50)),
+        text_input("...", app_view.shown_bookmarks.1, Msg::UpdateShownBookmarks)
+            .padding(3)
+            .width(Length::Units(50)),
         text("From:"),
-        text_input("...", app_view.shown_from.1, |s| Msg::UpdateShownFrom(
-            s.into()
-        ))
-        .padding(3)
-        .width(Length::Units(50)),
+        text_input("...", app_view.shown_from.1, Msg::UpdateShownFrom)
+            .padding(3)
+            .width(Length::Units(50)),
         horizontal_space(Length::Fill),
     ]
     .spacing(3)
