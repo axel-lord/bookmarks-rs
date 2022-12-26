@@ -1,4 +1,4 @@
-use crate::{AppView, MainContent, Msg};
+use crate::{AppView, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
@@ -56,9 +56,7 @@ fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Ele
 
     if app_view.edit_mode_active {
         row![
-            button("Edit")
-                .padding(1)
-                .on_press(Msg::SwitchMainTo(MainContent::EditBookmark)),
+            button("Edit").padding(1).on_press(Msg::EditBookmark(index)),
             btn
         ]
     } else {

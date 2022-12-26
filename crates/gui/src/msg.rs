@@ -17,6 +17,8 @@ pub enum Msg {
     SwitchMainTo(MainContent),
     AddBookmarks(Arc<Mutex<Option<Vec<Bookmark>>>>),
     SetEditMode(bool),
+    EditBookmark(usize),
+    EditCategory(usize),
     ApplyFilter,
     Reset,
     Tick,

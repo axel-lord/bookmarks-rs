@@ -10,7 +10,7 @@ use std::{
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
-use iced::{executor, Application, Theme};
+use iced::{executor, Application, Command, Theme};
 
 use crate::{MainContent, Msg, ParsedStr};
 
@@ -33,6 +33,7 @@ pub struct App {
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
     url_width: ParsedStr<usize>,
+    selected_bookmark: Option<usize>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -50,6 +51,7 @@ pub struct AppView<'a> {
     pub status: &'a str,
     pub status_log: &'a [String],
     pub url_width: (usize, &'a str),
+    pub selected_bookmark: Option<usize>,
 }
 
 impl App {
@@ -209,6 +211,7 @@ impl Application for App {
             main_content: MainContent::Bookmarks,
             category_tree: Default::default(),
             edit_mode_active: false,
+            selected_bookmark: None,
         };
 
         app.set_status("Created application");
@@ -235,6 +238,8 @@ impl Application for App {
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
+            Msg::None => Command::none(),
+
             Msg::GotoBookmarkLocation(i) => {
                 self.set_status({
                     let bookmarks = self.bookmarks.read().unwrap();
@@ -247,6 +252,8 @@ impl Application for App {
                         }
                     }
                 });
+
+                Command::none()
             }
 
             Msg::ApplyCategory(category_indices) => {
@@ -277,6 +284,8 @@ impl Application for App {
                 for message in messages {
                     self.set_status(message);
                 }
+
+                Command::none()
             }
 
             Msg::UpdateShownBookmarks(amount) => {
@@ -286,24 +295,32 @@ impl Application for App {
                 {
                     self.set_status(msg);
                 }
+
+                Command::none()
             }
 
             Msg::UpdateShownFrom(f) => {
                 if let Ok(msg) = self.shown_from.parse_with_message(f, "shown from") {
                     self.set_status(msg);
                 }
+
+                Command::none()
             }
 
             Msg::UpdateUrlWidth(w) => {
                 if let Ok(msg) = self.url_width.parse_with_message(w, "url width") {
                     self.set_status(msg);
                 }
+
+                Command::none()
             }
 
             Msg::UpdateDescWidth(w) => {
                 if let Ok(msg) = self.desc_width.parse_with_message(w, "desc width") {
                     self.set_status(msg);
                 }
+
+                Command::none()
             }
 
             Msg::Reset => {
@@ -311,17 +328,24 @@ impl Application for App {
                     println!("{err}");
                 }
                 self.set_status("reset bookmark filters");
+
+                Command::none()
             }
 
-            Msg::UpdateShownFromSteps(value) => self.shown_from.set_value(Some(
-                self.shown_from.value().unwrap_or(0).saturating_add_signed(
-                    (self.shown_bookmarks.value().unwrap_or(0) as isize).saturating_mul(value),
-                ),
-            )),
+            Msg::UpdateShownFromSteps(value) => {
+                self.shown_from.set_value(Some(
+                    self.shown_from.value().unwrap_or(0).saturating_add_signed(
+                        (self.shown_bookmarks.value().unwrap_or(0) as isize).saturating_mul(value),
+                    ),
+                ));
+                Command::none()
+            }
 
             Msg::FilterBookmarks(m) => {
                 self.filter_str = m;
                 self.update_filter();
+
+                Command::none()
             }
 
             Msg::ApplyFilter => {
@@ -330,11 +354,16 @@ impl Application for App {
                         filter.is_match(b.url()) || filter.is_match(b.description())
                     });
                 }
+
+                Command::none()
             }
 
-            Msg::SwitchMainTo(main_content) => self.main_content = main_content,
+            Msg::SwitchMainTo(main_content) => {
+                self.main_content = main_content;
+                Command::none()
+            }
 
-            Msg::Tick => (),
+            Msg::Tick => Command::none(),
 
             Msg::AddBookmarks(bookmarks) => {
                 if let Ok(mut bookmarks) = bookmarks.lock() {
@@ -342,13 +371,25 @@ impl Application for App {
                         self.bookmarks.write().unwrap().storage.extend(bookmarks);
                     }
                 }
+
+                Command::none()
             }
 
-            Msg::SetEditMode(val) => self.edit_mode_active = val,
+            Msg::SetEditMode(val) => {
+                self.edit_mode_active = val;
 
-            Msg::None => (),
+                Command::none()
+            }
+
+            Msg::EditBookmark(id) => {
+                self.selected_bookmark = Some(id);
+                self.main_content = MainContent::EditBookmark;
+
+                Command::none()
+            }
+
+            Msg::EditCategory(_) => todo!(),
         }
-        iced::Command::none()
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
@@ -376,6 +417,7 @@ impl Application for App {
             main_content: self.main_content,
             category_tree: &self.category_tree,
             edit_mode_active: self.edit_mode_active,
+            selected_bookmark: self.selected_bookmark,
         })
     }
 }
