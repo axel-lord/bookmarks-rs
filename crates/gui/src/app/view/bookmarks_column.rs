@@ -2,7 +2,9 @@ use crate::{AppView, MainContent, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
-    widget::{button, column, container, horizontal_space, row, scrollable, text, Column},
+    widget::{
+        button, column, container, horizontal_rule, horizontal_space, row, scrollable, text, Column,
+    },
     Color, Element, Length,
 };
 use unicode_segmentation::UnicodeSegmentation;
@@ -107,6 +109,7 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
 
     column![
         header,
+        horizontal_rule(3),
         scrollable(Column::with_children(bookmarks).spacing(3)),
     ]
     .padding(3)

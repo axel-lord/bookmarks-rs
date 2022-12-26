@@ -1,7 +1,10 @@
 use crate::{AppView, MainContent, Msg};
 use iced::{
     theme,
-    widget::{button, column, horizontal_space, row, scrollable, text, vertical_space, Column},
+    widget::{
+        button, column, horizontal_rule, horizontal_space, row, scrollable, text, vertical_space,
+        Column,
+    },
     Alignment, Element, Length,
 };
 
@@ -48,6 +51,7 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
 
     column![
         header,
+        horizontal_rule(3),
         scrollable(
             app_view
                 .category_tree
