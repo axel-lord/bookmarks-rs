@@ -1,5 +1,6 @@
 use iced::{
-    widget::{radio, Row},
+    theme,
+    widget::{button, radio, row, Row},
     Alignment, Application, Element,
 };
 use std::{fmt::Display, path::PathBuf};
@@ -16,6 +17,8 @@ pub use parsed_str::ParsedStr;
 pub enum MainContent {
     Bookmarks,
     Settings,
+    EditBookmark,
+    EditCategory,
     Log,
 }
 
@@ -26,25 +29,49 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    const MEMBERS: [MainContent; 3] = [
+    const RADIO_CHOCES: [MainContent; 3] = [
         MainContent::Bookmarks,
         MainContent::Settings,
         MainContent::Log,
     ];
 
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
-        Self::MEMBERS
-            .iter()
-            .map(|mem| {
-                radio(format!("{:?}", mem), *mem, Some(*self), Msg::SwitchMainTo)
+        match self {
+            MainContent::Bookmarks | MainContent::Settings | MainContent::Log => {
+                MainContent::RADIO_CHOCES
+                    .iter()
+                    .map(|mem| {
+                        radio(format!("{:?}", mem), *mem, Some(*self), Msg::SwitchMainTo)
+                            .spacing(3)
+                            .size(16)
+                            .into()
+                    })
+                    .fold(Row::new(), |row, widget: Element<Msg>| row.push(widget))
                     .spacing(3)
-                    .size(16)
+                    .align_items(Alignment::Center)
                     .into()
-            })
-            .fold(Row::new(), |row, widget: Element<Msg>| row.push(widget))
+            }
+            MainContent::EditBookmark => row![
+                button("Ok").padding(3).style(theme::Button::Positive),
+                button("Cancel")
+                    .padding(3)
+                    .style(theme::Button::Destructive)
+                    .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
+            ]
             .spacing(3)
             .align_items(Alignment::Center)
-            .into()
+            .into(),
+            MainContent::EditCategory => row![
+                button("Ok").padding(3).style(theme::Button::Positive),
+                button("Cancel")
+                    .padding(3)
+                    .style(theme::Button::Destructive)
+                    .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
+            ]
+            .spacing(3)
+            .align_items(Alignment::Center)
+            .into(),
+        }
     }
 }
 

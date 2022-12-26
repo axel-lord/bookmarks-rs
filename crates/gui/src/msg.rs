@@ -4,7 +4,7 @@ use bookmark_library::Bookmark;
 
 use crate::MainContent;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Msg {
     GotoBookmarkLocation(usize),
     ApplyCategory(Box<[usize]>),
@@ -19,4 +19,6 @@ pub enum Msg {
     ApplyFilter,
     Reset,
     Tick,
+    #[default]
+    None,
 }
