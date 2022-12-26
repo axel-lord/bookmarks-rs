@@ -106,11 +106,33 @@ fn status_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         .into()
 }
 
+fn blank_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+    let header = row![
+        button("Leave")
+            .padding(3)
+            .style(theme::Button::Destructive)
+            .on_press(Msg::SwitchMainTo(MainContent::Bookmarks)),
+        text("Blank:"),
+        horizontal_space(Length::Fill),
+        app_view.main_content.choice_row(),
+    ]
+    .padding(0)
+    .spacing(3)
+    .align_items(Alignment::Center);
+
+    column![header, vertical_space(Length::Fill)]
+        .padding(3)
+        .spacing(3)
+        .into()
+}
+
 fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Settings => settings_column(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
         MainContent::Log => status_column(app_view),
+
+        _ => blank_column(app_view),
     };
 
     row![category_column(app_view), vertical_rule(3), main_content,]

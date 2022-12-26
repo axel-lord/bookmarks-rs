@@ -340,6 +340,8 @@ impl Application for App {
                     }
                 }
             }
+
+            Msg::None => (),
         }
         iced::Command::none()
     }
