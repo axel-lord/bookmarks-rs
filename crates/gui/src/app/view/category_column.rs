@@ -1,4 +1,4 @@
-use crate::{AppView, Msg};
+use crate::{AppView, MainContent, Msg};
 use iced::{
     theme,
     widget::{button, column, horizontal_space, row, scrollable, text, vertical_space, Column},
@@ -6,7 +6,7 @@ use iced::{
 };
 
 fn category_row<'a>(app_view: AppView, level: &[usize]) -> Element<'a, Msg> {
-    button(
+    let btn = button(
         row![
             horizontal_space(Length::Units((level.len() as u16 - 1) * 24)),
             text(app_view.categories.storage[*level.last().unwrap()].name())
@@ -17,7 +17,21 @@ fn category_row<'a>(app_view: AppView, level: &[usize]) -> Element<'a, Msg> {
     )
     .on_press(Msg::ApplyCategory(level.into()))
     .style(theme::Button::Text)
+    .padding(1);
+
+    if app_view.edit_mode_active {
+        row![
+            button("Edit")
+                .padding(1)
+                .on_press(Msg::SwitchMainTo(MainContent::EditCategory)),
+            btn
+        ]
+    } else {
+        row![btn]
+    }
     .padding(0)
+    .spacing(3)
+    .align_items(Alignment::Center)
     .into()
 }
 

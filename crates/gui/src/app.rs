@@ -20,34 +20,36 @@ mod view;
 pub struct App {
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
-    infos: shared::BufferStorage<Info>,
+    category_tree: Vec<Vec<usize>>,
     command_map: CommandMap<'static>,
     desc_width: ParsedStr<usize>,
+    edit_mode_active: bool,
     filter: Option<AhoCorasick>,
     filter_str: String,
+    infos: shared::BufferStorage<Info>,
+    main_content: MainContent,
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
-    status_msg: RefCell<String>,
     status_log: RefCell<Vec<String>>,
+    status_msg: RefCell<String>,
     url_width: ParsedStr<usize>,
-    main_content: MainContent,
-    category_tree: Vec<Vec<usize>>,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct AppView<'a> {
     pub bookmarks: &'a container::BufferStorage<Bookmark>,
     pub categories: &'a container::BufferStorage<Category>,
-    pub infos: &'a container::BufferStorage<Info>,
+    pub category_tree: &'a [Vec<usize>],
     pub desc_width: (usize, &'a str),
+    pub edit_mode_active: bool,
     pub filter: (Option<&'a AhoCorasick>, &'a str),
-    pub status: &'a str,
-    pub status_log: &'a [String],
+    pub infos: &'a container::BufferStorage<Info>,
+    pub main_content: MainContent,
     pub shown_bookmarks: (usize, &'a str),
     pub shown_from: (usize, &'a str),
+    pub status: &'a str,
+    pub status_log: &'a [String],
     pub url_width: (usize, &'a str),
-    pub main_content: MainContent,
-    pub category_tree: &'a [Vec<usize>],
 }
 
 impl App {
@@ -206,6 +208,7 @@ impl Application for App {
             desc_width: 50.into(),
             main_content: MainContent::Bookmarks,
             category_tree: Default::default(),
+            edit_mode_active: false,
         };
 
         app.set_status("Created application");
@@ -341,6 +344,8 @@ impl Application for App {
                 }
             }
 
+            Msg::SetEditMode(val) => self.edit_mode_active = val,
+
             Msg::None => (),
         }
         iced::Command::none()
@@ -370,6 +375,7 @@ impl Application for App {
             url_width: self.url_width.as_tuple(),
             main_content: self.main_content,
             category_tree: &self.category_tree,
+            edit_mode_active: self.edit_mode_active,
         })
     }
 }

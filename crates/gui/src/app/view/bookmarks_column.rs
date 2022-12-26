@@ -1,4 +1,4 @@
-use crate::{AppView, Msg};
+use crate::{AppView, MainContent, Msg};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
@@ -7,56 +7,64 @@ use iced::{
 };
 use unicode_segmentation::UnicodeSegmentation;
 
-fn bookmark_row<'a>(
-    index: usize,
-    url_width: usize,
-    desc_width: usize,
-    bookmark: &Bookmark,
-) -> Element<'a, Msg> {
-    button(container(
+fn truncated_text<'a>(content: &str, max_width: usize, theme: theme::Text) -> Element<'a, Msg> {
+    if max_width == 0 {
+        text(content)
+    } else {
+        let letters = content
+            .grapheme_indices(true)
+            .take(max_width + 1)
+            .map(|(i, _)| i)
+            .collect::<Vec<_>>();
+
+        if letters.len() == max_width + 1 {
+            text(format!(
+                "{}...",
+                &content[0..letters[max_width.saturating_sub(3)]]
+            ))
+        } else {
+            text(content)
+        }
+    }
+    .width(Length::Fill)
+    .style(theme)
+    .into()
+}
+
+fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Element<'a, Msg> {
+    let btn = button(container(
         row![
-            text(if desc_width != 0 {
-                let val = bookmark.description();
-                let letters = val
-                    .grapheme_indices(true)
-                    .take(desc_width + 1)
-                    .map(|(i, _)| i)
-                    .collect::<Vec<_>>();
-
-                if letters.len() == desc_width + 1 {
-                    format!("{}...", &val[0..letters[desc_width.saturating_sub(3)]])
-                } else {
-                    val.to_string()
-                }
-            } else {
-                bookmark.description().to_string()
-            })
-            .width(Length::Fill),
-            text(if url_width != 0 {
-                let val = bookmark.url();
-                let letters = val
-                    .grapheme_indices(true)
-                    .take(url_width + 1)
-                    .map(|(i, _)| i)
-                    .collect::<Vec<_>>();
-
-                if letters.len() == url_width + 1 {
-                    format!("{}...", &val[0..letters[url_width.saturating_sub(3)]])
-                } else {
-                    val.to_string()
-                }
-            } else {
-                bookmark.url().to_string()
-            })
-            .style(theme::Text::Color(Color::from_rgb8(64, 96, 255)))
-            .width(Length::Fill),
+            truncated_text(
+                bookmark.description(),
+                app_view.desc_width.0,
+                theme::Text::Default
+            ),
+            truncated_text(
+                bookmark.url(),
+                app_view.url_width.0,
+                theme::Text::Color(Color::from_rgb8(64, 96, 255))
+            ),
         ]
         .spacing(3)
         .align_items(iced::Alignment::Center),
     ))
     .on_press(Msg::GotoBookmarkLocation(index))
     .style(theme::Button::Text)
+    .padding(1);
+
+    if app_view.edit_mode_active {
+        row![
+            button("Edit")
+                .padding(1)
+                .on_press(Msg::SwitchMainTo(MainContent::EditBookmark)),
+            btn
+        ]
+    } else {
+        row![btn]
+    }
     .padding(0)
+    .spacing(3)
+    .align_items(iced::Alignment::Center)
     .into()
 }
 
@@ -75,7 +83,7 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
             })
             .skip(app_view.shown_from.0)
             .take(app_view.shown_bookmarks.0)
-            .map(|(i, b)| bookmark_row(i, app_view.url_width.0, app_view.desc_width.0, b)),
+            .map(|(i, b)| bookmark_row(i, app_view, b)),
     );
 
     let header = row![
