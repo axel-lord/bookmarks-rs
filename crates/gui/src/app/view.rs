@@ -8,7 +8,7 @@ use iced::{
     theme,
     widget::{
         button, column, horizontal_rule, horizontal_space, row, scrollable, text, text_input,
-        vertical_rule, vertical_space, Column,
+        toggler, vertical_rule, vertical_space, Column,
     },
     Alignment, Element, Length,
 };
@@ -16,7 +16,9 @@ use iced::{
 fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     let filter = row![
         text("Filter:"),
-        text_input("...", app_view.filter.1, Msg::FilterBookmarks).padding(3),
+        text_input("...", app_view.filter.1, Msg::FilterBookmarks)
+            .padding(3)
+            .width(300.into()),
         button("Apply")
             .on_press(Msg::ApplyFilter)
             .padding(3)
@@ -30,10 +32,19 @@ fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     .spacing(3)
     .align_items(Alignment::Center);
 
+    let edit_option = row![
+        text("Edit"),
+        toggler(None, app_view.edit_mode_active, Msg::SetEditMode).width(Length::Shrink)
+    ]
+    .padding(0)
+    .spacing(3)
+    .align_items(Alignment::Center);
+
     row![
         horizontal_space(Length::Fill),
-        filter.width(Length::Fill),
+        filter.width(Length::Shrink),
         horizontal_space(Length::Fill),
+        edit_option.width(Length::Shrink),
     ]
     .align_items(iced::Alignment::Center)
     .spacing(3)
