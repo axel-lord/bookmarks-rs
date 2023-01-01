@@ -54,11 +54,7 @@ pub fn parse_struct(ast: &syn::DeriveInput) -> StructInfo {
         }
     }
 
-    if line.is_none() {
-        panic!("no field tagged line present");
-    }
-
-    let line = line.unwrap();
+    let line = line.expect("no field tagged \"line\" present");
 
     StructInfo {
         name,
