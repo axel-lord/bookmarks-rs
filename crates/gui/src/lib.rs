@@ -1,3 +1,15 @@
+//! Crate for graphical interface for manipulating bookmarks.
+
+#![warn(
+    missing_copy_implementations,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
+    clippy::unwrap_used,
+    rustdoc::missing_crate_level_docs
+)]
+
 use iced::{
     theme,
     widget::{button, radio, row, Row},
@@ -13,12 +25,18 @@ pub use app::{App, AppView};
 pub use msg::Msg;
 pub use parsed_str::ParsedStr;
 
+/// Enum representing what content the main area can hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MainContent {
+    /// Main area holds bookmark list.
     Bookmarks,
+    /// Main area holds settings editor.
     Settings,
+    /// Main area holds bookmark editor.
     EditBookmark,
+    /// Main area holds category editor.
     EditCategory,
+    /// Main area holds log.
     Log,
 }
 
@@ -35,6 +53,7 @@ impl MainContent {
         MainContent::Log,
     ];
 
+    /// Generate an area chooser for current area.
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
         match self {
             MainContent::Bookmarks | MainContent::Settings | MainContent::Log => {
@@ -75,12 +94,15 @@ impl MainContent {
     }
 }
 
-pub fn run(starting_files: Vec<PathBuf>) {
+/// Attempt to run the application, loading any file paths passed.
+///
+/// # Errors
+/// If iced fails to start application.
+pub fn run(starting_files: Vec<PathBuf>) -> Result<(), iced::Error> {
     println!("{:?}", MainContent::Bookmarks);
     App::run(iced::Settings {
         flags: starting_files,
         text_multithreading: true,
         ..Default::default()
     })
-    .unwrap();
 }

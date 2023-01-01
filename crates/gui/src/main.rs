@@ -7,6 +7,6 @@ struct Cli {
     files: Option<Vec<PathBuf>>,
 }
 
-fn main() {
-    bookmark_gui::run(Cli::parse().files.unwrap_or_default());
+fn main() -> Result<(), iced::Error> {
+    bookmark_gui::run(Cli::parse().files.unwrap_or_default())
 }

@@ -1,8 +1,9 @@
 use std::{fmt::Display, ops::Deref, str::FromStr};
 
+/// Type representing a string that can be parsed
 #[derive(Debug, Clone)]
 pub struct ParsedStr<V> {
-    string: Box<str>,
+    string: String,
     val: Option<V>,
 }
 
@@ -34,7 +35,7 @@ where
 {
     fn from(value: V) -> Self {
         Self {
-            string: value.to_string().into(),
+            string: value.to_string(),
             val: Some(value),
         }
     }
@@ -65,6 +66,7 @@ impl<V> ParsedStr<V>
 where
     V: Copy + Default,
 {
+    /// Type represented by a tuple containing value and it's string representation.
     pub fn as_tuple(&self) -> (V, &str) {
         (self.val.unwrap_or_default(), &self.string)
     }
@@ -74,14 +76,16 @@ impl<V> ParsedStr<V>
 where
     V: ToString,
 {
+    /// If any get value contained.
     pub fn value(&self) -> &Option<V> {
         &self.val
     }
 
+    /// Set value contained.
     pub fn set_value(&mut self, val: Option<V>) {
         self.string = val
             .as_ref()
-            .map(|v| v.to_string().into())
+            .map(|v| v.to_string())
             .unwrap_or_else(|| "".into());
         self.val = val;
     }
@@ -91,19 +95,23 @@ impl<V> ParsedStr<V>
 where
     V: FromStr + Display,
 {
+    /// Parse a value and get a message depending on success.
+    ///
+    /// # Errors
+    /// If and how the parsing failed.
     pub fn parse_with_message(
         &mut self,
-        from: impl Into<Box<str>>,
+        from: impl ToString,
         msg: &str,
-    ) -> Result<Box<str>, <V as FromStr>::Err> {
-        let string = from.into();
+    ) -> Result<String, <V as FromStr>::Err> {
+        let string = from.to_string();
         let out_msg;
 
         (self.val, out_msg) = if string.is_empty() {
-            (None, format!("changed {msg} to none").into())
+            (None, format!("changed {msg} to none"))
         } else {
             let val = string.parse()?;
-            let out_msg = format!("changed {msg} to {val}").into();
+            let out_msg = format!("changed {msg} to {val}");
             (Some(val), out_msg)
         };
 
