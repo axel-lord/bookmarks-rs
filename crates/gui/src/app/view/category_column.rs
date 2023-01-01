@@ -9,10 +9,16 @@ use iced::{
 };
 
 fn category_row<'a>(app_view: AppView, level: &[usize]) -> Element<'a, Msg> {
+    assert!(!level.is_empty());
     let btn = button(
         row![
             horizontal_space(Length::Units((level.len() as u16 - 1) * 24)),
-            text(app_view.categories.storage[*level.last().unwrap()].name())
+            text(
+                app_view.categories.storage[*level.last().expect(
+                    "level was empty, due to an assert this point should never be reached"
+                )]
+                .name()
+            )
         ]
         .align_items(iced::Alignment::Fill)
         .spacing(0)

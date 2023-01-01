@@ -16,6 +16,7 @@ use crate::{MainContent, Msg, ParsedStr};
 
 mod view;
 
+/// Application state.
 #[derive(Debug)]
 pub struct App {
     bookmarks: shared::BufferStorage<Bookmark>,
@@ -36,25 +37,41 @@ pub struct App {
     selected_bookmark: Option<usize>,
 }
 
+/// View of the application state, providing easy immutable read in building of view.
 #[derive(Clone, Copy, Debug)]
 pub struct AppView<'a> {
+    /// Bookmarks loaded by application.
     pub bookmarks: &'a container::BufferStorage<Bookmark>,
+    /// Categories loaded by application.
     pub categories: &'a container::BufferStorage<Category>,
+    /// Category indices arranged with parents at start.
     pub category_tree: &'a [Vec<usize>],
+    /// Expected max character count of bookmark descriptions deisplayed as numeric and str.
     pub desc_width: (usize, &'a str),
+    /// Is true if edit mode is enabled.
     pub edit_mode_active: bool,
+    /// Filter used for bookmarks as filter object and str.
     pub filter: (Option<&'a AhoCorasick>, &'a str),
+    /// Info loaded by application.
     pub infos: &'a container::BufferStorage<Info>,
+    /// What is expected to fill the main area.
     pub main_content: MainContent,
+    /// How many bookmarks are shown as numeric and str.
     pub shown_bookmarks: (usize, &'a str),
+    /// Where in the bookmark list to start showing bookmarks as numeric and str.
     pub shown_from: (usize, &'a str),
+    /// Current status message.
     pub status: &'a str,
+    /// All status messages.
     pub status_log: &'a [String],
+    /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
     pub url_width: (usize, &'a str),
+    /// Currently selected bookmark for editing if any.
     pub selected_bookmark: Option<usize>,
 }
 
 impl App {
+    /// Set the current status and add it to log.
     pub fn set_status(&self, msg: impl Into<String>) {
         let msg = msg.into();
         println!("status: {msg}");
@@ -91,10 +108,16 @@ impl App {
 
         let mut reader = io::BufReader::new(file).lines().enumerate();
 
+        macro_rules! load_sections {
+            ($($sect:expr),* $(,)?) => {
+                $(
+                self.load_section(reader.by_ref(), &mut $sect.write().expect("posioned lock"));
+                )*
+            };
+        }
+
         let before = std::time::Instant::now();
-        self.load_section(reader.by_ref(), &mut self.infos.write().unwrap());
-        self.load_section(reader.by_ref(), &mut self.categories.write().unwrap());
-        self.load_section(reader.by_ref(), &mut self.bookmarks.write().unwrap());
+        load_sections!(self.infos, self.categories, self.bookmarks,);
         let duration = std::time::Instant::now().duration_since(before);
 
         self.set_status(format!(
@@ -123,8 +146,8 @@ impl App {
     }
 
     fn update_category_tree(&mut self) {
-        let categories = self.categories.read().unwrap();
-        let infos = self.infos.read().unwrap();
+        let categories = self.categories.read().expect("poisoned lock");
+        let infos = self.infos.read().expect("posoned lock");
 
         let cat_map = categories
             .storage
@@ -147,9 +170,7 @@ impl App {
             .collect::<Vec<_>>();
 
         let mut cat_iter = Vec::new();
-        while !cat_stack.is_empty() {
-            let (depend, cat_id) = cat_stack.pop().unwrap();
-
+        while let Some((depend, cat_id)) = cat_stack.pop() {
             if depend.len() >= 12 {
                 continue;
             }
@@ -242,7 +263,7 @@ impl Application for App {
 
             Msg::GotoBookmarkLocation(i) => {
                 self.set_status({
-                    let bookmarks = self.bookmarks.read().unwrap();
+                    let bookmarks = self.bookmarks.read().expect("posioned lock");
                     match open::that(bookmarks.storage[i].url()) {
                         Ok(()) => {
                             format!("opened bookmark [{}]", bookmarks.storage[i].url())
@@ -258,8 +279,8 @@ impl Application for App {
 
             Msg::ApplyCategory(category_indices) => {
                 let messages = {
-                    let categories = self.categories.read().unwrap();
-                    let mut bookmarks = self.bookmarks.write().unwrap();
+                    let categories = self.categories.read().expect("posoned lock");
+                    let mut bookmarks = self.bookmarks.write().expect("posoned lock");
 
                     category_indices
                         .iter()
@@ -350,9 +371,12 @@ impl Application for App {
 
             Msg::ApplyFilter => {
                 if let Some(ref filter) = self.filter {
-                    self.bookmarks.write().unwrap().filter_in_place(|b| {
-                        filter.is_match(b.url()) || filter.is_match(b.description())
-                    });
+                    self.bookmarks
+                        .write()
+                        .expect("poisoned lock")
+                        .filter_in_place(|b| {
+                            filter.is_match(b.url()) || filter.is_match(b.description())
+                        });
                 }
 
                 Command::none()
@@ -368,7 +392,11 @@ impl Application for App {
             Msg::AddBookmarks(bookmarks) => {
                 if let Ok(mut bookmarks) = bookmarks.lock() {
                     if let Some(bookmarks) = bookmarks.take() {
-                        self.bookmarks.write().unwrap().storage.extend(bookmarks);
+                        self.bookmarks
+                            .write()
+                            .expect("posioned lock")
+                            .storage
+                            .extend(bookmarks);
                     }
                 }
 
@@ -397,9 +425,9 @@ impl Application for App {
     }
 
     fn view(&self) -> iced::Element<Msg> {
-        let bookmarks = self.bookmarks.read().unwrap();
-        let categories = self.categories.read().unwrap();
-        let infos = self.infos.read().unwrap();
+        let bookmarks = self.bookmarks.read().expect("poisoned lock");
+        let categories = self.categories.read().expect("poisoned lock");
+        let infos = self.infos.read().expect("poisoned lock");
         let status = self.status_msg.borrow();
         let status_log = self.status_log.borrow();
 
