@@ -2,46 +2,46 @@ use crate::{AppView, MainContent, Msg};
 use iced::{
     theme,
     widget::{
-        button, column, horizontal_rule, horizontal_space, row, scrollable, text, vertical_space,
-        Column,
+        button, column, horizontal_rule, horizontal_space, row, scrollable, text, Column, Row,
     },
     Alignment, Element, Length,
 };
 
-fn category_row<'a>(app_view: AppView, level: &[usize]) -> Element<'a, Msg> {
-    assert!(!level.is_empty());
-    let btn = button(
-        row![
-            horizontal_space(Length::Units((level.len() as u16 - 1) * 24)),
-            text(
-                app_view.categories.storage[*level.last().expect(
-                    "level was empty, due to an assert this point should never be reached"
-                )]
-                .name()
-            )
-        ]
-        .align_items(iced::Alignment::Fill)
-        .spacing(0)
-        .padding(0),
-    )
-    .on_press(Msg::ApplyCategory(level.into()))
-    .style(theme::Button::Text)
-    .padding(1);
+fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) -> Element<'a, Msg> {
+    let category = &app_view.categories.storage[match level.last().cloned() {
+        Some(index) => index,
+        None => panic!("level param is empty"),
+    }];
+    let indent_width = level.len() * 24 - 24;
+
+    let mut row_content = Vec::<Element<'a, Msg>>::with_capacity(4);
 
     if app_view.edit_mode_active {
-        row![
+        row_content.extend([
             button("Edit")
                 .padding(1)
-                .on_press(Msg::SwitchMainTo(MainContent::EditCategory)),
-            btn
-        ]
-    } else {
-        row![btn]
+                .on_press(Msg::SwitchMainTo(MainContent::EditCategory))
+                .into(),
+            horizontal_space(Length::Units(3)).into(),
+        ]);
     }
-    .padding(0)
-    .spacing(3)
-    .align_items(Alignment::Center)
-    .into()
+
+    row_content.extend([
+        horizontal_space(Length::Units(indent_width as u16)).into(),
+        button(column![text(category.name())].align_items(Alignment::Center))
+            .on_press(Msg::ApplyCategory(level.into()))
+            .style(style)
+            .padding(1)
+            .width(Length::Units(150))
+            .into(),
+    ]);
+
+    Row::with_children(row_content)
+        .padding(0)
+        .spacing(0)
+        .align_items(Alignment::Center)
+        .width(Length::Shrink)
+        .into()
 }
 
 pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
@@ -62,11 +62,23 @@ pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
             app_view
                 .category_tree
                 .iter()
-                .fold(Column::new(), |r, l| { r.push(category_row(app_view, l)) })
+                .zip(
+                    [
+                        || theme::Button::Positive,
+                        || theme::Button::Destructive,
+                        || theme::Button::Primary,
+                    ]
+                    .into_iter()
+                    .cycle()
+                    .map(|f| f())
+                )
+                .fold(Column::new(), |r, (l, s)| {
+                    r.push(category_row(app_view, l, s))
+                })
                 .align_items(Alignment::Fill)
                 .spacing(3)
+                .width(Length::Shrink)
         ),
-        vertical_space(Length::Fill),
     ]
     .align_items(Alignment::Fill)
     .spacing(3)
