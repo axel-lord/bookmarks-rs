@@ -14,7 +14,9 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
 
         let reader = BufReader::new(File::open(&args[0])?);
 
-        let mut bookmarks = bookmarks.write().unwrap();
+        let mut bookmarks = bookmarks
+            .write()
+            .expect("failed to aquire write lock for bookmarks");
         let mut added_count = 0usize;
         for line in reader.lines() {
             let line = line?;

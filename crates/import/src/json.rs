@@ -18,11 +18,15 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
             .as_object()
             .ok_or_else(|| CommandErr::Execution("root of json file was not an object".into()))?;
 
-        let mut bookmarks = bookmarks.write().unwrap();
+        let mut bookmarks = bookmarks
+            .write()
+            .expect("failed to aquire write lock on bookmarks");
         let mut element_stack = vec![root];
         let mut added_count = 0usize;
         while !element_stack.is_empty() {
-            let top = element_stack.pop().unwrap();
+            let top = element_stack
+                .pop()
+                .expect("somehow failed to pop an element from a non-empty stack");
 
             if let Some(children) = top.get("children") {
                 let Some(children) = children.as_array() else {
