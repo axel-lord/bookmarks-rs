@@ -69,22 +69,47 @@ fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Ele
 }
 
 pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
-    let mut bookmarks = Vec::with_capacity(app_view.shown_bookmarks.0);
-    bookmarks.extend(
-        app_view
-            .bookmarks
-            .iter_indexed()
-            .filter(|b| {
-                app_view
-                    .filter
-                    .0
-                    .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
-                    .unwrap_or(true)
-            })
-            .skip(app_view.shown_from.0)
-            .take(app_view.shown_bookmarks.0)
-            .map(|(i, b)| bookmark_row(i, app_view, b)),
-    );
+    // let mut bookmarks = Vec::with_capacity(app_view.shown_bookmarks.0);
+    // bookmarks.extend(
+    //     app_view
+    //         .bookmarks
+    //         .iter_indexed()
+    //         .filter(|b| {
+    //             app_view
+    //                 .filter
+    //                 .0
+    //                 .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
+    //                 .unwrap_or(true)
+    //         })
+    //         .skip(app_view.shown_from.0)
+    //         .take(app_view.shown_bookmarks.0)
+    //         .map(|(i, b)| bookmark_row(i, app_view, b)),
+    // );
+    let mut bookmark_count = 0usize;
+    let mut bookmarks = app_view
+        .bookmarks
+        .iter_indexed()
+        .filter(|b| {
+            app_view
+                .filter
+                .0
+                .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
+                .unwrap_or(true)
+        })
+        .skip(app_view.shown_from.0)
+        .take(app_view.shown_bookmarks.0)
+        .fold(
+            Vec::with_capacity(app_view.shown_bookmarks.0.saturating_mul(2)),
+            |mut v, (i, b)| {
+                bookmark_count += 1;
+                v.push(bookmark_row(i, app_view, b));
+                v.push(horizontal_rule(3).into());
+                v
+            },
+        );
+
+    bookmarks.pop();
+    let bookmarks = scrollable(Column::with_children(bookmarks).spacing(3));
 
     let header = row![
         button("Prev")
@@ -96,7 +121,7 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         text(format!(
             "Bookmarks ({}~{}/{}):",
             app_view.shown_from.0,
-            bookmarks.len().saturating_add(app_view.shown_from.0),
+            bookmark_count.saturating_add(app_view.shown_from.0),
             app_view.bookmarks.storage.len(),
         )),
         horizontal_space(Length::Fill),
@@ -105,13 +130,9 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
     .spacing(3)
     .align_items(iced::Alignment::Center);
 
-    column![
-        header,
-        horizontal_rule(3),
-        scrollable(Column::with_children(bookmarks).spacing(3)),
-    ]
-    .padding(3)
-    .spacing(3)
-    .width(Length::Fill)
-    .into()
+    column![header, horizontal_rule(3), bookmarks,]
+        .padding(3)
+        .spacing(3)
+        .width(Length::Fill)
+        .into()
 }
