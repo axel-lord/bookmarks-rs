@@ -1,21 +1,12 @@
-#[derive(Clone, Debug)]
+use thiserror::Error;
+
+#[derive(Clone, Debug, Error)]
 /// Error type for issues appearing when accessing properties.
 pub enum PropertyErr {
     /// If the property does not exist and a message.
+    #[error("property {0} does not exist as expected type of property")]
     DoesNotExist(String),
 }
-
-impl std::fmt::Display for PropertyErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            PropertyErr::DoesNotExist(ref prop) => {
-                write!(f, "property {prop} does not exist in used capacity")
-            }
-        }
-    }
-}
-
-impl std::error::Error for PropertyErr {}
 
 #[derive(Debug, Clone)]
 /// A property may be either a list of values or a single value
