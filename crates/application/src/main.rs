@@ -1,3 +1,15 @@
+//! Simple command line application for reading and merging bookmkar files.
+
+#![warn(
+    missing_copy_implementations,
+    missing_docs,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
+    clippy::unwrap_used,
+    rustdoc::missing_crate_level_docs
+)]
+
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -16,7 +28,13 @@ fn main() {
         .map(|files| {
             files
                 .iter()
-                .map(|s| String::from("load ") + s.to_str().unwrap())
+                .map(|path| {
+                    String::from("load ")
+                        + match path.to_str() {
+                            Some(path_string) => path_string,
+                            None => panic!("{:?} could not be converted to a string", path),
+                        }
+                })
                 .collect::<Vec<_>>()
         })
         .unwrap_or_else(Vec::new);

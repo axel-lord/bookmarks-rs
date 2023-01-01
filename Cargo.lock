@@ -230,6 +230,8 @@ name = "bookmark-command"
 version = "0.1.0"
 dependencies = [
  "bookmark-derive",
+ "bookmark-storage",
+ "thiserror",
 ]
 
 [[package]]
@@ -299,6 +301,7 @@ version = "0.1.0"
 dependencies = [
  "bookmark-derive",
  "lazy_static",
+ "thiserror",
 ]
 
 [[package]]
