@@ -12,7 +12,10 @@ pub fn split_by_delim_to_ranges(list: &str) -> Vec<Range<usize>> {
             if trimmed.is_empty() {
                 None
             } else {
-                Some(unsafe { substring_location(list, trimmed) }.unwrap())
+                Some(
+                    unsafe { substring_location(list, trimmed) }
+                        .expect("always the case, this expect should never fail, since a trim result is always a substring of the trimmed string"),
+                )
             }
         })
         .collect()
@@ -30,7 +33,7 @@ pub fn split_list_field(list_field: &'_ str) -> impl '_ + Iterator<Item = Field>
         } else {
             Some(
                 unsafe { substring_location(list_field, trimmed) }
-                    .unwrap()
+                    .expect("in no case should this fail, since the bytes of the trim result  is alway a substring of the trimmed str")
                     .into(),
             )
         }
@@ -73,7 +76,13 @@ pub unsafe fn substring_location(string: &str, substring: &str) -> Option<Range<
 /// # Panics
 /// If the given range is out of bounds.
 pub fn range_trim(source: &str, location: Range<usize>) -> Range<usize> {
-    unsafe { substring_location(source, source[location].trim()) }.unwrap()
+    match unsafe { substring_location(source, source[location.clone()].trim()) } {
+        Some(value) => value,
+        None => panic!(
+            "location {:?} is out of bounds for source {:?}",
+            location, source
+        ),
+    }
 }
 
 /// Join and iterator of string slices into a single string delimited by [token::DELIM].

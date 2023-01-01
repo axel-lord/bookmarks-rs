@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 bookmark-derive = { path = "../derive" }
+bookmark-storage = { path = "../storage" }
+thiserror = "1.0.38"

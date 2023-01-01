@@ -24,7 +24,9 @@ pub fn build(
             )
             .unwrap();
 
-        category.apply(&mut bookmarks.write().unwrap())?;
+        category
+            .apply(&mut bookmarks.write().unwrap())
+            .map_err(|err| CommandErr::Execution(format!("{err}")))?;
         Ok(())
     })
 }

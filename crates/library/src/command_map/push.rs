@@ -15,7 +15,9 @@ where
 
         let mut buffer_storage = buffer_storage.write().unwrap();
 
-        let (index, item) = buffer_storage.get_index_and_selected_mut()?;
+        let (index, item) = buffer_storage
+            .get_index_and_selected_mut()
+            .map_err(|err| format!("{err}"))?;
 
         let property_name = args[0].as_str();
         let property = item.get(property_name);

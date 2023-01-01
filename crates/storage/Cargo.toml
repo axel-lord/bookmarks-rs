@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 lazy_static = "1.4"
 bookmark-derive = { path = "../derive"}
+thiserror = "1.0.38"
