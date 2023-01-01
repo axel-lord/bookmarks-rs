@@ -6,6 +6,7 @@
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
+    clippy::unwrap_used,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -134,8 +135,8 @@ pub fn run(
     mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,
 ) -> i32 {
     lazy_static::lazy_static! {
-        static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).unwrap();
-        static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
+        static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).expect("failed to comple CMD_RE regex");
+        static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failed to ARG_RE compile regex");
     }
 
     let bookmarks = shared::BufferStorage::<bookmark::Bookmark>::default();

@@ -20,7 +20,7 @@ impl Command for Regex {
 
         self.bookmarks
             .write()
-            .unwrap()
+            .expect("failed to aquire write lock for bookmarks")
             .filter_in_place(|bookmark| re.is_match(bookmark.url()));
 
         Ok(())
@@ -45,7 +45,7 @@ impl Command for RegexInv {
 
         self.bookmarks
             .write()
-            .unwrap()
+            .expect("failed to aquire write lock for bookmarks")
             .filter_in_place(|bookmark| !re.is_match(bookmark.url()));
 
         Ok(())

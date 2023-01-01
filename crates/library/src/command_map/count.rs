@@ -21,7 +21,10 @@ where
             ));
         }
 
-        let buffer_storage = self.buffer_storage.read().unwrap();
+        let buffer_storage = self
+            .buffer_storage
+            .read()
+            .expect("failed to aquire read lock");
 
         println!(
             "total: {}, in buffer: {}",
