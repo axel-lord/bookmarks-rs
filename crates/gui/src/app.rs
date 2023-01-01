@@ -123,7 +123,7 @@ impl App {
         self.set_status(format!(
             "loaded file \"{}\" in {} milliseconds",
             path.display(),
-            duration.as_millis()
+            duration.as_secs_f64() * 1000.0,
         ));
 
         self
