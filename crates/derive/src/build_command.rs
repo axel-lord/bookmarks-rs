@@ -65,7 +65,11 @@ pub fn impl_build_command(ast: &syn::DeriveInput) -> TokenStream {
     let field_idents: Vec<_> = data_struct
         .fields
         .iter()
-        .map(|f| f.ident.clone().unwrap())
+        .map(|f| {
+            f.ident
+                .clone()
+                .expect("failed to get identifier for a field")
+        })
         .collect();
 
     let gen = quote! {

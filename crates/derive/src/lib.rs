@@ -6,6 +6,7 @@
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
+    clippy::unwrap_used,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -20,7 +21,7 @@ mod storeable;
 /// # Panics
 /// If the struct is malformed.
 pub fn build_command_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
+    let ast = syn::parse(input).expect("could not parse struct");
 
     build_command::impl_build_command(&ast)
 }
@@ -31,7 +32,7 @@ pub fn build_command_derive(input: TokenStream) -> TokenStream {
 /// If the struct is malformed.
 #[proc_macro_derive(Storeable, attributes(line, string, composite, token, title))]
 pub fn storeable_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
+    let ast = syn::parse(input).expect("could not parse struct");
 
     storeable::impl_storeable(&ast)
 }
