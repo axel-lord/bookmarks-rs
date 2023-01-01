@@ -16,9 +16,15 @@ impl Command for Reset {
             ));
         }
 
-        self.infos.write().unwrap().reset();
-        self.categories.write().unwrap().reset();
-        self.bookmarks.write().unwrap().reset();
+        macro_rules! reset_buffer_storage {
+            ($($storage:expr),* $(,)?) => {
+                $(
+                    $storage.write().expect("posoned lock").reset();
+                )*
+            };
+        }
+
+        reset_buffer_storage!(self.infos, self.categories, self.bookmarks,);
 
         Ok(())
     }

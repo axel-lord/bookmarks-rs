@@ -3,7 +3,8 @@ use regex::Regex;
 
 pub fn parse_command(line: &str) -> Option<Vec<String>> {
     lazy_static! {
-        static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).unwrap();
+        static ref ARG_RE: Regex =
+            Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failure to compile ARG_RE regex");
     }
 
     let mut next_start = 0;

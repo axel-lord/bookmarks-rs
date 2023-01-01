@@ -31,7 +31,7 @@ where
             )));
         }
 
-        let mut buffer_storage = self.buffer_storage.write().unwrap();
+        let mut buffer_storage = self.buffer_storage.write().expect("poisoned write lock");
 
         buffer_storage.storage.extend(loaded.into_iter());
         buffer_storage.buffer.reset();

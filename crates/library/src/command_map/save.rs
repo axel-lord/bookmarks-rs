@@ -19,7 +19,7 @@ where
             ));
         }
 
-        let buffer_storage = self.buffer_storage.write().unwrap();
+        let buffer_storage = self.buffer_storage.write().expect("poisoned lock");
 
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
@@ -52,11 +52,16 @@ impl Command for SaveAll {
 
         let mut writer = BufWriter::new(File::create(&args[0])?);
 
-        bookmark_storage::save(&mut writer, self.infos.read().unwrap().storage.iter())?;
+        use bookmark_storage::save;
+        macro_rules! save_buffer_storage {
+            ($($storage:expr),* $(,)?) => {
+                $(
+                    save(&mut writer, $storage.read().expect("posioned lock").storage.iter())?;
+                )*
+            };
+        }
 
-        bookmark_storage::save(&mut writer, self.categories.read().unwrap().storage.iter())?;
-
-        bookmark_storage::save(&mut writer, self.bookmarks.read().unwrap().storage.iter())?;
+        save_buffer_storage!(self.infos, self.categories, self.bookmarks);
 
         Ok(())
     }

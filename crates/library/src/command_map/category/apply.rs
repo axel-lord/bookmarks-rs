@@ -12,7 +12,9 @@ pub fn build(
             ));
         }
 
-        let categories = categories.read().unwrap();
+        let categories = categories
+            .read()
+            .expect("failed to aquire read lock for categories");
 
         let category = categories
             .storage
@@ -22,10 +24,14 @@ pub fn build(
                     .index()
                     .ok_or_else(|| CommandErr::Usage("no category selected".into()))?,
             )
-            .unwrap();
+            .expect("failed to get selected category");
 
         category
-            .apply(&mut bookmarks.write().unwrap())
+            .apply(
+                &mut bookmarks
+                    .write()
+                    .expect("failed to aquire write lock for bookmarks"),
+            )
             .map_err(|err| CommandErr::Execution(format!("{err}")))?;
         Ok(())
     })

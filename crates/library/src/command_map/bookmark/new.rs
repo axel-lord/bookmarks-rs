@@ -15,7 +15,10 @@ impl Command for New {
             ));
         }
 
-        let mut bookmarks = self.bookmarks.write().unwrap();
+        let mut bookmarks = self
+            .bookmarks
+            .write()
+            .expect("failed to aquire write lock for bookmarks");
 
         let index = bookmarks.storage.len();
 
@@ -34,7 +37,7 @@ impl Command for New {
             "added and selected:\n{index}. {:#}",
             bookmarks
                 .storage
-                .get(selected.index().unwrap())
+                .get(selected.index().expect("failed to get index of selected (should not happen as something was just selected)"))
                 .ok_or_else(|| CommandErr::Execution(
                     "failed in using index of added bookmark".into()
                 ))?

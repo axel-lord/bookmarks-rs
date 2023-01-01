@@ -63,7 +63,12 @@ pub fn build(
                     args_are_empty(args)?;
 
                     let mut map = CatMap::new();
-                    for cat in categories.read().unwrap().storage.iter() {
+                    for cat in categories
+                        .read()
+                        .expect("failed to aquire read lock for categories")
+                        .storage
+                        .iter()
+                    {
                         let cat_entry = map.get_or_create(cat.id());
 
                         for child in cat.subcategories() {
@@ -81,14 +86,18 @@ pub fn build(
                     }
 
                     let mut cat_stack = Vec::new();
-                    for info in infos.read().unwrap().storage.iter() {
+                    for info in infos
+                        .read()
+                        .expect("failed to aquire read lock for infos")
+                        .storage
+                        .iter()
+                    {
                         for cat in info.categories().collect::<Vec<_>>().into_iter().rev() {
                             cat_stack.push((0usize, map.get_or_create(cat)));
                         }
                     }
 
-                    while !cat_stack.is_empty() {
-                        let (level, current) = cat_stack.pop().unwrap();
+                    while let Some((level, current)) = cat_stack.pop() {
                         let current = current.borrow();
 
                         println!("{}{}", "   ".repeat(level), current.name);
@@ -99,7 +108,10 @@ pub fn build(
                         }
 
                         for child in current.children.iter().rev() {
-                            cat_stack.push((level + 1, child.upgrade().unwrap()));
+                            cat_stack.push((
+                                level + 1,
+                                child.upgrade().expect("failed to upgrade a weak ref"),
+                            ));
                         }
                     }
 
@@ -115,7 +127,13 @@ pub fn build(
                         ));
                     }
 
-                    for (i, info) in infos.read().unwrap().storage.iter().enumerate() {
+                    for (i, info) in infos
+                        .read()
+                        .expect("failed to aquire read lock")
+                        .storage
+                        .iter()
+                        .enumerate()
+                    {
                         println!("{i}. Categroies: ");
                         for category in info.categories() {
                             println!("\t{category}");
