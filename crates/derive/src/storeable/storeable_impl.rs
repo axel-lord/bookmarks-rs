@@ -120,7 +120,7 @@ fn gen_to_line(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
 fn gen_is_edited(line: &syn::Ident) -> TokenStream2 {
     quote! {
         fn is_edited(&self) -> bool {
-            self.#line.is_appended_to()
+            self.#line.has_been_pushed_to()
         }
     }
 }
