@@ -93,7 +93,7 @@ impl AnyField for FieldList {
 
     fn get_fancy_display(&self, _: usize) -> TokenStream2 {
         let ident = &self.ident;
-        let format_string = format!("\n\t{}: ", ident);
+        let format_string = format!("\n\t{ident}: ");
         quote! {
             if !self.#ident.is_empty() {
                 write!(f, #format_string)?;

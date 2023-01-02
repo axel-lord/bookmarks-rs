@@ -35,7 +35,7 @@ impl CommandEntry {
 impl Debug for CommandEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(help) = self.help.as_ref() {
-            write!(f, "<{}>", help)
+            write!(f, "<{help}>")
         } else {
             write!(f, "<>")
         }
@@ -216,7 +216,7 @@ impl CommandMap<'static> {
                 "debug",
                 None,
                 Box::new(|args: &[String]| {
-                    println!("{:#?}", args);
+                    println!("{args:#?}");
                     Ok(())
                 }),
             )

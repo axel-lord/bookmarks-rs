@@ -74,7 +74,7 @@ where
             .skip(from)
             .take(count)
         {
-            println!("{}. {:#}", index, item);
+            println!("{index}. {item:#}");
         }
 
         Ok(())

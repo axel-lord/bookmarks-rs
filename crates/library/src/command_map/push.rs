@@ -35,7 +35,7 @@ where
             }
         }
 
-        println!("{}. {:#}", index, item);
+        println!("{index}. {item:#}");
 
         Ok(())
     })

@@ -44,8 +44,7 @@ where
             Ok(Property::Single(_)) => {
                 if args[1..].len() != 1 {
                     return Err(CommandErr::Execution(format!(
-                        "property {} takes only a single value",
-                        property
+                        "property {property} takes only a single value"
                     )));
                 } else {
                     item.set(property, Property::Single(args[1].clone()))?;
@@ -53,7 +52,7 @@ where
             }
         }
 
-        println!("{}. {:#}", index, item);
+        println!("{index}. {item:#}");
 
         Ok(())
     }

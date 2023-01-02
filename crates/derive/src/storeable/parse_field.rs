@@ -66,7 +66,7 @@ pub fn parse_field(field: &syn::Field) -> FieldType {
     }
 
     let Some(key) = key else {
-        panic!("no token for field {}", ident);
+        panic!("no token for field {ident}");
     };
 
     match attr_type {

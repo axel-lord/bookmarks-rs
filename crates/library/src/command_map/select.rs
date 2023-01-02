@@ -32,7 +32,7 @@ where
             .get(index)
             .ok_or_else(|| CommandErr::Execution(format!("{index} is not a valid index")))?;
 
-        println!("selected:\n{}. {:#}", index, selected_item);
+        println!("selected:\n{index}. {selected_item:#}");
         buffer_storage.selected.replace(index);
 
         Ok(())
