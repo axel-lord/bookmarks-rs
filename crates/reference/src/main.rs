@@ -94,7 +94,7 @@ impl bookmark_storage::Storeable for Reference {
     }
 
     fn is_edited(&self) -> bool {
-        self.line.is_appended_to()
+        self.line.has_been_pushed_to()
     }
 
     fn get(

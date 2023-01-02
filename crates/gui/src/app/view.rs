@@ -8,8 +8,6 @@ mod settings_column;
 use crate::{AppView, MainContent, Msg};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
-use edit_bookmark_column::edit_bookmark_column;
-use edit_category_column::edit_category_column;
 use iced::{
     theme,
     widget::{
@@ -82,12 +80,9 @@ fn blank_column<'a>(app_view: AppView) -> Element<'a, Msg> {
 
 fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
-        MainContent::Settings => settings_column(app_view),
+        MainContent::Edit => settings_column(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
         MainContent::Log => log_column(app_view),
-        MainContent::EditBookmark => edit_bookmark_column(app_view),
-        MainContent::EditCategory => edit_category_column(app_view),
-
         #[allow(unreachable_patterns)]
         _ => blank_column(app_view),
     };
