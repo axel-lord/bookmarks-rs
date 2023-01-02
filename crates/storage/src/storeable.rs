@@ -37,15 +37,7 @@ pub trait Storeable: Sized {
     ///
     /// # Errors
     /// If the string cannot be parsed to the [Storeable].
-    fn with_string(line: String, line_num: Option<usize>) -> Result<Self, ParseErr> {
-        Self::with_content_string(line.into(), line_num)
-    }
-
-    /// Construct an instance from a string slice.
-    ///
-    /// # Errors
-    /// If the string slice cannot be parsed to the [Storeable].
-    fn with_str(line: impl Into<String>, line_num: Option<usize>) -> Result<Self, ParseErr> {
-        Self::with_string(line.into(), line_num)
+    fn with_string(line: impl Into<String>, line_num: Option<usize>) -> Result<Self, ParseErr> {
+        Self::with_content_string(line.into().into(), line_num)
     }
 }

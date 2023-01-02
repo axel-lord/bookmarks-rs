@@ -274,7 +274,7 @@ impl std::convert::TryFrom<&str> for Reference {
     type Error = bookmark_storage::ParseErr;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         use bookmark_storage::Storeable;
-        Self::with_str(value, None)
+        Self::with_string(value, None)
     }
 }
 
@@ -314,7 +314,7 @@ impl std::fmt::Display for Reference {
 
 fn main() {
     use bookmark_storage::Storeable;
-    let item = Reference::with_str(
+    let item = Reference::with_string(
         "<name> hello there <children> general <,> kenobi <info> blast them <tags> wow <,> nice",
         None,
     )
