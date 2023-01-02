@@ -32,7 +32,7 @@ fn main() {
                     String::from("load ")
                         + match path.to_str() {
                             Some(path_string) => path_string,
-                            None => panic!("{:?} could not be converted to a string", path),
+                            None => panic!("{path:?} could not be converted to a string"),
                         }
                 })
                 .collect::<Vec<_>>()

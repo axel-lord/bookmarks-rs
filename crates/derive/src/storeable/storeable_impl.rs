@@ -69,11 +69,11 @@ fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> Tok
 
     quote! {
         #[allow(clippy::needless_update)]
-        fn with_string(
-            #line: String,
+        fn with_content_string(
+            #line: bookmark_storage::ContentString,
             line_num: Option<usize>,
         ) -> Result<Self, bookmark_storage::ParseErr> {
-            let err = || bookmark_storage::ParseErr::Line(Some(#line.clone()), line_num);
+            let err = || bookmark_storage::ParseErr::Line(Some(#line.clone().to_string()), line_num);
             let len = || #line.len();
 
             use aho_corasick::AhoCorasick;
@@ -99,7 +99,7 @@ fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> Tok
             )*
 
             Ok(Self {
-                #line: #line.into(),
+                #line: #line,
                 #(#field_names,)*
                 ..Default::default()
             })

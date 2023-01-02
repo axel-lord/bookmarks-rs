@@ -1,5 +1,5 @@
 use crate::Field;
-use std::ops::Range;
+use std::{fmt::Display, ops::Range};
 
 #[derive(Debug, Clone, Default)]
 /// String that keeps track of whether or not it has been appended to
@@ -24,10 +24,34 @@ impl From<String> for ContentString {
     }
 }
 
+impl From<ContentString> for String {
+    fn from(value: ContentString) -> Self {
+        String::from(<ContentString as AsRef<str>>::as_ref(&value))
+    }
+}
+
+impl Display for ContentString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        <str as Display>::fmt(self, f)
+    }
+}
+
 impl std::ops::Deref for ContentString {
     type Target = str;
     fn deref(&self) -> &Self::Target {
         &self.string
+    }
+}
+
+impl AsRef<str> for ContentString {
+    fn as_ref(&self) -> &str {
+        self
+    }
+}
+
+impl AsRef<[u8]> for ContentString {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
     }
 }
 
