@@ -11,8 +11,7 @@
 )]
 
 use iced::{
-    theme,
-    widget::{button, radio, row, Row},
+    widget::{radio, Row},
     Alignment, Application, Element,
 };
 use std::{fmt::Display, path::PathBuf};
@@ -31,11 +30,7 @@ pub enum MainContent {
     /// Main area holds bookmark list.
     Bookmarks,
     /// Main area holds settings editor.
-    Settings,
-    /// Main area holds bookmark editor.
-    EditBookmark,
-    /// Main area holds category editor.
-    EditCategory,
+    Edit,
     /// Main area holds log.
     Log,
 }
@@ -47,16 +42,13 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    const RADIO_CHOCES: [MainContent; 3] = [
-        MainContent::Bookmarks,
-        MainContent::Settings,
-        MainContent::Log,
-    ];
+    const RADIO_CHOCES: [MainContent; 3] =
+        [MainContent::Bookmarks, MainContent::Edit, MainContent::Log];
 
     /// Generate an area chooser for current area.
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
         match self {
-            MainContent::Bookmarks | MainContent::Settings | MainContent::Log => {
+            MainContent::Bookmarks | MainContent::Edit | MainContent::Log => {
                 MainContent::RADIO_CHOCES
                     .iter()
                     .map(|mem| {
@@ -70,26 +62,6 @@ impl MainContent {
                     .align_items(Alignment::Center)
                     .into()
             }
-            MainContent::EditBookmark => row![
-                button("Ok").padding(3).style(theme::Button::Positive),
-                button("Cancel")
-                    .padding(3)
-                    .style(theme::Button::Destructive)
-                    .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
-            ]
-            .spacing(3)
-            .align_items(Alignment::Center)
-            .into(),
-            MainContent::EditCategory => row![
-                button("Ok").padding(3).style(theme::Button::Positive),
-                button("Cancel")
-                    .padding(3)
-                    .style(theme::Button::Destructive)
-                    .on_press(Msg::SwitchMainTo(MainContent::Bookmarks))
-            ]
-            .spacing(3)
-            .align_items(Alignment::Center)
-            .into(),
         }
     }
 }

@@ -69,22 +69,6 @@ fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Ele
 }
 
 pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
-    // let mut bookmarks = Vec::with_capacity(app_view.shown_bookmarks.0);
-    // bookmarks.extend(
-    //     app_view
-    //         .bookmarks
-    //         .iter_indexed()
-    //         .filter(|b| {
-    //             app_view
-    //                 .filter
-    //                 .0
-    //                 .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
-    //                 .unwrap_or(true)
-    //         })
-    //         .skip(app_view.shown_from.0)
-    //         .take(app_view.shown_bookmarks.0)
-    //         .map(|(i, b)| bookmark_row(i, app_view, b)),
-    // );
     let mut bookmark_count = 0usize;
     let mut bookmarks = app_view
         .bookmarks
@@ -109,7 +93,8 @@ pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         );
 
     bookmarks.pop();
-    let bookmarks = scrollable(Column::with_children(bookmarks).spacing(3));
+    let bookmarks = scrollable(Column::with_children(bookmarks).spacing(3))
+        .id(app_view.bookmark_scrollbar_id.clone());
 
     let header = row![
         button("Prev")

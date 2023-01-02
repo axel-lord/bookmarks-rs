@@ -1,4 +1,4 @@
-use crate::{AppView, MainContent, Msg};
+use crate::{AppView, Msg};
 use iced::{
     theme,
     widget::{
@@ -8,10 +8,11 @@ use iced::{
 };
 
 fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) -> Element<'a, Msg> {
-    let category = &app_view.categories.storage[match level.last().cloned() {
+    let index = match level.last().cloned() {
         Some(index) => index,
         None => panic!("level param is empty"),
-    }];
+    };
+    let category = &app_view.categories.storage[index];
     let indent_width = level.len() * 24 - 24;
 
     let mut row_content = Vec::<Element<'a, Msg>>::with_capacity(4);
@@ -20,7 +21,7 @@ fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) ->
         row_content.extend([
             button("Edit")
                 .padding(1)
-                .on_press(Msg::SwitchMainTo(MainContent::EditCategory))
+                .on_press(Msg::EditCategory(index))
                 .into(),
             horizontal_space(Length::Units(3)).into(),
         ]);

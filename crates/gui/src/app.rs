@@ -10,7 +10,7 @@ use std::{
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
-use iced::{executor, Application, Command, Theme};
+use iced::{executor, widget, Application, Command, Theme};
 
 use crate::{MainContent, Msg, ParsedStr};
 
@@ -34,7 +34,7 @@ pub struct App {
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
     url_width: ParsedStr<usize>,
-    selected_bookmark: Option<usize>,
+    bookmark_scrollbar_id: widget::scrollable::Id,
 }
 
 /// View of the application state, providing easy immutable read in building of view.
@@ -66,8 +66,9 @@ pub struct AppView<'a> {
     pub status_log: &'a [String],
     /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
     pub url_width: (usize, &'a str),
-    /// Currently selected bookmark for editing if any.
-    pub selected_bookmark: Option<usize>,
+
+    /// When bookmarks scrollbar is created will be set to it's id.
+    pub bookmark_scrollbar_id: &'a widget::scrollable::Id,
 }
 
 impl App {
@@ -232,7 +233,7 @@ impl Application for App {
             main_content: MainContent::Bookmarks,
             category_tree: Default::default(),
             edit_mode_active: false,
-            selected_bookmark: None,
+            bookmark_scrollbar_id: widget::scrollable::Id::unique(),
         };
 
         app.set_status("Created application");
@@ -359,7 +360,7 @@ impl Application for App {
                         (self.shown_bookmarks.value().unwrap_or(0) as isize).saturating_mul(value),
                     ),
                 ));
-                Command::none()
+                widget::scrollable::snap_to(self.bookmark_scrollbar_id.clone(), 0.0)
             }
 
             Msg::FilterBookmarks(m) => {
@@ -409,14 +410,9 @@ impl Application for App {
                 Command::none()
             }
 
-            Msg::EditBookmark(id) => {
-                self.selected_bookmark = Some(id);
-                self.main_content = MainContent::EditBookmark;
+            Msg::EditBookmark(_) => Command::none(),
 
-                Command::none()
-            }
-
-            Msg::EditCategory(_) => todo!(),
+            Msg::EditCategory(_) => Command::none(),
         }
     }
 
@@ -445,7 +441,7 @@ impl Application for App {
             main_content: self.main_content,
             category_tree: &self.category_tree,
             edit_mode_active: self.edit_mode_active,
-            selected_bookmark: self.selected_bookmark,
+            bookmark_scrollbar_id: &self.bookmark_scrollbar_id,
         })
     }
 }

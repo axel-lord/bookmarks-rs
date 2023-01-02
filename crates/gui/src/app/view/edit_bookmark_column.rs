@@ -6,6 +6,7 @@ use iced::{
 
 use crate::{AppView, MainContent, Msg};
 
+#[allow(dead_code)]
 pub fn edit_bookmark_column<'a>(_app_view: AppView) -> Element<'a, Msg> {
     let header = row![
         button("Ok").padding(3).style(theme::Button::Positive),
