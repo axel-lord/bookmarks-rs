@@ -1,3 +1,5 @@
+use bookmark_storage::ContentString;
+
 #[derive(Debug, Clone)]
 pub struct Reference {
     line: bookmark_storage::ContentString,
@@ -14,11 +16,11 @@ pub struct Reference {
 impl Reference {}
 
 impl bookmark_storage::Storeable for Reference {
-    fn with_string(
-        line: String,
+    fn with_content_string(
+        line: ContentString,
         line_num: Option<usize>,
     ) -> Result<Self, bookmark_storage::ParseErr> {
-        let err = || bookmark_storage::ParseErr::Line(Some(line.clone()), line_num);
+        let err = || bookmark_storage::ParseErr::Line(Some(line.clone().to_string()), line_num);
         let len = || line.len();
 
         use aho_corasick::AhoCorasick;
@@ -79,7 +81,7 @@ impl bookmark_storage::Storeable for Reference {
             .collect();
 
         Ok(Self {
-            line: line.into(),
+            line,
             name,
             children,
             info,
