@@ -42,7 +42,7 @@ pub enum MainContent {
 
 impl Display for MainContent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -60,7 +60,7 @@ impl MainContent {
                 MainContent::RADIO_CHOCES
                     .iter()
                     .map(|mem| {
-                        radio(format!("{:?}", mem), *mem, Some(*self), Msg::SwitchMainTo)
+                        radio(format!("{mem:?}"), *mem, Some(*self), Msg::SwitchMainTo)
                             .spacing(3)
                             .size(16)
                             .into()

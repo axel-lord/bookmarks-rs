@@ -34,7 +34,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
         }
 
         bookmarks.buffer.reset();
-        println!("added {} bookmarks", added_count);
+        println!("added {added_count} bookmarks");
 
         Ok(())
     })

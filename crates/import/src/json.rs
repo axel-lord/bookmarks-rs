@@ -30,13 +30,13 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
 
             if let Some(children) = top.get("children") {
                 let Some(children) = children.as_array() else {
-                    println!("children member not an array\n{:#?}", children);
+                    println!("children member not an array\n{children:#?}");
                     continue;
                 };
 
                 for child in children {
                     let Some(child) = child.as_object() else {
-                        println!("child was not an object\n{:#?}", child);
+                        println!("child was not an object\n{child:#?}");
                         continue;
                     };
                     element_stack.push(child);
@@ -53,7 +53,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
             }
         }
 
-        println!("added {} bookmarks", added_count);
+        println!("added {added_count} bookmarks");
         bookmarks.buffer.reset();
 
         Ok(())

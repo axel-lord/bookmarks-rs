@@ -88,8 +88,7 @@ impl Category {
         for identifier in self.identifiers() {
             let ty = identifier.get(..1).ok_or_else(|| {
                 IdentifierErr(format!(
-                    "identifier \"{}\" does not start with an ascii character",
-                    identifier
+                    "identifier \"{identifier}\" does not start with an ascii character"
                 ))
             })?;
 
@@ -108,8 +107,7 @@ impl Category {
                 }
                 spec => {
                     return Err(IdentifierErr(format!(
-                        "invalid identifier specifier '{}' in identifier: {}",
-                        spec, identifier
+                        "invalid identifier specifier '{spec}' in identifier: {identifier}"
                     )));
                 }
             }

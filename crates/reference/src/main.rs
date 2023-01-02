@@ -331,5 +331,5 @@ fn main() {
     ));
 
     println!("{item}");
-    println!("{:#}", item);
+    println!("{item:#}");
 }

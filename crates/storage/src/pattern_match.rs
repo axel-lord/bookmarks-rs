@@ -78,10 +78,7 @@ pub unsafe fn substring_location(string: &str, substring: &str) -> Option<Range<
 pub fn range_trim(source: &str, location: Range<usize>) -> Range<usize> {
     match unsafe { substring_location(source, source[location.clone()].trim()) } {
         Some(value) => value,
-        None => panic!(
-            "location {:?} is out of bounds for source {:?}",
-            location, source
-        ),
+        None => panic!("location {location:?} is out of bounds for source {source:?}"),
     }
 }
 

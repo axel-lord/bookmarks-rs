@@ -213,7 +213,7 @@ pub fn run(
 
         match std::io::stdin().read_line(&mut command) {
             Err(err) => {
-                eprintln!("failed to read from stdin: {}", err);
+                eprintln!("failed to read from stdin: {err}");
                 break 1;
             }
             Ok(0) => break 0,
