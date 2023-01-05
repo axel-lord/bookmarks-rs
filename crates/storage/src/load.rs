@@ -4,21 +4,21 @@ use std::io::{self, BufRead, BufReader, Read};
 /// Load occurances of a [Listed] type from a [Read].
 ///
 /// # Errors
-/// If a line cannot be parsed a [ParseErr] will be issued.
+/// If a line cannot be parsed a [`ParseErr`] will be issued.
 pub fn load<T>(reader: &mut impl Read) -> Result<Vec<T>, ParseErr>
 where
     T: Listed,
 {
     let reader = BufReader::new(reader);
-    load_from(reader.lines().enumerate())
+    from(reader.lines().enumerate())
 }
 
 /// Load occurances of a [Listed] type from an enumerated iterator of line parses.
 ///
 /// # Errors
-/// If any of the line parses in the passed iterator is an error, [ParseErr] will
+/// If any of the line parses in the passed iterator is an error, eErr] will
 /// be returned.
-pub fn load_from<T>(
+pub fn from<T>(
     mut reader: impl Iterator<Item = (usize, io::Result<String>)>,
 ) -> Result<Vec<T>, ParseErr>
 where

@@ -24,13 +24,13 @@ pub trait Storeable: Sized {
     /// Push a value onto a list property on the instance.
     ///
     /// # Errors
-    /// If the property does not exist, or if it is not a [Property::List]
+    /// If the property does not exist, or if it is not a [`Property::List`]
     fn push(&mut self, property: &str, value: &str) -> Result<&mut Self, PropertyErr>;
 
-    /// Construct an instance from a ready [ContentString].
+    /// Construct an instance from a ready [`ContentString`].
     ///
     /// # Errors
-    /// If the [ContentString] cannot be parsed to the [Storeable].
+    /// If the [`ContentString`] cannot be parsed to the [Storeable].
     fn with_content_string(line: ContentString, line_num: Option<usize>) -> Result<Self, ParseErr>;
 
     /// Construct an instance from a string.

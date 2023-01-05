@@ -32,12 +32,14 @@ impl Content {
 }
 
 impl ContentString {
-    /// Create a new [ContentString], it is empty ad marked as not appended to.
+    /// Create a new [`ContentString`], it is empty ad marked as not appended to.
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        ContentString::default()
     }
 
-    /// Create a [ContentString] from a regular string, it is marked as not appended to.
+    /// Create a [`ContentString`] from a regular string, it is marked as not appended to.
+    #[must_use]
     pub fn with_string(value: String) -> Self {
         ContentString {
             is_appended_to: false,
@@ -45,10 +47,11 @@ impl ContentString {
         }
     }
 
-    /// Create a [ContentString] from a an [Rc] and a Range, it is marked as not appended to.
+    /// Create a [`ContentString`] from a an [Rc] and a Range, it is marked as not appended to.
     ///
     /// # Panics
     /// If the range is out of bound of the string.
+    #[must_use]
     pub fn with_rc_range(rc: Arc<str>, range: Range<usize>) -> Self {
         assert!(rc.get(range.clone()).is_some());
         Self {
@@ -58,6 +61,7 @@ impl ContentString {
     }
 
     /// Check whether or not the string has been appended to.
+    #[must_use]
     pub fn has_been_pushed_to(&self) -> bool {
         self.is_appended_to
     }
@@ -83,6 +87,7 @@ impl ContentString {
     }
 
     /// Get content as a string slice.
+    #[must_use]
     pub fn as_str(&self) -> &str {
         match self
             .content

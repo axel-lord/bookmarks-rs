@@ -8,6 +8,7 @@
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
     clippy::unwrap_used,
+    clippy::pedantic,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -31,10 +32,10 @@ pub use bookmark_derive::Storeable;
 pub use content_string::ContentString;
 pub use field::Field;
 pub use list_field::ListField;
+pub use load::from as load_from;
 pub use load::load;
-pub use load::load_from;
 pub use parse_err::ParseErr;
-pub use property::{Property, PropertyErr};
+pub use property::{Error as PropertyErr, Property};
 pub use save::save;
 pub use section::Section;
 pub use storeable::Storeable;
