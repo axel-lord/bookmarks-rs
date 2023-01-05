@@ -1,11 +1,9 @@
-use lazy_static::lazy_static;
 use regex::Regex;
 
 pub fn parse_command(line: &str) -> Option<Vec<String>> {
-    lazy_static! {
-        static ref ARG_RE: Regex =
-            Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failure to compile ARG_RE regex");
-    }
+    use once_cell::sync::Lazy;
+    static ARG_RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failure to compile ARG_RE regex"));
 
     let mut next_start = 0;
     let mut arg_vec = Vec::new();

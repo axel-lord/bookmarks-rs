@@ -127,18 +127,11 @@ impl From<&[Category]> for Graph {
     }
 }
 
-use regex::Regex;
-
 /// Run a command line bookmark manager.
 pub fn run(
     init_commands: Option<String>,
     mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,
 ) -> i32 {
-    lazy_static::lazy_static! {
-        static ref CMD_RE: Regex = Regex::new(r#"(\S+)\s*(.*)"#).expect("failed to comple CMD_RE regex");
-        static ref ARG_RE: Regex = Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failed to ARG_RE compile regex");
-    }
-
     let bookmarks = shared::BufferStorage::<bookmark::Bookmark>::default();
     let categories = shared::BufferStorage::<category::Category>::default();
     let infos = shared::BufferStorage::<info::Info>::default();

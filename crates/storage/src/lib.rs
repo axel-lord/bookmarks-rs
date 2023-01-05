@@ -42,4 +42,6 @@ pub use storeable::Storeable;
 /// Trait for types that imlement both [Section] ans [Storeable].
 pub trait Listed: Storeable + Section {}
 
+pub use once_cell::sync::Lazy;
+
 impl<T> Listed for T where T: Storeable + Section {}

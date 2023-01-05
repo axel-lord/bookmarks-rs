@@ -84,10 +84,8 @@ pub fn range_trim(source: &str, location: Range<usize>) -> Range<usize> {
 
 /// Join and iterator of string slices into a single string delimited by [token::DELIM].
 pub fn join_with_delim(mut fields: impl Iterator<Item = impl AsRef<str>>) -> String {
-    use lazy_static::lazy_static;
-    lazy_static! {
-        static ref DELIM: String = format!(" {} ", token::DELIM);
-    }
+    use once_cell::sync::Lazy;
+    static DELIM: Lazy<String> = Lazy::new(|| format!(" {} ", token::DELIM));
 
     let mut out = String::new();
 

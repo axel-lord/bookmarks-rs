@@ -24,11 +24,9 @@ impl bookmark_storage::Storeable for Reference {
         let len = || line.len();
 
         use aho_corasick::AhoCorasick;
-        use lazy_static::lazy_static;
-        lazy_static! {
-            static ref AC: AhoCorasick =
-                AhoCorasick::new(["<name>", "<children>", "<info>", "<tags>"]);
-        }
+        use bookmark_storage::Lazy;
+        static AC: Lazy<AhoCorasick> =
+            Lazy::new(|| AhoCorasick::new(["<name>", "<children>", "<info>", "<tags>"]));
 
         let mut iter = AC.find_iter(&line).enumerate().peekable();
 
