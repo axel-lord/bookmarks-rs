@@ -2,7 +2,7 @@ use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
 /// Error type for issues appearing when accessing properties.
-pub enum PropertyErr {
+pub enum Error {
     /// If the property does not exist and a message.
     #[error("property {0} does not exist as expected type of property")]
     DoesNotExist(String),

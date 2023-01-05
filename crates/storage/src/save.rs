@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use crate::Listed;
+use crate::{Listed, Storeable};
 
 /// Write the items of an iterator of [Listed].
 ///
@@ -12,7 +12,7 @@ where
 {
     writeln!(writer, "{}", T::TOKEN_BEGIN)?;
 
-    for item in content.map(|item| item.to_line()) {
+    for item in content.map(Storeable::to_line) {
         writeln!(writer, "{item}")?;
     }
 

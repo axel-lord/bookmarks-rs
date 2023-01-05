@@ -6,11 +6,13 @@ pub struct Field(Range<usize>);
 
 impl Field {
     /// Create a new field from two positions in a string slice.
+    #[must_use]
     pub fn new(from: usize, to: usize) -> Self {
         Self(from..to)
     }
 
     /// Get the field as a string slice existing in another string slice.
+    #[must_use]
     pub fn get<'a>(&self, from: &'a str) -> &'a str {
         &from[self.0.clone()]
     }

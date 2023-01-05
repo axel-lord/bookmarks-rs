@@ -49,13 +49,15 @@ impl FromIterator<Range<usize>> for ListField {
 }
 
 impl ListField {
-    /// Create a new empty [ListField].
+    /// Create a new empty [`ListField`].
+    #[must_use]
     pub fn new() -> Self {
-        Self(Default::default())
+        Self(Vec::new())
     }
 
-    /// Get an iterator of the contained values of a [ListField] as
+    /// Get an iterator of the contained values of a [`ListField`] as
     /// string slices existing in another string slice.
+    #[must_use]
     pub fn get<'a>(&'a self, from: &'a str) -> impl DoubleEndedIterator<Item = &'a str> {
         self.0.iter().map(|f| f.get(from))
     }
