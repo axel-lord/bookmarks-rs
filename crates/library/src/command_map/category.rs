@@ -4,7 +4,7 @@ use crate::{
     bookmark::Bookmark,
     category::Category,
     command_map::{
-        count, list, load, print, push, save, select, set, CommandMap, CommandMapBuilder,
+        count, list, load, print, push, save, select, set, Builder as CommandMapBuilder, CommandMap,
     },
     shared,
 };

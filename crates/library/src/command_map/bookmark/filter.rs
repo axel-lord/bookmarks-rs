@@ -39,11 +39,11 @@ impl Command for Filter {
 }
 
 #[derive(Debug, Command)]
-pub struct FilterInv {
+pub struct Inverse {
     bookmarks: shared::BufferStorage<Bookmark>,
 }
 
-impl Command for FilterInv {
+impl Command for Inverse {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution(

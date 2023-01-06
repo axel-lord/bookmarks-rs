@@ -15,7 +15,7 @@ mod html;
 mod json;
 mod onetab;
 
-use bookmark_library::{command_map::CommandMapBuilder, shared::BufferStorage};
+use bookmark_library::{command_map::Builder as CommandMapBuilder, shared::BufferStorage};
 
 /// Type used to build import command.
 #[derive(Debug, Clone, Copy)]

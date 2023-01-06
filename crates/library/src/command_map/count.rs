@@ -32,8 +32,7 @@ where
             buffer_storage
                 .buffer
                 .count()
-                .map(|b| b.to_string())
-                .unwrap_or_else(|| "All".into()),
+                .map_or_else(|| "All".into(), |b| b.to_string()),
         );
 
         Ok(())

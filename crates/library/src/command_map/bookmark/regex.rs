@@ -28,11 +28,11 @@ impl Command for Regex {
 }
 
 #[derive(Debug, Command)]
-pub struct RegexInv {
+pub struct Inverse {
     bookmarks: shared::BufferStorage<Bookmark>,
 }
 
-impl Command for RegexInv {
+impl Command for Inverse {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.is_empty() {
             return Err(CommandErr::Execution("regex needs a pattern".into()));
