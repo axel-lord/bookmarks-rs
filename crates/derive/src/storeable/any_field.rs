@@ -15,6 +15,13 @@ pub trait AnyField {
     fn get_fancy_display(&self, index: usize) -> TokenStream2;
     fn get_simple_display(&self, index: usize) -> TokenStream2;
 
+    fn get_field_init(&self) -> TokenStream2 {
+        let ident = self.get_ident();
+        quote::quote! {
+            #ident
+        }
+    }
+
     fn get_ident_string(&self) -> String {
         self.get_ident().to_string()
     }
