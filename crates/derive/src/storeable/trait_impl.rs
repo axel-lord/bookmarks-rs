@@ -63,12 +63,11 @@ fn gen_push(store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
 fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> TokenStream2 {
     let capture_extracts = store_fields.iter().map(|f| f.get_capture_extract(line));
 
-    let field_names = store_fields.iter().map(|f| f.get_ident());
+    let field_init = store_fields.iter().map(|f| f.get_field_init());
 
     let tokens = store_fields.iter().map(|f| f.get_key());
 
     quote! {
-        #[allow(clippy::needless_update)]
         fn with_content_string(
             #line: bookmark_storage::ContentString,
             line_num: Option<usize>,
@@ -99,8 +98,7 @@ fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> Tok
 
             Ok(Self {
                 #line: #line,
-                #(#field_names,)*
-                ..Default::default()
+                #(#field_init,)*
             })
         }
     }
