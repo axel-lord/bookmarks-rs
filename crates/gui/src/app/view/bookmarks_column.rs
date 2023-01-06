@@ -1,4 +1,4 @@
-use crate::{AppView, Msg};
+use crate::{Msg, View};
 use bookmark_library::Bookmark;
 use iced::{
     theme,
@@ -33,7 +33,7 @@ fn truncated_text<'a>(content: &str, max_width: usize, theme: theme::Text) -> El
     .into()
 }
 
-fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Element<'a, Msg> {
+fn bookmark_row<'a>(index: usize, app_view: View, bookmark: &Bookmark) -> Element<'a, Msg> {
     let btn = button(container(
         row![
             truncated_text(
@@ -68,17 +68,15 @@ fn bookmark_row<'a>(index: usize, app_view: AppView, bookmark: &Bookmark) -> Ele
     .into()
 }
 
-pub fn bookmark_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
     let mut bookmark_count = 0usize;
     let mut bookmarks = app_view
         .bookmarks
         .iter_indexed()
         .filter(|b| {
-            app_view
-                .filter
-                .0
-                .map(|f| f.is_match(b.1.url()) || f.is_match(b.1.description()))
-                .unwrap_or(true)
+            app_view.filter.0.map_or(true, |f| {
+                f.is_match(b.1.url()) || f.is_match(b.1.description())
+            })
         })
         .skip(app_view.shown_from.0)
         .take(app_view.shown_bookmarks.0)

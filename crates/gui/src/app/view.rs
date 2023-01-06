@@ -5,7 +5,7 @@ mod edit_category_column;
 mod log_column;
 mod settings_column;
 
-use crate::{AppView, MainContent, Msg};
+use crate::{MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
@@ -19,7 +19,7 @@ use iced::{
 use log_column::log_column;
 use settings_column::settings_column;
 
-fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
+fn tool_row<'a>(app_view: View) -> Element<'a, Msg> {
     let filter = row![
         text("Filter:"),
         text_input("...", app_view.filter.1, Msg::FilterBookmarks)
@@ -58,7 +58,7 @@ fn tool_row<'a>(app_view: AppView) -> Element<'a, Msg> {
     .into()
 }
 
-fn blank_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
     let header = row![
         button("Leave")
             .padding(3)
@@ -78,7 +78,7 @@ fn blank_column<'a>(app_view: AppView) -> Element<'a, Msg> {
         .into()
 }
 
-fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
+fn content_row<'a>(app_view: View) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Edit => settings_column(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
@@ -93,7 +93,7 @@ fn content_row<'a>(app_view: AppView) -> Element<'a, Msg> {
         .into()
 }
 
-pub fn application_view<'a>(app_view: AppView<'_>) -> Element<'a, Msg> {
+pub fn view<'a>(app_view: View<'_>) -> Element<'a, Msg> {
     let status = row![horizontal_space(Length::Fill), text(app_view.status),]
         .padding(3)
         .align_items(iced::Alignment::Center);
