@@ -8,7 +8,7 @@ use bookmark_command::args_are_empty;
 
 use crate::{
     category::Category,
-    command_map::{load, CommandMap, CommandMapBuilder},
+    command_map::{load, Builder as CommandMapBuilder, CommandMap},
     info::Info,
     shared,
 };
@@ -43,7 +43,7 @@ impl CatMap {
     }
 
     fn new() -> Self {
-        Default::default()
+        CatMap::default()
     }
 }
 

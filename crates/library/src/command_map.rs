@@ -16,7 +16,7 @@ mod set;
 
 use crate::{bookmark::Bookmark, category::Category, info::Info, shared};
 use bookmark_command::{Command, CommandErr};
-use std::{cell::RefCell, collections::HashMap, fmt::Debug, iter::FromIterator};
+use std::{cell::RefCell, collections::HashMap, fmt::Debug};
 
 struct CommandEntry {
     command: RefCell<Box<dyn Command>>,
@@ -42,43 +42,48 @@ impl Debug for CommandEntry {
     }
 }
 
-/// Builder for [CommandMap].
+/// Builder for [`CommandMap`].
 #[derive(Debug, Default)]
-pub struct CommandMapBuilder<'a> {
+pub struct Builder<'a> {
     commands: Vec<(&'a str, CommandEntry)>,
     name: String,
     fallback: Option<String>,
 }
 
-impl<'a> CommandMapBuilder<'a> {
-    /// Create a new [CommandMapBuilder] same as [CommandMapBuilder::default].
+impl<'a> Builder<'a> {
+    /// Create a new [Builder] same as [`Builder::default`].
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Builder::default()
     }
 
-    /// Push a [Command] to be used by the built [CommandMap].
+    /// Push a [Command] to be used by the built [`CommandMap`].
+    #[must_use]
     pub fn push(mut self, name: &'a str, help: Option<&str>, command: Box<dyn Command>) -> Self {
         self.commands.push((name, CommandEntry::new(command, help)));
         self
     }
 
-    /// Set the name of the [CommandMap].
+    /// Set the name of the [`CommandMap`].
+    #[must_use]
     pub fn name(mut self, name: String) -> Self {
         self.name = name;
         self
     }
 
-    /// Set a backup, if the the [Command] requested of the [CommandMap] does not exist it will
+    /// Set a backup, if the the [Command] requested of the [`CommandMap`] does not exist it will
     /// forward it to this subcommand.
+    #[must_use]
     pub fn lookup_backup(mut self, backup: Option<String>) -> Self {
         self.fallback = backup;
         self
     }
 
-    /// Build a [CommandMap] consuming the [CommandMapBuilder].
+    /// Build a [`CommandMap`] consuming the [Builder].
+    #[must_use]
     pub fn build(self) -> CommandMap<'a> {
         CommandMap {
-            commands: HashMap::from_iter(self.commands.into_iter()),
+            commands: self.commands.into_iter().collect(),
             name: self.name,
             fallback: self.fallback,
         }
@@ -95,13 +100,14 @@ pub struct CommandMap<'a> {
 }
 
 impl<'a> CommandMap<'a> {
-    /// Gives the name of the [CommandMap].
+    /// Gives the name of the [`CommandMap`].
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    /// Call a command in the [CommandMap] and pass ite the given arguments, this is the main
-    /// purpose of the [CommandMap].
+    /// Call a command in the [`CommandMap`] and pass ite the given arguments, this is the main
+    /// purpose of the [`CommandMap`].
     ///
     /// # Errors
     /// If the command fails in some way, or if it does not exist.
@@ -110,7 +116,7 @@ impl<'a> CommandMap<'a> {
             "help" => match args.len() {
                 0 => {
                     println!("available commands:");
-                    for (command, entry) in self.commands.iter() {
+                    for (command, entry) in &self.commands {
                         if let Some(ref help) = entry.help {
                             println!("- {command}, {help}");
                         } else {
@@ -159,6 +165,7 @@ impl<'a> CommandMap<'a> {
 
     /// Get the hel message for a command, the message is given if the command exists and it has a
     /// help message.
+    #[must_use]
     pub fn help(&self, name: &str) -> Option<String> {
         if name == "help" {
             Some(if self.name.is_empty() {
@@ -173,14 +180,14 @@ impl<'a> CommandMap<'a> {
 }
 
 impl CommandMap<'static> {
-    /// Get a default config of the [CommandMapBuilder] this includes all default commands for
+    /// Get a default config of the [`CommandMapBuilder`] this includes all default commands for
     /// handling bookmarks, categories, and info.
     pub fn default_config(
         bookmarks: shared::BufferStorage<Bookmark>,
         categories: shared::BufferStorage<Category>,
         infos: shared::BufferStorage<Info>,
-    ) -> CommandMapBuilder<'static> {
-        CommandMapBuilder::new()
+    ) -> Builder<'static> {
+        Builder::new()
             .lookup_backup(Some("bookmark".into()))
             .push(
                 "reset",
@@ -207,11 +214,7 @@ impl CommandMap<'static> {
                 None,
                 load::LoadAll::build(categories.clone(), bookmarks.clone(), infos.clone()),
             )
-            .push(
-                "save",
-                None,
-                save::SaveAll::build(infos, categories, bookmarks),
-            )
+            .push("save", None, save::All::build(infos, categories, bookmarks))
             .push(
                 "debug",
                 None,

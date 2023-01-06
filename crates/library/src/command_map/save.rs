@@ -36,14 +36,16 @@ where
 }
 
 #[derive(Debug, Command)]
-pub struct SaveAll {
+pub struct All {
     infos: shared::BufferStorage<Info>,
     categories: shared::BufferStorage<Category>,
     bookmarks: shared::BufferStorage<Bookmark>,
 }
 
-impl Command for SaveAll {
+impl Command for All {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
+        use bookmark_storage::save;
+
         if args.len() != 1 {
             return Err(CommandErr::Execution(
                 "save should be called with one argument".into(),
@@ -52,7 +54,6 @@ impl Command for SaveAll {
 
         let mut writer = BufWriter::new(File::create(&args[0])?);
 
-        use bookmark_storage::save;
         macro_rules! save_buffer_storage {
             ($($storage:expr),* $(,)?) => {
                 $(

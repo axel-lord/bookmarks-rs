@@ -7,7 +7,7 @@ pub mod unique;
 use crate::{
     bookmark::Bookmark,
     command_map::{
-        count, list, load, print, push, save, select, set, CommandMap, CommandMapBuilder,
+        count, list, load, print, push, save, select, set, Builder as CommandMapBuilder, CommandMap,
     },
     shared,
 };
@@ -21,10 +21,10 @@ pub fn build(name: String, bookmarks: shared::BufferStorage<Bookmark>) -> Box<Co
             .push(
                 "filter-inv",
                 None,
-                filter::FilterInv::build(bookmarks.clone()),
+                filter::Inverse::build(bookmarks.clone()),
             )
             .push("regex", None, regex::Regex::build(bookmarks.clone()))
-            .push("regex-inv", None, regex::RegexInv::build(bookmarks.clone()))
+            .push("regex-inv", None, regex::Inverse::build(bookmarks.clone()))
             .push("count", None, count::Count::build(bookmarks.clone()))
             .push("load", None, load::Load::build(bookmarks.clone()))
             .push("save", None, save::Save::build(bookmarks.clone()))

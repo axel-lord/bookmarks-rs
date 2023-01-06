@@ -1,6 +1,7 @@
 use crate::{container::BufferStorage, token, Bookmark};
 use bookmark_storage::{ContentString, Field, ListField, Section, Storeable};
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
+use thiserror::Error;
 
 /// Type representing a category.
 ///
@@ -37,17 +38,10 @@ pub struct Category {
     subcategories: ListField,
 }
 
-/// Error type for issues creatin an [IdentifierContainer].
-#[derive(Clone, Debug)]
+/// Error type for issues creatin an [`IdentifierContainer`].
+#[derive(Clone, Debug, Error)]
+#[error("{0}")]
 pub struct IdentifierErr(String);
-
-impl std::fmt::Display for IdentifierErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Error for IdentifierErr {}
 
 impl std::convert::AsRef<Category> for Category {
     fn as_ref(&self) -> &Category {
@@ -68,6 +62,7 @@ pub struct IdentifierContainer<'a> {
 
 impl<'a> IdentifierContainer<'a> {
     /// Tally how many of each kind of requirement exist.
+    #[must_use]
     pub fn tally(&self) -> HashMap<char, usize> {
         HashMap::from([
             ('(', self.include.len()),
@@ -83,7 +78,7 @@ impl Category {
     /// # Errors
     /// If one of the requirements is malformed.
     pub fn identifier_container<'a>(&'a self) -> Result<IdentifierContainer<'a>, IdentifierErr> {
-        let mut identifier_container: IdentifierContainer<'a> = Default::default();
+        let mut identifier_container: IdentifierContainer<'a> = IdentifierContainer::default();
 
         for identifier in self.identifiers() {
             let ty = identifier.get(..1).ok_or_else(|| {
@@ -116,7 +111,7 @@ impl Category {
         Ok(identifier_container)
     }
 
-    /// Apply the category to a [BufferStorage] of bookmarks.
+    /// Apply the category to a [`BufferStorage`] of bookmarks.
     ///
     /// # Errors
     /// If the Category cirteria are malformed.

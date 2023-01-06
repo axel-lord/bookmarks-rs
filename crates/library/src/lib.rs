@@ -7,6 +7,7 @@
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
     clippy::unwrap_used,
+    clippy::pedantic,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -14,7 +15,7 @@ pub mod command_map;
 pub mod container;
 pub mod token;
 
-/// More easily use shared [container::BufferStorage].
+/// More easily use shared [`container::BufferStorage`].
 pub mod shared {
     /// Since a lot of commands need access to reference counted storag, this type is used as a
     /// conveniance to simplify their signatures.

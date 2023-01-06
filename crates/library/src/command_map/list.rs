@@ -9,6 +9,7 @@ pub fn wrap_if_negative(number: isize, max: usize) -> Result<usize, CommandErr> 
         )));
     }
 
+    #[allow(clippy::cast_sign_loss)]
     Ok(if number >= 0 {
         number as usize
     } else {
@@ -36,13 +37,15 @@ where
 
         let count = args
             .get(0)
-            .map(|arg| arg.parse())
-            .unwrap_or_else(|| {
-                Ok(buffer_storage
-                    .buffer
-                    .count()
-                    .unwrap_or(buffer_storage.storage.len()))
-            })
+            .map_or_else(
+                || {
+                    Ok(buffer_storage
+                        .buffer
+                        .count()
+                        .unwrap_or(buffer_storage.storage.len()))
+                },
+                |arg| arg.parse(),
+            )
             .map_err(|_| {
                 CommandErr::Execution(format!(
                     "could not parse {} as a positive integer",
@@ -52,8 +55,7 @@ where
 
         let from = args
             .get(1)
-            .map(|arg| arg.parse())
-            .unwrap_or(Ok(0))
+            .map_or(Ok(0), |arg| arg.parse())
             .map_err(|_| {
                 CommandErr::Execution(format!("could not parse {} as an integer", &args[1]))
             })
