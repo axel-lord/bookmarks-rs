@@ -42,12 +42,12 @@ where
                 item.set(property, Property::List(Vec::from(&args[1..])))?;
             }
             Ok(Property::Single(_)) => {
-                if args[1..].len() != 1 {
+                if args[1..].len() == 1 {
+                    item.set(property, Property::Single(args[1].clone()))?;
+                } else {
                     return Err(CommandErr::Execution(format!(
                         "property {property} takes only a single value"
                     )));
-                } else {
-                    item.set(property, Property::Single(args[1].clone()))?;
                 }
             }
         }

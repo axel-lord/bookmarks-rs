@@ -41,7 +41,7 @@ where
 }
 
 #[derive(Debug, Command)]
-pub struct LoadAll {
+pub struct All {
     categories: shared::BufferStorage<Category>,
     bookmarks: shared::BufferStorage<Bookmark>,
     infos: shared::BufferStorage<Info>,
@@ -59,7 +59,7 @@ macro_rules! load_section {
     }};
 }
 
-impl Command for LoadAll {
+impl Command for All {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
         if args.len() != 1 {
             return Err(CommandErr::Execution(

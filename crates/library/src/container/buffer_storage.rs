@@ -34,7 +34,8 @@ impl std::fmt::Display for GetSelectedErr {
 impl std::error::Error for GetSelectedErr {}
 
 impl<T> BufferStorage<T> {
-    /// Create a new [BufferStorage].
+    /// Create a new [`BufferStorage`].
+    #[must_use]
     pub fn new(storage: Storage<T>, buffer: Buffer, selected: Selected) -> Self {
         Self {
             storage,
@@ -43,7 +44,7 @@ impl<T> BufferStorage<T> {
         }
     }
 
-    /// Reset the [Selected] and [Buffer] of the [BufferStorage].
+    /// Reset the [Selected] and [Buffer] of the [`BufferStorage`].
     /// Important to note that the [Storage] stays the same.
     pub fn reset(&mut self) -> &Self {
         self.buffer.reset();

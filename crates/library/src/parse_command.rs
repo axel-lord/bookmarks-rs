@@ -1,6 +1,6 @@
 use regex::Regex;
 
-pub fn parse_command(line: &str) -> Option<Vec<String>> {
+pub fn parse_command(line: &str) -> Vec<String> {
     use once_cell::sync::Lazy;
     static ARG_RE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"\s*"(.*?)"\s*|$"#).expect("failure to compile ARG_RE regex"));
@@ -30,5 +30,5 @@ pub fn parse_command(line: &str) -> Option<Vec<String>> {
         arg_vec.push(quoted_arg.as_str().into());
     }
 
-    Some(arg_vec)
+    arg_vec
 }
