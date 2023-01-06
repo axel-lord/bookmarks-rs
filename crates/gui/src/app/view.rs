@@ -5,14 +5,14 @@ mod edit_category_column;
 mod log_column;
 mod settings_column;
 
-use crate::{MainContent, Msg, View};
+use crate::{app::LogPane, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
     theme,
     widget::{
-        button, column, horizontal_rule, horizontal_space, row, text, text_input, toggler,
-        vertical_rule, vertical_space,
+        button, column, horizontal_rule, horizontal_space, pane_grid, row, text, text_input,
+        toggler, vertical_rule, vertical_space,
     },
     Alignment, Element, Length,
 };
@@ -78,11 +78,11 @@ fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
         .into()
 }
 
-fn content_row<'a>(app_view: View) -> Element<'a, Msg> {
+fn content_row<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPane>) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Edit => settings_column(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
-        MainContent::Log => log_column(app_view),
+        MainContent::Log => log_column(app_view, log_panes),
         #[allow(unreachable_patterns)]
         _ => blank_column(app_view),
     };
@@ -93,7 +93,7 @@ fn content_row<'a>(app_view: View) -> Element<'a, Msg> {
         .into()
 }
 
-pub fn view<'a>(app_view: View<'_>) -> Element<'a, Msg> {
+pub fn view<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPane>) -> Element<'a, Msg> {
     let status = row![horizontal_space(Length::Fill), text(app_view.status),]
         .padding(3)
         .align_items(iced::Alignment::Center);
@@ -101,7 +101,7 @@ pub fn view<'a>(app_view: View<'_>) -> Element<'a, Msg> {
     column![
         tool_row(app_view),
         horizontal_rule(3),
-        content_row(app_view),
+        content_row(app_view, log_panes),
         horizontal_rule(3),
         status,
     ]

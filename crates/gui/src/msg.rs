@@ -1,8 +1,9 @@
 use std::sync::{Arc, Mutex};
 
 use bookmark_library::Bookmark;
+use iced::{widget::pane_grid::ResizeEvent, Theme};
 
-use crate::MainContent;
+use crate::{app::Metric, MainContent};
 
 /// Message type for gui.
 #[derive(Debug, Clone, Default)]
@@ -33,6 +34,12 @@ pub enum Msg {
     EditBookmark(usize),
     /// Catgegory at passed index should be edited.
     EditCategory(usize),
+    /// Used for when resizing log panes.
+    LogPaneResize(ResizeEvent),
+    /// Signal that some stats are to be gathered.
+    GatherMetric(Metric),
+    /// Set the theme in use.
+    SetTheme(Theme),
     /// The filter in the filter box should be filter the bookmarks until reset.
     ApplyFilter,
     /// Any and all bookmark filters should be removed.
