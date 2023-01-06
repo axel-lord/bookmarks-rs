@@ -22,6 +22,14 @@ pub struct Bookmark {
     tags: ListField,
 }
 
+impl Bookmark {
+    /// Get the amount of bytes used to store text used by bookmark.
+    #[must_use]
+    pub fn stored_length(&self) -> usize {
+        self.line.as_bytes().len()
+    }
+}
+
 impl AsRef<Bookmark> for Bookmark {
     fn as_ref(&self) -> &Bookmark {
         self

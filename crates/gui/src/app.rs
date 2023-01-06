@@ -10,11 +10,22 @@ use std::{
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
-use iced::{executor, widget, Application, Command, Theme};
+use iced::{
+    executor,
+    widget::{
+        self,
+        pane_grid::{self, Axis, ResizeEvent},
+    },
+    Application, Command, Theme,
+};
 
 use crate::{MainContent, Msg, ParsedStr};
+use conv::prelude::*;
 
+mod log_pane;
 mod view;
+
+pub use log_pane::{LogPane, Metric, Metrics};
 
 /// Application state.
 #[derive(Debug)]
@@ -35,6 +46,9 @@ pub struct App {
     status_msg: RefCell<String>,
     url_width: ParsedStr<usize>,
     bookmark_scrollbar_id: widget::scrollable::Id,
+    log_panes: pane_grid::State<LogPane>,
+    theme: Theme,
+    metrics: Metrics,
 }
 
 /// View of the application state, providing easy immutable read in building of view.
@@ -66,7 +80,10 @@ pub struct View<'a> {
     pub status_log: &'a [String],
     /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
     pub url_width: (usize, &'a str),
-
+    /// True if dark mode in use.
+    pub is_dark_mode: bool,
+    /// Stats that may have been gathered.
+    pub metrics: &'a Metrics,
     /// When bookmarks scrollbar is created will be set to it's id.
     pub bookmark_scrollbar_id: &'a widget::scrollable::Id,
 }
@@ -266,6 +283,9 @@ impl Application for App {
         let categories = shared::BufferStorage::default();
         let infos = shared::BufferStorage::default();
 
+        let (mut log_panes, log_pane) = pane_grid::State::new(LogPane::Log);
+        log_panes.split(Axis::Vertical, &log_pane, LogPane::Stats);
+
         let mut app = Self {
             command_map: CommandMap::default_config(
                 bookmarks.clone(),
@@ -288,6 +308,12 @@ impl Application for App {
             category_tree: Vec::new(),
             edit_mode_active: false,
             bookmark_scrollbar_id: widget::scrollable::Id::unique(),
+            log_panes,
+            theme: match dark_light::detect() {
+                dark_light::Mode::Dark => Theme::Dark,
+                dark_light::Mode::Light => Theme::Light,
+            },
+            metrics: Metrics::default(),
         };
 
         app.set_status("Created application");
@@ -306,12 +332,11 @@ impl Application for App {
     }
 
     fn theme(&self) -> Self::Theme {
-        match dark_light::detect() {
-            dark_light::Mode::Dark => Theme::Dark,
-            dark_light::Mode::Light => Theme::Light,
-        }
+        self.theme.clone()
     }
 
+    #[allow(clippy::too_many_lines)] // due to having to handle a lot of message types, perhaps
+                                     // look into dynamic dispatch.
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
             Msg::Tick | Msg::None => Command::none(),
@@ -435,6 +460,41 @@ impl Application for App {
                 self.edit_category(index);
                 Command::none()
             }
+            Msg::LogPaneResize(ResizeEvent { ref split, ratio }) => {
+                self.log_panes.resize(split, ratio);
+                Command::none()
+            }
+            Msg::SetTheme(theme) => {
+                self.theme = theme;
+                Command::none()
+            }
+
+            Msg::GatherMetric(metric) => {
+                match metric {
+                    Metric::AverageContentStringLength => {
+                        let bookmarks = self.bookmarks.read().expect("poisoned lock");
+                        if let Ok(sum) = f64::value_from(
+                            bookmarks
+                                .storage
+                                .iter()
+                                .map(Bookmark::stored_length)
+                                .sum::<usize>(),
+                        ) {
+                            let average = sum
+                                / f64::value_from(bookmarks.storage.len())
+                                    .expect("there should not be more than 2^52 bookmarks, please");
+                            self.metrics
+                                .set(Metric::AverageContentStringLength, Some(average));
+                            self.set_status(format!(
+                                "gathered ContentString average length ({average})"
+                            ));
+                        } else {
+                            self.set_status("failed to gather ContentString average length");
+                        };
+                    }
+                };
+                Command::none()
+            }
         }
     }
 
@@ -449,21 +509,26 @@ impl Application for App {
         let status = self.status_msg.borrow();
         let status_log = self.status_log.borrow();
 
-        view::view(View {
-            bookmarks: &bookmarks,
-            categories: &categories,
-            infos: &infos,
-            desc_width: self.desc_width.as_tuple(),
-            filter: (self.filter.as_ref(), &self.filter_str),
-            status: &status,
-            status_log: &status_log,
-            shown_bookmarks: self.shown_bookmarks.as_tuple(),
-            shown_from: self.shown_from.as_tuple(),
-            url_width: self.url_width.as_tuple(),
-            main_content: self.main_content,
-            category_tree: &self.category_tree,
-            edit_mode_active: self.edit_mode_active,
-            bookmark_scrollbar_id: &self.bookmark_scrollbar_id,
-        })
+        view::view(
+            View {
+                bookmarks: &bookmarks,
+                categories: &categories,
+                infos: &infos,
+                desc_width: self.desc_width.as_tuple(),
+                filter: (self.filter.as_ref(), &self.filter_str),
+                status: &status,
+                status_log: &status_log,
+                shown_bookmarks: self.shown_bookmarks.as_tuple(),
+                shown_from: self.shown_from.as_tuple(),
+                url_width: self.url_width.as_tuple(),
+                main_content: self.main_content,
+                category_tree: &self.category_tree,
+                edit_mode_active: self.edit_mode_active,
+                bookmark_scrollbar_id: &self.bookmark_scrollbar_id,
+                is_dark_mode: matches!(self.theme, Theme::Dark),
+                metrics: &self.metrics,
+            },
+            &self.log_panes,
+        )
     }
 }
