@@ -56,7 +56,7 @@ impl AnyField for FieldSingle {
     }
 
     fn get_push_match(&self) -> TokenStream2 {
-        Default::default()
+        TokenStream2::default()
     }
 
     fn get_create_line_param(&self) -> TokenStream2 {

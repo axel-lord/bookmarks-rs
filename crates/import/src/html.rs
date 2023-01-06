@@ -16,7 +16,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
         if !document.errors.is_empty() {
             println!("Errors encountered parsing document:");
         }
-        for err in document.errors.iter() {
+        for err in &document.errors {
             println!("\t{err}");
         }
 

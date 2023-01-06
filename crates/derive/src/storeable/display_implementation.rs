@@ -67,6 +67,6 @@ pub fn display_implementation(
     if let Some(title_field) = title_field {
         gen_display(name, store_fields, display_fields, title_field)
     } else {
-        Default::default()
+        TokenStream2::default()
     }
 }

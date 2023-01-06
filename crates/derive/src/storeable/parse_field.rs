@@ -22,7 +22,7 @@ pub fn parse_field(field: &syn::Field) -> FieldType {
     let mut key = None;
     let mut is_title = false;
 
-    for attr in field.attrs.iter() {
+    for attr in &field.attrs {
         match parse_attr(attr) {
             AttrType::Content => attr_type = AttrType::Content,
             AttrType::Key(k) => {
@@ -53,9 +53,10 @@ pub fn parse_field(field: &syn::Field) -> FieldType {
         }
     }
 
-    if is_title && !matches!(attr_type, AttrType::Single) {
-        panic!("title may only be specified on a field marked as string");
-    }
+    assert!(
+        matches!(attr_type, AttrType::Single) || !is_title,
+        "title may only be specified on a field marked as string"
+    );
 
     if matches!(attr_type, AttrType::Other) {
         return FieldType::Other;

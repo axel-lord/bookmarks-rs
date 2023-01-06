@@ -31,15 +31,15 @@ pub fn parse_struct(ast: &syn::DeriveInput) -> StructInfo {
                 if line.is_none() {
                     line = Some(ident);
                     continue;
-                } else {
-                    panic!("only one line can be marked as line")
                 }
+                panic!("only one line can be marked as line")
             }
             FieldType::Single(field, is_title) => {
                 if is_title {
-                    if title_field.is_some() {
-                        panic!("only one field may be marked as title");
-                    }
+                    assert!(
+                        title_field.is_none(),
+                        "only one field may be marked as title"
+                    );
                     title_field = Some(field.clone());
                 } else {
                     display_fields.push(Box::new(field.clone()));

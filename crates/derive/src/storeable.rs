@@ -10,15 +10,15 @@ pub mod get_name_impl;
 pub mod parse_attr;
 pub mod parse_field;
 pub mod parse_struct;
-pub mod storeable_impl;
+pub mod trait_impl;
 
 use conversion_boilerplate::conversion_boilerplate;
 use display_implementation::display_implementation;
 use get_name_impl::gen_name_impl;
 use parse_struct::{parse_struct, StructInfo};
-use storeable_impl::gen_storeable_impl;
+use trait_impl::gen_storeable_impl;
 
-pub fn impl_storeable(ast: &syn::DeriveInput) -> TokenStream {
+pub fn implementation(ast: &syn::DeriveInput) -> TokenStream {
     let StructInfo {
         name,
         line,
