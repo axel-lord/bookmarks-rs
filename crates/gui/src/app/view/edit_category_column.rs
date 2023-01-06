@@ -4,10 +4,10 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{AppView, MainContent, Msg};
+use crate::{MainContent, Msg, View};
 
 #[allow(dead_code)]
-pub fn edit_category_column<'a>(_app_view: AppView) -> Element<'a, Msg> {
+pub fn edit_category_column<'a>(_app_view: View) -> Element<'a, Msg> {
     let header = row![
         button("Ok").padding(3).style(theme::Button::Positive),
         button("Cancel")

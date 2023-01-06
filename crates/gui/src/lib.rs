@@ -7,6 +7,7 @@
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
     clippy::unwrap_used,
+    clippy::pedantic,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -20,7 +21,7 @@ mod app;
 mod msg;
 mod parsed_str;
 
-pub use app::{App, AppView};
+pub use app::{App, View};
 pub use msg::Msg;
 pub use parsed_str::ParsedStr;
 
@@ -46,18 +47,20 @@ impl MainContent {
         [MainContent::Bookmarks, MainContent::Edit, MainContent::Log];
 
     /// Generate an area chooser for current area.
+    #[must_use]
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
         match self {
             MainContent::Bookmarks | MainContent::Edit | MainContent::Log => {
                 MainContent::RADIO_CHOCES
                     .iter()
                     .map(|mem| {
-                        radio(format!("{mem:?}"), *mem, Some(*self), Msg::SwitchMainTo)
-                            .spacing(3)
-                            .size(16)
-                            .into()
+                        <Element<Msg>>::from(
+                            radio(format!("{mem:?}"), *mem, Some(*self), Msg::SwitchMainTo)
+                                .spacing(3)
+                                .size(16),
+                        )
                     })
-                    .fold(Row::new(), |row, widget: Element<Msg>| row.push(widget))
+                    .fold(Row::new(), iced_native::widget::row::Row::push)
                     .spacing(3)
                     .align_items(Alignment::Center)
                     .into()

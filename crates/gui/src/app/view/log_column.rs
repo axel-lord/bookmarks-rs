@@ -7,9 +7,9 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{AppView, Msg};
+use crate::{Msg, View};
 
-pub fn log_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+pub fn log_column<'a>(app_view: View) -> Element<'a, Msg> {
     let header = row![
         button("Clear").padding(3).style(theme::Button::Destructive),
         text("Status Log:"),

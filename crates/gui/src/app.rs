@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
     fs,
     io::{self, BufRead},
-    path::PathBuf,
+    path::{Path, PathBuf},
     rc::Rc,
 };
 
@@ -39,7 +39,7 @@ pub struct App {
 
 /// View of the application state, providing easy immutable read in building of view.
 #[derive(Clone, Copy, Debug)]
-pub struct AppView<'a> {
+pub struct View<'a> {
     /// Bookmarks loaded by application.
     pub bookmarks: &'a container::BufferStorage<Bookmark>,
     /// Categories loaded by application.
@@ -98,8 +98,9 @@ impl App {
             }
         });
     }
-    fn load_file(&mut self, path: std::path::PathBuf) -> &mut Self {
-        let file = match fs::File::open(path.clone()) {
+
+    fn load_file(&mut self, path: &Path) -> &mut Self {
+        let file = match fs::File::open(path) {
             Ok(file) => file,
             Err(err) => {
                 self.set_status(format!("failed to open file \"{}\", {err}", path.display()));
@@ -143,7 +144,7 @@ impl App {
                 .auto_configure(patterns)
                 .ascii_case_insensitive(true)
                 .build(patterns),
-        )
+        );
     }
 
     fn update_category_tree(&mut self) {
@@ -180,7 +181,7 @@ impl App {
                 let category = &categories.storage[*i];
                 let this_depend = depend
                     .iter()
-                    .cloned()
+                    .copied()
                     .chain(std::iter::once(*i))
                     .collect::<Vec<usize>>();
 
@@ -198,6 +199,59 @@ impl App {
         }
 
         self.category_tree = cat_iter;
+    }
+
+    fn apply_category(&mut self, indices: impl IntoIterator<Item = usize>) {
+        let messages = {
+            let categories = self.categories.read().expect("posoned lock");
+            let mut bookmarks = self.bookmarks.write().expect("posoned lock");
+
+            indices
+                .into_iter()
+                .map(|i| {
+                    let category = &categories.storage[i];
+
+                    match category.apply(&mut bookmarks) {
+                        Ok(_) => format!("applied category <{}>", category.name()),
+                        Err(err) => {
+                            format!("failed to apply category <{}>, {}", category.name(), err)
+                        }
+                    }
+                })
+                .collect::<Vec<_>>()
+        };
+
+        for message in messages {
+            self.set_status(message);
+        }
+    }
+
+    fn goto_bookmark_location(&self, index: usize) {
+        self.set_status({
+            let bookmarks = self.bookmarks.read().expect("posioned lock");
+            match open::that(bookmarks.storage[index].url()) {
+                Ok(()) => {
+                    format!("opened bookmark [{}]", bookmarks.storage[index].url())
+                }
+                Err(err) => {
+                    format!(
+                        "Failed to open: {}, {}",
+                        bookmarks.storage[index].url(),
+                        err
+                    )
+                }
+            }
+        });
+    }
+
+    fn edit_bookmark(&mut self, _index: usize) {
+        dbg!(self);
+        todo!()
+    }
+
+    fn edit_category(&mut self, _index: usize) {
+        dbg!(self);
+        todo!()
     }
 }
 
@@ -222,16 +276,16 @@ impl Application for App {
             bookmarks,
             categories,
             infos,
-            status_msg: Default::default(),
-            status_log: Default::default(),
+            status_msg: RefCell::default(),
+            status_log: RefCell::default(),
             filter: None,
-            filter_str: "".into(),
+            filter_str: String::new(),
             shown_bookmarks: 512.into(),
             shown_from: 0.into(),
             url_width: 75.into(),
             desc_width: 50.into(),
             main_content: MainContent::Bookmarks,
-            category_tree: Default::default(),
+            category_tree: Vec::new(),
             edit_mode_active: false,
             bookmark_scrollbar_id: widget::scrollable::Id::unique(),
         };
@@ -239,7 +293,7 @@ impl Application for App {
         app.set_status("Created application");
 
         for file in flags {
-            app.load_file(file);
+            app.load_file(&file);
         }
 
         app.update_category_tree();
@@ -260,60 +314,22 @@ impl Application for App {
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
-            Msg::None => Command::none(),
+            Msg::Tick | Msg::None => Command::none(),
 
             Msg::GotoBookmarkLocation(i) => {
-                self.set_status({
-                    let bookmarks = self.bookmarks.read().expect("posioned lock");
-                    match open::that(bookmarks.storage[i].url()) {
-                        Ok(()) => {
-                            format!("opened bookmark [{}]", bookmarks.storage[i].url())
-                        }
-                        Err(err) => {
-                            format!("Failed to open: {}, {}", bookmarks.storage[i].url(), err)
-                        }
-                    }
-                });
-
+                self.goto_bookmark_location(i);
                 Command::none()
             }
 
-            Msg::ApplyCategory(category_indices) => {
-                let messages = {
-                    let categories = self.categories.read().expect("posoned lock");
-                    let mut bookmarks = self.bookmarks.write().expect("posoned lock");
-
-                    category_indices
-                        .iter()
-                        .cloned()
-                        .map(|i| {
-                            let category = &categories.storage[i];
-
-                            match category.apply(&mut bookmarks) {
-                                Ok(_) => format!("applied category <{}>", category.name()),
-                                Err(err) => {
-                                    format!(
-                                        "failed to apply category <{}>, {}",
-                                        category.name(),
-                                        err
-                                    )
-                                }
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                };
-
-                for message in messages {
-                    self.set_status(message);
-                }
-
+            Msg::ApplyCategory(indices) => {
+                self.apply_category(indices);
                 Command::none()
             }
 
             Msg::UpdateShownBookmarks(amount) => {
                 if let Ok(msg) = self
                     .shown_bookmarks
-                    .parse_with_message(amount, "shown bookmarks")
+                    .parse_with_message(&amount, "shown bookmarks")
                 {
                     self.set_status(msg);
                 }
@@ -322,7 +338,7 @@ impl Application for App {
             }
 
             Msg::UpdateShownFrom(f) => {
-                if let Ok(msg) = self.shown_from.parse_with_message(f, "shown from") {
+                if let Ok(msg) = self.shown_from.parse_with_message(&f, "shown from") {
                     self.set_status(msg);
                 }
 
@@ -330,7 +346,7 @@ impl Application for App {
             }
 
             Msg::UpdateUrlWidth(w) => {
-                if let Ok(msg) = self.url_width.parse_with_message(w, "url width") {
+                if let Ok(msg) = self.url_width.parse_with_message(&w, "url width") {
                     self.set_status(msg);
                 }
 
@@ -338,7 +354,7 @@ impl Application for App {
             }
 
             Msg::UpdateDescWidth(w) => {
-                if let Ok(msg) = self.desc_width.parse_with_message(w, "desc width") {
+                if let Ok(msg) = self.desc_width.parse_with_message(&w, "desc width") {
                     self.set_status(msg);
                 }
 
@@ -357,7 +373,9 @@ impl Application for App {
             Msg::UpdateShownFromSteps(value) => {
                 self.shown_from.set_value(Some(
                     self.shown_from.value().unwrap_or(0).saturating_add_signed(
-                        (self.shown_bookmarks.value().unwrap_or(0) as isize).saturating_mul(value),
+                        isize::try_from(self.shown_bookmarks.value().unwrap_or(0))
+                            .expect("shown bookmarks too large to convert to isize")
+                            .saturating_mul(value),
                     ),
                 ));
                 widget::scrollable::snap_to(self.bookmark_scrollbar_id.clone(), 0.0)
@@ -388,8 +406,6 @@ impl Application for App {
                 Command::none()
             }
 
-            Msg::Tick => Command::none(),
-
             Msg::AddBookmarks(bookmarks) => {
                 if let Ok(mut bookmarks) = bookmarks.lock() {
                     if let Some(bookmarks) = bookmarks.take() {
@@ -410,9 +426,15 @@ impl Application for App {
                 Command::none()
             }
 
-            Msg::EditBookmark(_) => Command::none(),
+            Msg::EditBookmark(index) => {
+                self.edit_bookmark(index);
+                Command::none()
+            }
 
-            Msg::EditCategory(_) => Command::none(),
+            Msg::EditCategory(index) => {
+                self.edit_category(index);
+                Command::none()
+            }
         }
     }
 
@@ -427,7 +449,7 @@ impl Application for App {
         let status = self.status_msg.borrow();
         let status_log = self.status_log.borrow();
 
-        view::application_view(AppView {
+        view::view(View {
             bookmarks: &bookmarks,
             categories: &categories,
             infos: &infos,

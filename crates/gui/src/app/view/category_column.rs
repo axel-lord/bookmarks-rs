@@ -1,4 +1,4 @@
-use crate::{AppView, Msg};
+use crate::{Msg, View};
 use iced::{
     theme,
     widget::{
@@ -7,10 +7,9 @@ use iced::{
     Alignment, Element, Length,
 };
 
-fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) -> Element<'a, Msg> {
-    let index = match level.last().cloned() {
-        Some(index) => index,
-        None => panic!("level param is empty"),
+fn category_row<'a>(app_view: View, level: &[usize], style: theme::Button) -> Element<'a, Msg> {
+    let Some(index) = level.last().copied() else {
+        panic!("level param is empty");
     };
     let category = &app_view.categories.storage[index];
     let indent_width = level.len() * 24 - 24;
@@ -28,7 +27,10 @@ fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) ->
     }
 
     row_content.extend([
-        horizontal_space(Length::Units(indent_width as u16)).into(),
+        horizontal_space(Length::Units(u16::try_from(indent_width).expect(
+            "depth of nested categories times 24 should not exceed u16::MAX",
+        )))
+        .into(),
         button(column![text(category.name())].align_items(Alignment::Center))
             .on_press(Msg::ApplyCategory(level.into()))
             .style(style)
@@ -45,7 +47,7 @@ fn category_row<'a>(app_view: AppView, level: &[usize], style: theme::Button) ->
         .into()
 }
 
-pub fn category_column<'a>(app_view: AppView) -> Element<'a, Msg> {
+pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
     let header = row![
         button("Reset")
             .on_press(Msg::Reset)

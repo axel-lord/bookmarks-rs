@@ -10,7 +10,7 @@ pub struct ParsedStr<V> {
 impl<V> Default for ParsedStr<V> {
     fn default() -> Self {
         Self {
-            string: "".into(),
+            string: String::new(),
             val: None,
         }
     }
@@ -49,7 +49,7 @@ where
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
             Ok(Self {
-                string: "".into(),
+                string: String::new(),
                 val: None,
             })
         } else {
@@ -83,10 +83,7 @@ where
 
     /// Set value contained.
     pub fn set_value(&mut self, val: Option<V>) {
-        self.string = val
-            .as_ref()
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "".into());
+        self.string = val.as_ref().map_or_else(String::new, ToString::to_string);
         self.val = val;
     }
 }
@@ -101,7 +98,7 @@ where
     /// If and how the parsing failed.
     pub fn parse_with_message(
         &mut self,
-        from: impl ToString,
+        from: &impl ToString,
         msg: &str,
     ) -> Result<String, <V as FromStr>::Err> {
         let string = from.to_string();
