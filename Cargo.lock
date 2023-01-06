@@ -279,6 +279,7 @@ dependencies = [
  "aho-corasick",
  "bookmark-command",
  "bookmark-storage",
+ "either",
  "once_cell",
  "paste",
  "regex",

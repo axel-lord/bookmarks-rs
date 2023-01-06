@@ -129,6 +129,7 @@ impl From<&[Category]> for Graph {
 }
 
 /// Run a command line bookmark manager.
+#[must_use]
 pub fn run(
     init_commands: Option<String>,
     mut extended_commands: Vec<Box<dyn command_factory::CommandFactory>>,
@@ -156,20 +157,18 @@ pub fn run(
         .build();
 
     let eval_command = |command: &str, fatal_errors| -> Result<(), i32> {
-        let command = command.trim();
+        let split_command = parse_command::parse_command(command.trim());
 
-        let Some(args) = parse_command::parse_command(command) else {
+        let [command, args @ .. ] = &split_command[..] else {
             println!("could not parse \"{command}\"");
             return Ok(());
         };
-
-        let command = &args[0];
 
         if command == "exit" {
             return Err(0);
         }
 
-        if let Err(err) = command_map.call(command, &args[1..]) {
+        if let Err(err) = command_map.call(command, args) {
             match err {
                 bookmark_command::CommandErr::Usage(ref msg) => {
                     println!("incorrect usage: {msg}");

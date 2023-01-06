@@ -212,7 +212,7 @@ impl CommandMap<'static> {
             .push(
                 "load",
                 None,
-                load::LoadAll::build(categories.clone(), bookmarks.clone(), infos.clone()),
+                load::All::build(categories.clone(), bookmarks.clone(), infos.clone()),
             )
             .push("save", None, save::All::build(infos, categories, bookmarks))
             .push(

@@ -6,11 +6,13 @@ pub struct Selected {
 
 impl Selected {
     /// Get the index of the selected item, if something is selected.
+    #[must_use]
     pub fn index(&self) -> Option<usize> {
         self.index
     }
 
     /// Returns true if nothing is selected.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.index.is_none()
     }

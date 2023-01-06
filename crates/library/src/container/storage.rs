@@ -11,7 +11,7 @@ impl<T> Storage<T> {
         self.content.push(value);
         self
     }
-    /// Extend the storage with an [IntoIterator] of values.
+    /// Extend the storage with an [`IntoIterator`] of values.
     pub fn extend(&mut self, iter: impl IntoIterator<Item = T>) -> &mut Self {
         self.content.extend(iter.into_iter());
         self
@@ -39,12 +39,12 @@ impl<T> std::ops::Deref for Storage<T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
-        self.content.deref()
+        &self.content
     }
 }
 
 impl<T> std::ops::DerefMut for Storage<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.content.deref_mut()
+        &mut self.content
     }
 }
