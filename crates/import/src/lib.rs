@@ -7,6 +7,7 @@
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
     clippy::unwrap_used,
+    clippy::pedantic,
     rustdoc::missing_crate_level_docs
 )]
 

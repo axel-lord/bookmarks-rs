@@ -37,9 +37,10 @@ pub fn parse_attr(attr: &syn::Attribute) -> AttrType {
         match ident.to_string().as_str() {
             "composite" => {
                 let items = list.nested.iter().collect::<Vec<_>>();
-                if items.len() != 1 {
-                    panic!("composite field should only contain one item")
-                }
+                assert!(
+                    items.len() == 1,
+                    "composite field should only contain one item"
+                );
                 let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
                      panic!("contents of composite should be a single token");
                  };
@@ -53,9 +54,7 @@ pub fn parse_attr(attr: &syn::Attribute) -> AttrType {
             }
             "token" => {
                 let items = list.nested.iter().collect::<Vec<_>>();
-                if items.len() != 1 {
-                    panic!("token should contain a single value");
-                }
+                assert!(items.len() == 1, "token should contain a single value");
 
                 let syn::NestedMeta::Meta(syn::Meta::Path(ref path)) = items[0] else {
                      panic!("contents of token should be a single token\n{:#?}", items[0]);

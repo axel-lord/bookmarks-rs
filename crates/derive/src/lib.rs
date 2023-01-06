@@ -7,6 +7,7 @@
     clippy::missing_panics_doc,
     clippy::missing_safety_doc,
     clippy::unwrap_used,
+    clippy::pedantic,
     rustdoc::missing_crate_level_docs
 )]
 
@@ -23,7 +24,7 @@ mod storeable;
 pub fn build_command_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("could not parse struct");
 
-    build_command::impl_build_command(&ast)
+    build_command::implementation(&ast)
 }
 
 /// Derive a storeable implementation for a macro.
@@ -34,5 +35,5 @@ pub fn build_command_derive(input: TokenStream) -> TokenStream {
 pub fn storeable_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("could not parse struct");
 
-    storeable::impl_storeable(&ast)
+    storeable::implementation(&ast)
 }

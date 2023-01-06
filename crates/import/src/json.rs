@@ -42,9 +42,12 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
                     element_stack.push(child);
                 }
             } else {
-                let description = top.get("title").and_then(|v| v.as_str()).unwrap_or("");
+                let description = top
+                    .get("title")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("");
                 let Some(url) =
-                    top.get("uri").and_then(|v| v.as_str()) else {continue;};
+                    top.get("uri").and_then(serde_json::Value::as_str) else {continue;};
 
                 bookmarks
                     .storage
