@@ -1,4 +1,5 @@
-use crate::{Msg, View};
+use crate::{Msg, ParsedStr, View};
+use aho_corasick::AhoCorasick;
 use bookmark_library::Bookmark;
 use iced::{
     theme,
@@ -8,6 +9,31 @@ use iced::{
     Color, Element, Length,
 };
 use unicode_segmentation::UnicodeSegmentation;
+
+#[derive(Debug)]
+pub struct BookmarkColumnState {
+    pub bookmark_scrollbar_id: scrollable::Id,
+    pub desc_width: ParsedStr<usize>,
+    pub url_width: ParsedStr<usize>,
+    pub filter: Option<AhoCorasick>,
+    pub filter_str: String,
+    pub shown_bookmarks: ParsedStr<usize>,
+    pub shown_from: ParsedStr<usize>,
+}
+
+impl Default for BookmarkColumnState {
+    fn default() -> Self {
+        Self {
+            bookmark_scrollbar_id: scrollable::Id::unique(),
+            desc_width: 50.into(),
+            filter: None,
+            filter_str: String::new(),
+            shown_bookmarks: 512.into(),
+            shown_from: 0.into(),
+            url_width: 75.into(),
+        }
+    }
+}
 
 fn truncated_text<'a>(content: &str, max_width: usize, theme: theme::Text) -> Element<'a, Msg> {
     if max_width == 0 {
