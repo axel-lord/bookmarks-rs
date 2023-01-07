@@ -6,7 +6,6 @@ use std::{
     path::{Path, PathBuf},
     rc::Rc,
     sync::mpsc,
-    thread,
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
@@ -22,7 +21,6 @@ use iced::{
 };
 
 use crate::{MainContent, Msg};
-use conv::prelude::*;
 
 pub mod log_pane;
 pub mod view;
@@ -32,7 +30,7 @@ pub use log_pane::{LogPane, Metric, MetricValue, Metrics};
 use self::view::bookmarks_column::BookmarkColumnState;
 
 #[derive(Clone, Copy, Debug)]
-enum ChannelMessage {
+pub enum ChannelMessage {
     GatheredMetric(Metric, MetricValue),
 }
 
@@ -590,32 +588,11 @@ impl Application for App {
             Msg::GatherMetric(metric) => {
                 match metric {
                     Metric::AverageContentStringLength => {
-                        let bookmarks = self.bookmarks.clone();
-                        let tx = self.channel.0.clone();
                         self.increment_tick_watchers(1);
-
-                        thread::spawn(move || {
-                            let bookmarks = bookmarks.read().expect("posioned lock");
-                            tx.send(ChannelMessage::GatheredMetric(
-                                Metric::AverageContentStringLength,
-                                (|| {
-                                    let sum = f64::value_from(
-                                        bookmarks
-                                            .storage
-                                            .iter()
-                                            .map(Bookmark::stored_length)
-                                            .sum::<usize>(),
-                                    )
-                                    .ok()?;
-
-                                    let average =
-                                        sum / f64::value_from(bookmarks.storage.len()).ok()?;
-
-                                    Some(average)
-                                })()
-                                .map_or_else(|| MetricValue::None, MetricValue::Float),
-                            ))
-                        });
+                        Metrics::gather_average_content_string_length(
+                            self.channel.0.clone(),
+                            self.bookmarks.clone(),
+                        );
                     }
                 };
                 Command::none()
