@@ -19,36 +19,32 @@ use iced::{
     Application, Command, Theme,
 };
 
-use crate::{MainContent, Msg, ParsedStr};
+use crate::{MainContent, Msg};
 use conv::prelude::*;
 
-mod log_pane;
-mod view;
+pub mod log_pane;
+pub mod view;
 
 pub use log_pane::{LogPane, Metric, Metrics};
+
+use self::view::bookmarks_column::BookmarkColumnState;
 
 /// Application state.
 #[derive(Debug)]
 pub struct App {
-    bookmark_scrollbar_id: widget::scrollable::Id,
+    bookmark_column_state: view::bookmarks_column::BookmarkColumnState,
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
     category_tree: Vec<Vec<usize>>,
     command_map: CommandMap<'static>,
-    desc_width: ParsedStr<usize>,
     edit_mode_active: bool,
-    filter: Option<AhoCorasick>,
-    filter_str: String,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPane>,
     main_content: MainContent,
     metrics: Metrics,
-    shown_bookmarks: ParsedStr<usize>,
-    shown_from: ParsedStr<usize>,
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
     theme: Theme,
-    url_width: ParsedStr<usize>,
 }
 
 /// View of the application state, providing easy immutable read in building of view.
@@ -101,17 +97,20 @@ impl<'a> View<'a> {
             bookmarks,
             categories,
             infos,
-            desc_width: app.desc_width.as_tuple(),
-            filter: (app.filter.as_ref(), &app.filter_str),
+            desc_width: app.bookmark_column_state.desc_width.as_tuple(),
+            filter: (
+                app.bookmark_column_state.filter.as_ref(),
+                &app.bookmark_column_state.filter_str,
+            ),
             status,
             status_log,
-            shown_bookmarks: app.shown_bookmarks.as_tuple(),
-            shown_from: app.shown_from.as_tuple(),
-            url_width: app.url_width.as_tuple(),
+            shown_bookmarks: app.bookmark_column_state.shown_bookmarks.as_tuple(),
+            shown_from: app.bookmark_column_state.shown_from.as_tuple(),
+            url_width: app.bookmark_column_state.url_width.as_tuple(),
             main_content: app.main_content,
             category_tree: &app.category_tree,
             edit_mode_active: app.edit_mode_active,
-            bookmark_scrollbar_id: &app.bookmark_scrollbar_id,
+            bookmark_scrollbar_id: &app.bookmark_column_state.bookmark_scrollbar_id,
             is_dark_mode: matches!(app.theme, Theme::Dark),
             metrics: &app.metrics,
         }
@@ -179,14 +178,14 @@ impl App {
     }
 
     fn update_filter(&mut self) {
-        if self.filter_str.is_empty() {
-            self.filter = None;
+        if self.bookmark_column_state.filter_str.is_empty() {
+            self.bookmark_column_state.filter = None;
             return;
         }
 
-        let patterns: &[&str] = &[&self.filter_str];
+        let patterns: &[&str] = &[&self.bookmark_column_state.filter_str];
 
-        self.filter = Some(
+        self.bookmark_column_state.filter = Some(
             AhoCorasickBuilder::new()
                 .auto_configure(patterns)
                 .ascii_case_insensitive(true)
@@ -323,22 +322,16 @@ impl Default for App {
             infos,
             status_msg: RefCell::default(),
             status_log: RefCell::default(),
-            filter: None,
-            filter_str: String::new(),
-            shown_bookmarks: 512.into(),
-            shown_from: 0.into(),
-            url_width: 75.into(),
-            desc_width: 50.into(),
             main_content: MainContent::Bookmarks,
             category_tree: Vec::new(),
             edit_mode_active: false,
-            bookmark_scrollbar_id: widget::scrollable::Id::unique(),
             log_panes,
             theme: match dark_light::detect() {
                 dark_light::Mode::Dark => Theme::Dark,
                 dark_light::Mode::Light => Theme::Light,
             },
             metrics: Metrics::default(),
+            bookmark_column_state: BookmarkColumnState::default(),
         }
     }
 }
@@ -393,6 +386,7 @@ impl Application for App {
 
             Msg::UpdateShownBookmarks(amount) => {
                 if let Ok(msg) = self
+                    .bookmark_column_state
                     .shown_bookmarks
                     .parse_with_message(&amount, "shown bookmarks")
                 {
@@ -403,7 +397,11 @@ impl Application for App {
             }
 
             Msg::UpdateShownFrom(f) => {
-                if let Ok(msg) = self.shown_from.parse_with_message(&f, "shown from") {
+                if let Ok(msg) = self
+                    .bookmark_column_state
+                    .shown_from
+                    .parse_with_message(&f, "shown from")
+                {
                     self.set_status(msg);
                 }
 
@@ -411,7 +409,11 @@ impl Application for App {
             }
 
             Msg::UpdateUrlWidth(w) => {
-                if let Ok(msg) = self.url_width.parse_with_message(&w, "url width") {
+                if let Ok(msg) = self
+                    .bookmark_column_state
+                    .url_width
+                    .parse_with_message(&w, "url width")
+                {
                     self.set_status(msg);
                 }
 
@@ -419,7 +421,11 @@ impl Application for App {
             }
 
             Msg::UpdateDescWidth(w) => {
-                if let Ok(msg) = self.desc_width.parse_with_message(&w, "desc width") {
+                if let Ok(msg) = self
+                    .bookmark_column_state
+                    .desc_width
+                    .parse_with_message(&w, "desc width")
+                {
                     self.set_status(msg);
                 }
 
@@ -436,25 +442,37 @@ impl Application for App {
             }
 
             Msg::UpdateShownFromSteps(value) => {
-                self.shown_from.set_value(Some(
-                    self.shown_from.value().unwrap_or(0).saturating_add_signed(
-                        isize::try_from(self.shown_bookmarks.value().unwrap_or(0))
+                self.bookmark_column_state.shown_from.set_value(Some(
+                    self.bookmark_column_state
+                        .shown_from
+                        .value()
+                        .unwrap_or(0)
+                        .saturating_add_signed(
+                            isize::try_from(
+                                self.bookmark_column_state
+                                    .shown_bookmarks
+                                    .value()
+                                    .unwrap_or(0),
+                            )
                             .expect("shown bookmarks too large to convert to isize")
                             .saturating_mul(value),
-                    ),
+                        ),
                 ));
-                widget::scrollable::snap_to(self.bookmark_scrollbar_id.clone(), 0.0)
+                widget::scrollable::snap_to(
+                    self.bookmark_column_state.bookmark_scrollbar_id.clone(),
+                    0.0,
+                )
             }
 
             Msg::FilterBookmarks(m) => {
-                self.filter_str = m;
+                self.bookmark_column_state.filter_str = m;
                 self.update_filter();
 
                 Command::none()
             }
 
             Msg::ApplyFilter => {
-                if let Some(ref filter) = self.filter {
+                if let Some(ref filter) = self.bookmark_column_state.filter {
                     self.bookmarks
                         .write()
                         .expect("poisoned lock")

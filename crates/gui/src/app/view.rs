@@ -1,9 +1,9 @@
-mod bookmarks_column;
-mod category_column;
-mod edit_bookmark_column;
-mod edit_category_column;
-mod log_column;
-mod settings_column;
+pub mod bookmarks_column;
+pub mod category_column;
+pub mod edit_bookmark_column;
+pub mod edit_category_column;
+pub mod log_column;
+pub mod settings_column;
 
 use crate::{app::LogPane, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
