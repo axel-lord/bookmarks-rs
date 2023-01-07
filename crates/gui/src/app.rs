@@ -30,6 +30,7 @@ pub use log_pane::{LogPane, Metric, Metrics};
 /// Application state.
 #[derive(Debug)]
 pub struct App {
+    bookmark_scrollbar_id: widget::scrollable::Id,
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
     category_tree: Vec<Vec<usize>>,
@@ -39,21 +40,22 @@ pub struct App {
     filter: Option<AhoCorasick>,
     filter_str: String,
     infos: shared::BufferStorage<Info>,
+    log_panes: pane_grid::State<LogPane>,
     main_content: MainContent,
+    metrics: Metrics,
     shown_bookmarks: ParsedStr<usize>,
     shown_from: ParsedStr<usize>,
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
-    url_width: ParsedStr<usize>,
-    bookmark_scrollbar_id: widget::scrollable::Id,
-    log_panes: pane_grid::State<LogPane>,
     theme: Theme,
-    metrics: Metrics,
+    url_width: ParsedStr<usize>,
 }
 
 /// View of the application state, providing easy immutable read in building of view.
 #[derive(Clone, Copy, Debug)]
 pub struct View<'a> {
+    /// When bookmarks scrollbar is created will be set to it's id.
+    pub bookmark_scrollbar_id: &'a widget::scrollable::Id,
     /// Bookmarks loaded by application.
     pub bookmarks: &'a container::BufferStorage<Bookmark>,
     /// Categories loaded by application.
@@ -68,8 +70,12 @@ pub struct View<'a> {
     pub filter: (Option<&'a AhoCorasick>, &'a str),
     /// Info loaded by application.
     pub infos: &'a container::BufferStorage<Info>,
+    /// True if dark mode in use.
+    pub is_dark_mode: bool,
     /// What is expected to fill the main area.
     pub main_content: MainContent,
+    /// Stats that may have been gathered.
+    pub metrics: &'a Metrics,
     /// How many bookmarks are shown as numeric and str.
     pub shown_bookmarks: (usize, &'a str),
     /// Where in the bookmark list to start showing bookmarks as numeric and str.
@@ -80,12 +86,36 @@ pub struct View<'a> {
     pub status_log: &'a [String],
     /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
     pub url_width: (usize, &'a str),
-    /// True if dark mode in use.
-    pub is_dark_mode: bool,
-    /// Stats that may have been gathered.
-    pub metrics: &'a Metrics,
-    /// When bookmarks scrollbar is created will be set to it's id.
-    pub bookmark_scrollbar_id: &'a widget::scrollable::Id,
+}
+
+impl<'a> View<'a> {
+    fn from_app(
+        app: &'a App,
+        bookmarks: &'a container::BufferStorage<Bookmark>,
+        categories: &'a container::BufferStorage<Category>,
+        infos: &'a container::BufferStorage<Info>,
+        status: &'a str,
+        status_log: &'a [String],
+    ) -> Self {
+        View {
+            bookmarks,
+            categories,
+            infos,
+            desc_width: app.desc_width.as_tuple(),
+            filter: (app.filter.as_ref(), &app.filter_str),
+            status,
+            status_log,
+            shown_bookmarks: app.shown_bookmarks.as_tuple(),
+            shown_from: app.shown_from.as_tuple(),
+            url_width: app.url_width.as_tuple(),
+            main_content: app.main_content,
+            category_tree: &app.category_tree,
+            edit_mode_active: app.edit_mode_active,
+            bookmark_scrollbar_id: &app.bookmark_scrollbar_id,
+            is_dark_mode: matches!(app.theme, Theme::Dark),
+            metrics: &app.metrics,
+        }
+    }
 }
 
 impl App {
@@ -272,13 +302,8 @@ impl App {
     }
 }
 
-impl Application for App {
-    type Executor = executor::Default;
-    type Flags = Vec<PathBuf>;
-    type Message = Msg;
-    type Theme = Theme;
-
-    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+impl Default for App {
+    fn default() -> Self {
         let bookmarks = shared::BufferStorage::default();
         let categories = shared::BufferStorage::default();
         let infos = shared::BufferStorage::default();
@@ -286,7 +311,7 @@ impl Application for App {
         let (mut log_panes, log_pane) = pane_grid::State::new(LogPane::Log);
         log_panes.split(Axis::Vertical, &log_pane, LogPane::Stats);
 
-        let mut app = Self {
+        Self {
             command_map: CommandMap::default_config(
                 bookmarks.clone(),
                 categories.clone(),
@@ -314,7 +339,18 @@ impl Application for App {
                 dark_light::Mode::Light => Theme::Light,
             },
             metrics: Metrics::default(),
-        };
+        }
+    }
+}
+
+impl Application for App {
+    type Executor = executor::Default;
+    type Flags = Vec<PathBuf>;
+    type Message = Msg;
+    type Theme = Theme;
+
+    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+        let mut app = Self::default();
 
         app.set_status("Created application");
 
@@ -327,12 +363,16 @@ impl Application for App {
         (app, iced::Command::none())
     }
 
-    fn title(&self) -> String {
-        "Application".into()
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        iced::time::every(std::time::Duration::from_millis(500)).map(|_| Msg::Tick)
     }
 
     fn theme(&self) -> Self::Theme {
         self.theme.clone()
+    }
+
+    fn title(&self) -> String {
+        "Application".into()
     }
 
     #[allow(clippy::too_many_lines)] // due to having to handle a lot of message types, perhaps
@@ -498,10 +538,6 @@ impl Application for App {
         }
     }
 
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::time::every(std::time::Duration::from_millis(500)).map(|_| Msg::Tick)
-    }
-
     fn view(&self) -> iced::Element<Msg> {
         let bookmarks = self.bookmarks.read().expect("poisoned lock");
         let categories = self.categories.read().expect("poisoned lock");
@@ -510,24 +546,7 @@ impl Application for App {
         let status_log = self.status_log.borrow();
 
         view::view(
-            View {
-                bookmarks: &bookmarks,
-                categories: &categories,
-                infos: &infos,
-                desc_width: self.desc_width.as_tuple(),
-                filter: (self.filter.as_ref(), &self.filter_str),
-                status: &status,
-                status_log: &status_log,
-                shown_bookmarks: self.shown_bookmarks.as_tuple(),
-                shown_from: self.shown_from.as_tuple(),
-                url_width: self.url_width.as_tuple(),
-                main_content: self.main_content,
-                category_tree: &self.category_tree,
-                edit_mode_active: self.edit_mode_active,
-                bookmark_scrollbar_id: &self.bookmark_scrollbar_id,
-                is_dark_mode: matches!(self.theme, Theme::Dark),
-                metrics: &self.metrics,
-            },
+            View::from_app(self, &bookmarks, &categories, &infos, &status, &status_log),
             &self.log_panes,
         )
     }
