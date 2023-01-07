@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use iced::{
     widget::{
         button, column, container, horizontal_rule,
@@ -21,19 +23,78 @@ pub enum Metric {
     AverageContentStringLength,
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub enum MetricValue {
+    #[default]
+    None,
+    Float(f64),
+}
+
+pub trait IntoMetricValue {
+    fn into_metric_value(self) -> MetricValue;
+}
+
+impl IntoMetricValue for f64 {
+    fn into_metric_value(self) -> MetricValue {
+        MetricValue::Float(self)
+    }
+}
+
+impl IntoMetricValue for () {
+    fn into_metric_value(self) -> MetricValue {
+        MetricValue::None
+    }
+}
+
+impl<T> From<T> for MetricValue
+where
+    T: IntoMetricValue,
+{
+    fn from(value: T) -> Self {
+        value.into_metric_value()
+    }
+}
+
+impl<T> From<Option<T>> for MetricValue
+where
+    T: IntoMetricValue,
+{
+    fn from(value: Option<T>) -> Self {
+        value.map_or_else(|| MetricValue::None, IntoMetricValue::into_metric_value)
+    }
+}
+
+impl<T, E> From<Result<T, E>> for MetricValue
+where
+    T: IntoMetricValue,
+{
+    fn from(value: Result<T, E>) -> Self {
+        value.ok().into()
+    }
+}
+
+impl Display for MetricValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MetricValue::None => write!(f, "None"),
+            MetricValue::Float(v) => write!(f, "{v}"),
+        }
+    }
+}
+
 #[derive(Clone, Default, Debug, Copy)]
 pub struct Metrics {
-    average_content_string_length: Option<f64>,
+    average_content_string_length: MetricValue,
 }
 
 impl Metrics {
-    pub fn get(&self, metric: Metric) -> Option<f64> {
+    pub fn get(&self, metric: Metric) -> MetricValue {
         match metric {
             Metric::AverageContentStringLength => self.average_content_string_length,
         }
     }
 
-    pub fn set(&mut self, metric: Metric, value: Option<f64>) {
+    pub fn set(&mut self, metric: Metric, value: MetricValue) {
         match metric {
             Metric::AverageContentStringLength => self.average_content_string_length = value,
         }
@@ -66,10 +127,10 @@ impl LogPane {
                     button("Gather")
                         .on_press(Msg::GatherMetric(Metric::AverageContentStringLength)),
                     text("Average ContentString Length:"),
-                    app_view
-                        .metrics
-                        .average_content_string_length
-                        .map_or_else(|| text("[None]"), |v| text(format!("[{v}]"))),
+                    text(format!(
+                        "[{}]",
+                        app_view.metrics.average_content_string_length
+                    )),
                 ]
                 .spacing(3)
                 .align_items(Alignment::Center);

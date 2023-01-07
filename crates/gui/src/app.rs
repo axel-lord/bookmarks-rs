@@ -5,6 +5,8 @@ use std::{
     io::{self, BufRead},
     path::{Path, PathBuf},
     rc::Rc,
+    sync::mpsc,
+    thread,
 };
 
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
@@ -25,9 +27,14 @@ use conv::prelude::*;
 pub mod log_pane;
 pub mod view;
 
-pub use log_pane::{LogPane, Metric, Metrics};
+pub use log_pane::{LogPane, Metric, MetricValue, Metrics};
 
 use self::view::bookmarks_column::BookmarkColumnState;
+
+#[derive(Clone, Copy, Debug)]
+enum ChannelMessage {
+    GatheredMetric(Metric, MetricValue),
+}
 
 /// Application state.
 #[derive(Debug)]
@@ -45,6 +52,8 @@ pub struct App {
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
     theme: Theme,
+    tick_watcher_count: usize,
+    channel: (mpsc::Sender<ChannelMessage>, mpsc::Receiver<ChannelMessage>),
 }
 
 /// View of the application state, providing easy immutable read in building of view.
@@ -299,6 +308,46 @@ impl App {
         dbg!(self);
         todo!()
     }
+
+    fn recieve_channel_message(&mut self) {
+        let Ok(message) = self.channel.1.try_recv() else {
+            return;
+        };
+
+        match message {
+            ChannelMessage::GatheredMetric(metric, value) => {
+                self.metrics.set(metric, value);
+                if matches!(value, MetricValue::None) {
+                    self.set_status(format!("failed to gather metric \"{metric:?}\""));
+                } else {
+                    self.set_status(format!("gathered metric \"{metric:?}\", value [{value}]"));
+                }
+                self.decrement_tick_watchers(1);
+            }
+        }
+    }
+
+    fn increment_tick_watchers(&mut self, amount: usize) {
+        let old = self.tick_watcher_count;
+
+        self.tick_watcher_count = old.saturating_add(amount);
+
+        self.set_status(format!(
+            "incremented tick watcher count from {old} to {}",
+            self.tick_watcher_count
+        ));
+    }
+
+    fn decrement_tick_watchers(&mut self, amount: usize) {
+        let old = self.tick_watcher_count;
+
+        self.tick_watcher_count = old.saturating_sub(amount);
+
+        self.set_status(format!(
+            "decremented tick watcher count from {old} to {}",
+            self.tick_watcher_count
+        ));
+    }
 }
 
 impl Default for App {
@@ -332,6 +381,8 @@ impl Default for App {
             },
             metrics: Metrics::default(),
             bookmark_column_state: BookmarkColumnState::default(),
+            tick_watcher_count: 0usize,
+            channel: mpsc::channel(),
         }
     }
 }
@@ -357,7 +408,11 @@ impl Application for App {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::time::every(std::time::Duration::from_millis(500)).map(|_| Msg::Tick)
+        if self.tick_watcher_count > 0 {
+            iced::time::every(std::time::Duration::from_millis(50)).map(|_| Msg::Tick)
+        } else {
+            iced::Subscription::none()
+        }
     }
 
     fn theme(&self) -> Self::Theme {
@@ -372,7 +427,12 @@ impl Application for App {
                                      // look into dynamic dispatch.
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
-            Msg::Tick | Msg::None => Command::none(),
+            Msg::None => Command::none(),
+
+            Msg::Tick => {
+                self.recieve_channel_message();
+                Command::none()
+            }
 
             Msg::GotoBookmarkLocation(i) => {
                 self.goto_bookmark_location(i);
@@ -530,25 +590,32 @@ impl Application for App {
             Msg::GatherMetric(metric) => {
                 match metric {
                     Metric::AverageContentStringLength => {
-                        let bookmarks = self.bookmarks.read().expect("poisoned lock");
-                        if let Ok(sum) = f64::value_from(
-                            bookmarks
-                                .storage
-                                .iter()
-                                .map(Bookmark::stored_length)
-                                .sum::<usize>(),
-                        ) {
-                            let average = sum
-                                / f64::value_from(bookmarks.storage.len())
-                                    .expect("there should not be more than 2^52 bookmarks, please");
-                            self.metrics
-                                .set(Metric::AverageContentStringLength, Some(average));
-                            self.set_status(format!(
-                                "gathered ContentString average length ({average})"
-                            ));
-                        } else {
-                            self.set_status("failed to gather ContentString average length");
-                        };
+                        let bookmarks = self.bookmarks.clone();
+                        let tx = self.channel.0.clone();
+                        self.increment_tick_watchers(1);
+
+                        thread::spawn(move || {
+                            let bookmarks = bookmarks.read().expect("posioned lock");
+                            tx.send(ChannelMessage::GatheredMetric(
+                                Metric::AverageContentStringLength,
+                                (|| {
+                                    let sum = f64::value_from(
+                                        bookmarks
+                                            .storage
+                                            .iter()
+                                            .map(Bookmark::stored_length)
+                                            .sum::<usize>(),
+                                    )
+                                    .ok()?;
+
+                                    let average =
+                                        sum / f64::value_from(bookmarks.storage.len()).ok()?;
+
+                                    Some(average)
+                                })()
+                                .map_or_else(|| MetricValue::None, MetricValue::Float),
+                            ))
+                        });
                     }
                 };
                 Command::none()
