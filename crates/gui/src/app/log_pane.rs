@@ -1,5 +1,7 @@
-use std::fmt::Display;
+use std::{fmt::Display, sync::mpsc, thread};
 
+use bookmark_library::{shared, Bookmark};
+use conv::prelude::*;
 use iced::{
     widget::{
         button, column, container, horizontal_rule,
@@ -10,6 +12,8 @@ use iced::{
 };
 
 use crate::{Msg, View};
+
+use super::ChannelMessage;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub enum LogPane {
@@ -28,6 +32,11 @@ pub enum MetricValue {
     #[default]
     None,
     Float(f64),
+}
+
+#[derive(Clone, Default, Debug, Copy)]
+pub struct Metrics {
+    average_content_string_length: MetricValue,
 }
 
 pub trait IntoMetricValue {
@@ -82,11 +91,6 @@ impl Display for MetricValue {
     }
 }
 
-#[derive(Clone, Default, Debug, Copy)]
-pub struct Metrics {
-    average_content_string_length: MetricValue,
-}
-
 impl Metrics {
     pub fn get(&self, metric: Metric) -> MetricValue {
         match metric {
@@ -98,6 +102,33 @@ impl Metrics {
         match metric {
             Metric::AverageContentStringLength => self.average_content_string_length = value,
         }
+    }
+
+    pub fn gather_average_content_string_length(
+        tx: mpsc::Sender<ChannelMessage>,
+        bookmarks: shared::BufferStorage<Bookmark>,
+    ) {
+        thread::spawn(move || {
+            let bookmarks = bookmarks.read().expect("posioned lock");
+            tx.send(ChannelMessage::GatheredMetric(
+                Metric::AverageContentStringLength,
+                (|| {
+                    let sum = f64::value_from(
+                        bookmarks
+                            .storage
+                            .iter()
+                            .map(Bookmark::stored_length)
+                            .sum::<usize>(),
+                    )
+                    .ok()?;
+
+                    let average = sum / f64::value_from(bookmarks.storage.len()).ok()?;
+
+                    Some(average)
+                })()
+                .map_or_else(|| MetricValue::None, MetricValue::Float),
+            ))
+        });
     }
 }
 
