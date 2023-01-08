@@ -3,7 +3,7 @@ use bookmark_storage::{ContentString, Field, ListField, Section, Storeable};
 
 /// Type representing a bookmark.
 /// Easily responsible for the most important data.
-#[derive(Debug, Storeable, Default)]
+#[derive(Debug, Storeable, Clone, Default)]
 pub struct Bookmark {
     #[line]
     line: ContentString,

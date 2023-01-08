@@ -29,7 +29,7 @@ pub use log_pane::{LogPane, Metric, MetricValue, Metrics};
 
 use self::view::bookmarks_column::BookmarkColumnState;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum ChannelMessage {
     GatheredMetric(Metric, MetricValue),
 }
@@ -314,12 +314,12 @@ impl App {
 
         match message {
             ChannelMessage::GatheredMetric(metric, value) => {
-                self.metrics.set(metric, value);
                 if matches!(value, MetricValue::None) {
                     self.set_status(format!("failed to gather metric \"{metric:?}\""));
                 } else {
                     self.set_status(format!("gathered metric \"{metric:?}\", value [{value}]"));
                 }
+                self.metrics.set(metric, value);
                 self.decrement_tick_watchers(1);
             }
         }
@@ -590,6 +590,13 @@ impl Application for App {
                     Metric::AverageContentStringLength => {
                         self.increment_tick_watchers(1);
                         Metrics::gather_average_content_string_length(
+                            self.channel.0.clone(),
+                            self.bookmarks.clone(),
+                        );
+                    }
+                    Metric::UrlOccurances => {
+                        self.increment_tick_watchers(1);
+                        Metrics::gather_url_occurances(
                             self.channel.0.clone(),
                             self.bookmarks.clone(),
                         );
