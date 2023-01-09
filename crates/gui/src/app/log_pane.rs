@@ -31,25 +31,20 @@ impl From<UrlMap> for LogPane {
 }
 
 impl LogPane {
-    fn title_bar_content<'a>(title: impl ToString, close: Option<Pane>) -> 
-    fn title_bar<'a>(title: impl ToString, _close: Option<Pane>) -> TitleBar<'a, Msg> {
-        Row::new()
-            .push(title.pipe(text).pipe(container).padding(3))
-            .align_items(Alignment::Center)
-            .pipe(TitleBar::new)
-            .controls(Row::new())
-        // .pipe(|bar| {
-        //     if let Some(pane) = close {
-        //         bar.controls(
-        //             button("Close")
-        //                 .style(theme::Button::Destructive)
-        //                 .on_press(Msg::CloseLogPane(pane))
-        //                 .padding(3),
-        //         )
-        //     } else {
-        //         bar
-        //     }
-        // })
+    fn title_bar<'a>(title: impl ToString, close: Option<Pane>) -> TitleBar<'a, Msg> {
+        TitleBar::new(title.pipe(text).pipe(container).padding(3))
+            .controls(if let Some(pane) = close {
+                Row::new().push(
+                    button("Close")
+                        .on_press(Msg::CloseLogPane(pane))
+                        .style(theme::Button::Destructive)
+                        .padding(3),
+                )
+            } else {
+                Row::new()
+            })
+            .always_show_controls()
+            .style(theme::Container::Box)
     }
 
     fn log_content<'a>(app_view: View) -> Content<'a, Msg> {
@@ -57,6 +52,7 @@ impl LogPane {
             .status_log
             .iter()
             .fold(Column::new(), |column, msg| column.push(text(msg)))
+            .width(Length::Fill)
             .pipe(scrollable)
             .pipe(container)
             .padding(3)

@@ -44,7 +44,6 @@ fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
                     .width(Length::Fill),
             )
             .width(Length::Fill)
-            .style(theme::Container::Box)
             .padding(1),
         )
         .on_press(Msg::ApplyCategory(level.into()))
