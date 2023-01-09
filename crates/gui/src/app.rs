@@ -15,7 +15,7 @@ use iced::{
     executor,
     widget::{
         self,
-        pane_grid::{self, Axis, ResizeEvent},
+        pane_grid::{self, Axis, DragEvent, ResizeEvent},
     },
     Application, Command, Theme,
 };
@@ -45,6 +45,7 @@ pub struct App {
     edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPane>,
+    stat_pane: pane_grid::Pane,
     main_content: MainContent,
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
@@ -319,6 +320,10 @@ impl App {
                 } else {
                     self.set_status(format!("gathered metric \"{metric:?}\", value [{value}]"));
                 }
+                if let MetricValue::UrlMap(ref url_map) = value {
+                    self.log_panes
+                        .split(Axis::Horizontal, &self.stat_pane, url_map.clone().into());
+                }
                 self.metrics.set(metric, value);
                 self.decrement_tick_watchers(1);
             }
@@ -355,7 +360,9 @@ impl Default for App {
         let infos = shared::BufferStorage::default();
 
         let (mut log_panes, log_pane) = pane_grid::State::new(LogPane::Log);
-        log_panes.split(Axis::Vertical, &log_pane, LogPane::Stats);
+        let (stat_pane, _) = log_panes
+            .split(Axis::Vertical, &log_pane, LogPane::Stats)
+            .expect("splitting log pane should not fail");
 
         Self {
             command_map: CommandMap::default_config(
@@ -381,6 +388,7 @@ impl Default for App {
             bookmark_column_state: BookmarkColumnState::default(),
             tick_watcher_count: 0usize,
             channel: mpsc::channel(),
+            stat_pane,
         }
     }
 }
@@ -602,6 +610,21 @@ impl Application for App {
                         );
                     }
                 };
+                Command::none()
+            }
+            Msg::CloseLogPane(pane) => {
+                self.log_panes.close(&pane);
+                Command::none()
+            }
+            Msg::DragLogPane(drag_event) => {
+                if let DragEvent::Dropped { pane, target } = drag_event {
+                    self.log_panes.swap(&pane, &target);
+                }
+                self.set_status(format!("{drag_event:?}"));
+                Command::none()
+            }
+            Msg::Debug(value) => {
+                self.set_status(format!("{value:?}"));
                 Command::none()
             }
         }
