@@ -2,12 +2,18 @@ use crate::{Msg, View};
 use iced::{
     theme,
     widget::{
-        button, column, horizontal_rule, horizontal_space, row, scrollable, text, Column, Row,
+        button, column, container, horizontal_rule, horizontal_space, row, scrollable, text,
+        Column, Row,
     },
     Alignment, Element, Length,
 };
 
-fn category_row<'a>(app_view: View, level: &[usize], style: theme::Button) -> Element<'a, Msg> {
+fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
+    const BUTTON_THEMES: &[&dyn Fn() -> theme::Button] = &[
+        &|| theme::Button::Destructive,
+        &|| theme::Button::Primary,
+        &|| theme::Button::Positive,
+    ];
     let Some(index) = level.last().copied() else {
         panic!("level param is empty");
     };
@@ -19,7 +25,7 @@ fn category_row<'a>(app_view: View, level: &[usize], style: theme::Button) -> El
     if app_view.edit_mode_active {
         row_content.extend([
             button("Edit")
-                .padding(1)
+                .padding(3)
                 .on_press(Msg::EditCategory(index))
                 .into(),
             horizontal_space(Length::Units(3)).into(),
@@ -31,12 +37,21 @@ fn category_row<'a>(app_view: View, level: &[usize], style: theme::Button) -> El
             "depth of nested categories times 24 should not exceed u16::MAX",
         )))
         .into(),
-        button(column![text(category.name())].align_items(Alignment::Center))
-            .on_press(Msg::ApplyCategory(level.into()))
-            .style(style)
-            .padding(1)
-            .width(Length::Units(150))
-            .into(),
+        button(
+            container(
+                column![text(category.name())]
+                    .align_items(Alignment::Center)
+                    .width(Length::Fill),
+            )
+            .width(Length::Fill)
+            .style(theme::Container::Box)
+            .padding(1),
+        )
+        .on_press(Msg::ApplyCategory(level.into()))
+        .style(BUTTON_THEMES[level.len() % BUTTON_THEMES.len()]())
+        .padding(2)
+        .width(Length::Units(150))
+        .into(),
     ]);
 
     Row::with_children(row_content)
@@ -65,19 +80,7 @@ pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
             app_view
                 .category_tree
                 .iter()
-                .zip(
-                    [
-                        || theme::Button::Positive,
-                        || theme::Button::Destructive,
-                        || theme::Button::Primary,
-                    ]
-                    .into_iter()
-                    .cycle()
-                    .map(|f| f())
-                )
-                .fold(Column::new(), |r, (l, s)| {
-                    r.push(category_row(app_view, l, s))
-                })
+                .fold(Column::new(), |r, l| { r.push(category_row(app_view, l)) })
                 .align_items(Alignment::Fill)
                 .spacing(3)
                 .width(Length::Shrink)

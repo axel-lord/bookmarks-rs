@@ -1,7 +1,13 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    fmt::Debug,
+    sync::{Arc, Mutex},
+};
 
 use bookmark_library::Bookmark;
-use iced::{widget::pane_grid::ResizeEvent, Theme};
+use iced::{
+    widget::pane_grid::{DragEvent, Pane, ResizeEvent},
+    Theme,
+};
 
 use crate::{app::Metric, MainContent};
 
@@ -40,6 +46,12 @@ pub enum Msg {
     GatherMetric(Metric),
     /// Set the theme in use.
     SetTheme(Theme),
+    /// Close a pane in the log section.
+    CloseLogPane(Pane),
+    /// A pane was dragged in the log section.
+    DragLogPane(DragEvent),
+    /// Don't use some generated value but log it.
+    Debug(Arc<dyn Debug + Send + Sync>),
     /// The filter in the filter box should be filter the bookmarks until reset.
     ApplyFilter,
     /// Any and all bookmark filters should be removed.
