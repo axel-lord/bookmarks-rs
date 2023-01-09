@@ -22,10 +22,10 @@ use iced::{
 
 use crate::{MainContent, Msg};
 
-pub mod log_pane;
+pub mod pane;
 pub mod view;
 
-pub use log_pane::{LogPane, Metric, MetricValue, Metrics};
+pub use pane::{log::State as LogPaneState, Metric, MetricValue, Metrics};
 
 use self::view::bookmarks_column::BookmarkColumnState;
 
@@ -44,8 +44,7 @@ pub struct App {
     command_map: CommandMap<'static>,
     edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
-    log_panes: pane_grid::State<LogPane>,
-    stat_pane: pane_grid::Pane,
+    log_panes: pane_grid::State<LogPaneState>,
     main_content: MainContent,
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
@@ -321,8 +320,24 @@ impl App {
                     self.set_status(format!("gathered metric \"{metric:?}\", value [{value}]"));
                 }
                 if let MetricValue::UrlMap(ref url_map) = value {
+                    let mut pane = *self
+                        .log_panes
+                        .iter()
+                        .next()
+                        .expect("there should always be at least one log pane")
+                        .0;
+
+                    let pane = loop {
+                        match self.log_panes.adjacent(&pane, pane_grid::Direction::Right) {
+                            Some(new_pane) => {
+                                pane = new_pane;
+                            }
+                            None => break pane,
+                        }
+                    };
+
                     self.log_panes
-                        .split(Axis::Horizontal, &self.stat_pane, url_map.clone().into());
+                        .split(Axis::Vertical, &pane, url_map.clone().into());
                 }
                 self.metrics.set(metric, value);
                 self.decrement_tick_watchers(1);
@@ -359,9 +374,9 @@ impl Default for App {
         let categories = shared::BufferStorage::default();
         let infos = shared::BufferStorage::default();
 
-        let (mut log_panes, log_pane) = pane_grid::State::new(LogPane::Log);
-        let (stat_pane, _) = log_panes
-            .split(Axis::Vertical, &log_pane, LogPane::Stats)
+        let (mut log_panes, log_pane) = pane_grid::State::new(LogPaneState::Log);
+        log_panes
+            .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
         Self {
@@ -388,7 +403,6 @@ impl Default for App {
             bookmark_column_state: BookmarkColumnState::default(),
             tick_watcher_count: 0usize,
             channel: mpsc::channel(),
-            stat_pane,
         }
     }
 }
@@ -620,7 +634,6 @@ impl Application for App {
                 if let DragEvent::Dropped { pane, target } = drag_event {
                     self.log_panes.swap(&pane, &target);
                 }
-                self.set_status(format!("{drag_event:?}"));
                 Command::none()
             }
             Msg::Debug(value) => {

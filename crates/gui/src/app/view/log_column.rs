@@ -4,11 +4,11 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{app::LogPane, Msg, View};
+use crate::{app::pane::log::State as LogPaneState, Msg, View};
 
 pub fn log_column<'a>(
     app_view: View,
-    log_panes: &'a pane_grid::State<LogPane>,
+    log_panes: &'a pane_grid::State<LogPaneState>,
 ) -> Element<'a, Msg> {
     Column::new()
         .push(
