@@ -44,6 +44,7 @@ fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
                     .width(Length::Fill),
             )
             .width(Length::Fill)
+            .style(style::CATEGORY_INNER)
             .padding(1),
         )
         .on_press(Msg::ApplyCategory(level.into()))
@@ -90,4 +91,19 @@ pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
     .padding(3)
     .width(Length::Shrink)
     .into()
+}
+
+mod style {
+    use iced::{widget::container, Theme};
+
+    fn category_inner_impl(theme: &Theme) -> container::Appearance {
+        let palette = theme.extended_palette();
+        container::Appearance {
+            background: Some(palette.background.base.color.into()),
+            text_color: Some(palette.background.base.text),
+            ..Default::default()
+        }
+    }
+
+    pub const CATEGORY_INNER: fn(&Theme) -> container::Appearance = category_inner_impl;
 }

@@ -123,5 +123,22 @@ impl LogPane {
             LogPane::UrlSummary(url_map) => Self::url_summary_content(url_map)
                 .title_bar(Self::title_bar("URL Summary", Some(pane))),
         }
+        .style(style::PANE_STYLE)
     }
+}
+
+mod style {
+    use iced::{widget::container, Theme};
+
+    fn pane_style(theme: &Theme) -> container::Appearance {
+        let palette = theme.extended_palette();
+
+        container::Appearance {
+            background: Some(palette.background.base.color.into()),
+            text_color: Some(palette.background.base.text),
+            ..Default::default()
+        }
+    }
+
+    pub const PANE_STYLE: fn(&Theme) -> container::Appearance = pane_style;
 }
