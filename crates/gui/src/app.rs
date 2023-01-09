@@ -25,7 +25,9 @@ use crate::{MainContent, Msg};
 pub mod pane;
 pub mod view;
 
-pub use pane::{log::State as LogPaneState, Metric, MetricValue, Metrics};
+pub use pane::{
+    edit::State as EditPaneState, log::State as LogPaneState, Metric, MetricValue, Metrics,
+};
 
 use self::view::bookmarks_column::BookmarkColumnState;
 
@@ -45,6 +47,7 @@ pub struct App {
     edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPaneState>,
+    edit_panes: pane_grid::State<EditPaneState>,
     main_content: MainContent,
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
@@ -379,6 +382,8 @@ impl Default for App {
             .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
+        let (edit_panes, _) = pane_grid::State::new(EditPaneState::Settings);
+
         Self {
             command_map: CommandMap::default_config(
                 bookmarks.clone(),
@@ -395,6 +400,7 @@ impl Default for App {
             category_tree: Vec::new(),
             edit_mode_active: false,
             log_panes,
+            edit_panes,
             theme: match dark_light::detect() {
                 dark_light::Mode::Dark => Theme::Dark,
                 dark_light::Mode::Light => Theme::Light,
@@ -640,6 +646,20 @@ impl Application for App {
                 self.set_status(format!("{value:?}"));
                 Command::none()
             }
+            Msg::CloseEditPane(pane) => {
+                self.edit_panes.close(&pane);
+                Command::none()
+            }
+            Msg::DragEditPane(drag_event) => {
+                if let DragEvent::Dropped { pane, target } = drag_event {
+                    self.edit_panes.swap(&pane, &target);
+                }
+                Command::none()
+            }
+            Msg::EditPaneResize(ResizeEvent { ref split, ratio }) => {
+                self.edit_panes.resize(split, ratio);
+                Command::none()
+            }
         }
     }
 
@@ -653,6 +673,7 @@ impl Application for App {
         view::view(
             View::from_app(self, &bookmarks, &categories, &infos, &status, &status_log),
             &self.log_panes,
+            &self.edit_panes,
         )
     }
 }
