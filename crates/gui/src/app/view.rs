@@ -5,7 +5,7 @@ pub mod edit_category_column;
 pub mod log_column;
 pub mod settings_column;
 
-use crate::{app::LogPane, MainContent, Msg, View};
+use crate::{app::pane::log::State as LogPaneState, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
@@ -78,7 +78,10 @@ fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
         .into()
 }
 
-fn content_row<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPane>) -> Element<'a, Msg> {
+fn content_row<'a>(
+    app_view: View,
+    log_panes: &'a pane_grid::State<LogPaneState>,
+) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Edit => settings_column(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
@@ -93,7 +96,7 @@ fn content_row<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPane>) -> 
         .into()
 }
 
-pub fn view<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPane>) -> Element<'a, Msg> {
+pub fn view<'a>(app_view: View, log_panes: &'a pane_grid::State<LogPaneState>) -> Element<'a, Msg> {
     let status = row![horizontal_space(Length::Fill), text(app_view.status),]
         .padding(3)
         .align_items(iced::Alignment::Center);
