@@ -1,11 +1,10 @@
-use super::{style, Metric, UrlMap};
+use super::{style, title_bar, Metric, UrlMap};
 use tap::{Pipe, Tap};
 
 use iced::{
-    theme,
     widget::{
         button, container,
-        pane_grid::{Content, Pane, TitleBar},
+        pane_grid::{Content, Pane},
         scrollable, text, Column, Row,
     },
     Alignment, Length,
@@ -13,9 +12,8 @@ use iced::{
 
 use crate::{Msg, View};
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub enum State {
-    #[default]
     Log,
     Stats,
     UrlSummary(UrlMap),
@@ -28,22 +26,6 @@ impl From<UrlMap> for State {
 }
 
 impl State {
-    fn title_bar<'a>(title: impl ToString, close: Option<Pane>) -> TitleBar<'a, Msg> {
-        TitleBar::new(title.pipe(text).pipe(container).padding(3))
-            .controls(if let Some(pane) = close {
-                Row::new().push(
-                    button("Close")
-                        .on_press(Msg::CloseLogPane(pane))
-                        .style(theme::Button::Destructive)
-                        .padding(3),
-                )
-            } else {
-                Row::new()
-            })
-            .always_show_controls()
-            .style(theme::Container::Box)
-    }
-
     fn log_content<'a>(app_view: View) -> Content<'a, Msg> {
         app_view
             .status_log
@@ -111,14 +93,11 @@ impl State {
 
     pub fn pane_content<'a>(&self, app_view: View, pane: Pane) -> Content<'a, Msg> {
         match self {
-            State::Log => {
-                Self::log_content(app_view).title_bar(Self::title_bar("Status Log", None))
+            State::Log => Self::log_content(app_view).title_bar(title_bar("Status Log", None)),
+            State::Stats => Self::stat_content(app_view).title_bar(title_bar("Statistics", None)),
+            State::UrlSummary(url_map) => {
+                Self::url_summary_content(url_map).title_bar(title_bar("URL Summary", Some(pane)))
             }
-            State::Stats => {
-                Self::stat_content(app_view).title_bar(Self::title_bar("Statistics", None))
-            }
-            State::UrlSummary(url_map) => Self::url_summary_content(url_map)
-                .title_bar(Self::title_bar("URL Summary", Some(pane))),
         }
         .style(style::PANE_STYLE)
     }

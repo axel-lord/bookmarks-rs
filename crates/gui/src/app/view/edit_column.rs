@@ -4,17 +4,21 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{app::pane::log::State as LogPaneState, Msg, View};
+use crate::{app::pane::edit::State as EditPaneState, Msg, View};
 
-pub fn log_column<'a>(
+pub fn edit_column<'a>(
     app_view: View,
-    log_panes: &'a pane_grid::State<LogPaneState>,
+    edit_panes: &'a pane_grid::State<EditPaneState>,
 ) -> Element<'a, Msg> {
     Column::new()
         .push(
             Row::new()
-                .push(button("Clear").padding(3).style(theme::Button::Destructive))
-                .push(text("Log"))
+                .push(
+                    button("Close All")
+                        .padding(3)
+                        .style(theme::Button::Destructive),
+                )
+                .push(text("Edit"))
                 .push(horizontal_space(Length::Fill))
                 .push(app_view.main_content.choice_row())
                 .padding(0)
@@ -23,11 +27,11 @@ pub fn log_column<'a>(
         )
         .push(horizontal_rule(3))
         .push(
-            PaneGrid::new(log_panes, |pane, state, _| {
+            PaneGrid::new(edit_panes, |pane, state, _| {
                 state.pane_content(app_view, pane)
             })
-            .on_resize(10, Msg::LogPaneResize)
-            .on_drag(Msg::DragLogPane)
+            .on_resize(10, Msg::EditPaneResize)
+            .on_drag(Msg::DragEditPane)
             .spacing(3)
             .width(Length::Fill)
             .height(Length::Fill),

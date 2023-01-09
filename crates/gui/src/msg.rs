@@ -40,16 +40,22 @@ pub enum Msg {
     EditBookmark(usize),
     /// Catgegory at passed index should be edited.
     EditCategory(usize),
+    /// Close a pane in the log section.
+    CloseEditPane(Pane),
+    /// A pane was dragged in the log section.
+    DragEditPane(DragEvent),
     /// Used for when resizing log panes.
     LogPaneResize(ResizeEvent),
-    /// Signal that some stats are to be gathered.
-    GatherMetric(Metric),
-    /// Set the theme in use.
-    SetTheme(Theme),
     /// Close a pane in the log section.
     CloseLogPane(Pane),
     /// A pane was dragged in the log section.
     DragLogPane(DragEvent),
+    /// Used for when resizing edit panes.
+    EditPaneResize(ResizeEvent),
+    /// Signal that some stats are to be gathered.
+    GatherMetric(Metric),
+    /// Set the theme in use.
+    SetTheme(Theme),
     /// Don't use some generated value but log it.
     Debug(Arc<dyn Debug + Send + Sync>),
     /// The filter in the filter box should be filter the bookmarks until reset.
