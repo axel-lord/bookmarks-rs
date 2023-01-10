@@ -8,9 +8,10 @@ use iced::{
     theme,
     widget::{
         button, container,
-        pane_grid::{Pane, TitleBar},
-        text, Row,
+        pane_grid::{Content, Pane, TitleBar},
+        scrollable, text, Column, Row,
     },
+    Element, Length,
 };
 pub use metric::{IntoMetricValue, Metric, Metrics, Value as MetricValue};
 use tap::Pipe;
@@ -32,6 +33,49 @@ fn title_bar<'a>(title: impl ToString, close: Option<Pane>) -> TitleBar<'a, Msg>
         })
         .always_show_controls()
         .style(theme::Container::Box)
+}
+
+fn scrollable_content<'a>(content: impl Into<Element<'a, Msg>>) -> Content<'a, Msg> {
+    content
+        .pipe(scrollable)
+        .pipe(container)
+        .padding(3)
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .pipe(Content::new)
+}
+
+trait IterElements: Iterator {
+    fn collect_coumn<'a, E, F>(self, f: F) -> Column<'a, Msg>
+    where
+        E: Into<Element<'a, Msg>>,
+        F: FnMut(Self::Item) -> E;
+
+    fn collect_row<'a, E, F>(self, f: F) -> Row<'a, Msg>
+    where
+        E: Into<Element<'a, Msg>>,
+        F: FnMut(Self::Item) -> E;
+}
+
+impl<I> IterElements for I
+where
+    I: Iterator,
+{
+    fn collect_row<'a, E, F>(self, mut f: F) -> Row<'a, Msg>
+    where
+        E: Into<Element<'a, Msg>>,
+        F: FnMut(Self::Item) -> E,
+    {
+        self.fold(Row::new(), |row, item| row.push(f(item)))
+    }
+
+    fn collect_coumn<'a, E, F>(self, mut f: F) -> Column<'a, Msg>
+    where
+        E: Into<Element<'a, Msg>>,
+        F: FnMut(Self::Item) -> E,
+    {
+        self.fold(Column::new(), |column, item| column.push(f(item)))
+    }
 }
 
 pub mod style {

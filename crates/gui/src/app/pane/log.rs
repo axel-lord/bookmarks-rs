@@ -1,11 +1,11 @@
-use super::{style, title_bar, Metric, UrlMap};
+use super::{scrollable_content, style, title_bar, IterElements, Metric, UrlMap};
 use tap::{Pipe, Tap};
 
 use iced::{
     widget::{
-        button, container,
+        button,
         pane_grid::{Content, Pane},
-        scrollable, text, Column, Row,
+        text, Row,
     },
     Alignment, Length,
 };
@@ -30,44 +30,32 @@ impl State {
         app_view
             .status_log
             .iter()
-            .fold(Column::new(), |column, msg| column.push(text(msg)))
+            .collect_coumn(text)
             .width(Length::Fill)
-            .pipe(scrollable)
-            .pipe(container)
-            .padding(3)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .pipe(Content::new)
+            .pipe(scrollable_content)
     }
 
     fn stat_content<'a>(app_view: View) -> Content<'a, Msg> {
         [Metric::AverageContentStringLength, Metric::UrlOccurances]
             .into_iter()
-            .fold(Column::new(), |column, metric| {
-                column.push(
-                    Row::new()
-                        .push(
-                            button("Gather")
-                                .on_press(Msg::GatherMetric(metric))
-                                .padding(3),
-                        )
-                        .push(text(format!(
-                            "{metric:?} [{}]",
-                            app_view.metrics.get(metric)
-                        )))
-                        .spacing(3)
-                        .align_items(Alignment::Center)
-                        .width(Length::Fill),
-                )
+            .collect_coumn(|metric| {
+                Row::new()
+                    .push(
+                        button("Gather")
+                            .on_press(Msg::GatherMetric(metric))
+                            .padding(3),
+                    )
+                    .push(text(format!(
+                        "{metric:?} [{}]",
+                        app_view.metrics.get(metric)
+                    )))
+                    .spacing(3)
+                    .align_items(Alignment::Center)
+                    .width(Length::Fill)
             })
             .align_items(Alignment::Start)
             .spacing(3)
-            .pipe(scrollable)
-            .pipe(container)
-            .padding(3)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .pipe(Content::new)
+            .pipe(scrollable_content)
     }
 
     fn url_summary_content<'a>(url_map: &UrlMap) -> Content<'a, Msg> {
@@ -78,17 +66,10 @@ impl State {
             .tap_mut(|vec| vec.sort_by_key(|(_, count)| *count))
             .into_iter()
             .rev()
-            .fold(Column::new(), |column, (url, count)| {
-                column.push(text(format!("{url}: {count}")).width(Length::Fill))
-            })
+            .collect_coumn(|(url, count)| text(format!("{url}: {count}")).width(Length::Fill))
             .align_items(Alignment::Start)
             .spacing(3)
-            .pipe(scrollable)
-            .pipe(container)
-            .padding(3)
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .pipe(Content::new)
+            .pipe(scrollable_content)
     }
 
     pub fn pane_content<'a>(&self, app_view: View, pane: Pane) -> Content<'a, Msg> {

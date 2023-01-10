@@ -3,13 +3,13 @@ use iced::{
     widget::{
         container,
         pane_grid::{Content, Pane},
-        scrollable, text, text_input, toggler, Column, Row,
+        scrollable, text, text_input, toggler, Row,
     },
     Alignment, Length, Theme,
 };
 use tap::Pipe;
 
-use crate::{Msg, View};
+use crate::{app::pane::IterElements, Msg, View};
 
 use super::{style, title_bar};
 
@@ -45,18 +45,16 @@ impl State {
                     ("From", app_view.shown_from.1, Msg::UpdateShownFrom as MsgFn),
                 ]
                 .into_iter()
-                .fold(Column::new(), |column, (title, value, msg)| {
-                    column.push(
-                        Row::new()
-                            .push(text(title))
-                            .push(
-                                text_input("...", value, msg)
-                                    .padding(3)
-                                    .width(Length::Units(50)),
-                            )
-                            .align_items(Alignment::Center)
-                            .spacing(3),
-                    )
+                .collect_coumn(|(title, value, msg)| {
+                    Row::new()
+                        .push(text(title))
+                        .push(
+                            text_input("...", value, msg)
+                                .padding(3)
+                                .width(Length::Units(50)),
+                        )
+                        .align_items(Alignment::Center)
+                        .spacing(3)
                 })
                 .spacing(3)
                 .align_items(Alignment::End),
@@ -66,14 +64,12 @@ impl State {
                     Msg::SetTheme(if b { Theme::Dark } else { Theme::Light })
                 })]
                 .into_iter()
-                .fold(Column::new(), |column, (title, value, msg)| {
-                    column.push(
-                        Row::new()
-                            .push(container(text(title)).padding(3))
-                            .push(toggler(None, value, msg))
-                            .align_items(Alignment::Center)
-                            .spacing(3),
-                    )
+                .collect_coumn(|(title, value, msg)| {
+                    Row::new()
+                        .push(container(text(title)).padding(3))
+                        .push(toggler(None, value, msg))
+                        .align_items(Alignment::Center)
+                        .spacing(3)
                 })
                 .spacing(3)
                 .align_items(Alignment::End),
