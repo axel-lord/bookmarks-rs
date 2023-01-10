@@ -1,24 +1,46 @@
-use bookmark_library::{Bookmark, Category};
 use iced::{
     widget::{
         container,
         pane_grid::{Content, Pane},
-        scrollable, text, text_input, toggler, Row,
+        text, text_input, toggler, Row,
     },
     Alignment, Length, Theme,
 };
 use tap::Pipe;
 
-use crate::{app::pane::IterElements, Msg, View};
+use crate::{
+    app::pane::{scrollable_content, IterElements},
+    Msg, View,
+};
 
 use super::{style, title_bar};
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct BookmarkProxy {
+    pub info: String,
+    pub url: String,
+    pub tags: Vec<String>,
+    pub index: usize,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct CategoryProxy {
+    pub id: String,
+    pub name: String,
+    pub info: String,
+    pub identifiers: Vec<String>,
+    pub subcategories: Vec<String>,
+    pub index: usize,
+}
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum State {
     Settings,
-    Bookmark { index: usize, bookmark: Bookmark },
-    Category { index: usize, category: Category },
+    Bookmark(BookmarkProxy),
+    Category(CategoryProxy),
 }
 
 impl State {
@@ -75,17 +97,14 @@ impl State {
                 .align_items(Alignment::End),
             )
             .width(Length::Fill)
-            .pipe(scrollable)
-            .pipe(container)
-            .padding(3)
-            .pipe(Content::new)
+            .pipe(scrollable_content)
     }
 
-    fn edit_bookmark_content<'a>(_app_view: View) -> Content<'a, Msg> {
+    fn edit_bookmark_content<'a>(_app_view: View, _bookmark: &BookmarkProxy) -> Content<'a, Msg> {
         todo!()
     }
 
-    fn edit_category_content<'a>(_app_view: View) -> Content<'a, Msg> {
+    fn edit_category_content<'a>(_app_view: View, _category: &CategoryProxy) -> Content<'a, Msg> {
         todo!()
     }
 
@@ -94,14 +113,8 @@ impl State {
             State::Settings => {
                 Self::settings_content(app_view).title_bar(title_bar("Settings", None))
             }
-            State::Bookmark {
-                index: _,
-                bookmark: _,
-            } => Self::edit_bookmark_content(app_view),
-            State::Category {
-                index: _,
-                category: _,
-            } => Self::edit_category_content(app_view),
+            State::Bookmark(bookmark) => Self::edit_bookmark_content(app_view, bookmark),
+            State::Category(category) => Self::edit_category_content(app_view, category),
         }
         .style(style::PANE_STYLE)
     }
