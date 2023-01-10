@@ -23,13 +23,13 @@ use iced::{
 use crate::{MainContent, Msg};
 
 pub mod pane;
-pub mod view;
+pub mod ui;
 
 pub use pane::{
     edit::State as EditPaneState, log::State as LogPaneState, Metric, MetricValue, Metrics,
 };
 
-use self::view::bookmarks_column::BookmarkColumnState;
+use ui::bookmarks_column::BookmarkColumnState;
 
 #[derive(Clone, Debug)]
 pub enum ChannelMessage {
@@ -39,7 +39,7 @@ pub enum ChannelMessage {
 /// Application state.
 #[derive(Debug)]
 pub struct App {
-    bookmark_column_state: view::bookmarks_column::BookmarkColumnState,
+    bookmark_column_state: ui::bookmarks_column::BookmarkColumnState,
     bookmarks: shared::BufferStorage<Bookmark>,
     categories: shared::BufferStorage<Category>,
     category_tree: Vec<Vec<usize>>,
@@ -94,40 +94,39 @@ pub struct View<'a> {
     pub url_width: (usize, &'a str),
 }
 
-impl<'a> View<'a> {
-    fn from_app(
-        app: &'a App,
+impl App {
+    /// Create a [View] into the app.
+    pub fn to_view<'a>(
+        &'a self,
         bookmarks: &'a container::BufferStorage<Bookmark>,
         categories: &'a container::BufferStorage<Category>,
         infos: &'a container::BufferStorage<Info>,
         status: &'a str,
         status_log: &'a [String],
-    ) -> Self {
+    ) -> View<'a> {
         View {
             bookmarks,
             categories,
             infos,
-            desc_width: app.bookmark_column_state.desc_width.as_tuple(),
+            desc_width: self.bookmark_column_state.desc_width.as_tuple(),
             filter: (
-                app.bookmark_column_state.filter.as_ref(),
-                &app.bookmark_column_state.filter_str,
+                self.bookmark_column_state.filter.as_ref(),
+                &self.bookmark_column_state.filter_str,
             ),
             status,
             status_log,
-            shown_bookmarks: app.bookmark_column_state.shown_bookmarks.as_tuple(),
-            shown_from: app.bookmark_column_state.shown_from.as_tuple(),
-            url_width: app.bookmark_column_state.url_width.as_tuple(),
-            main_content: app.main_content,
-            category_tree: &app.category_tree,
-            edit_mode_active: app.edit_mode_active,
-            bookmark_scrollbar_id: &app.bookmark_column_state.bookmark_scrollbar_id,
-            is_dark_mode: matches!(app.theme, Theme::Dark),
-            metrics: &app.metrics,
+            shown_bookmarks: self.bookmark_column_state.shown_bookmarks.as_tuple(),
+            shown_from: self.bookmark_column_state.shown_from.as_tuple(),
+            url_width: self.bookmark_column_state.url_width.as_tuple(),
+            main_content: self.main_content,
+            category_tree: &self.category_tree,
+            edit_mode_active: self.edit_mode_active,
+            bookmark_scrollbar_id: &self.bookmark_column_state.bookmark_scrollbar_id,
+            is_dark_mode: matches!(self.theme, Theme::Dark),
+            metrics: &self.metrics,
         }
     }
-}
 
-impl App {
     /// Set the current status and add it to log.
     pub fn set_status(&self, msg: impl Into<String>) {
         let msg = msg.into();
@@ -670,8 +669,8 @@ impl Application for App {
         let status = self.status_msg.borrow();
         let status_log = self.status_log.borrow();
 
-        view::view(
-            View::from_app(self, &bookmarks, &categories, &infos, &status, &status_log),
+        ui::view(
+            self.to_view(&bookmarks, &categories, &infos, &status, &status_log),
             &self.log_panes,
             &self.edit_panes,
         )
