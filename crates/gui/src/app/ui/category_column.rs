@@ -1,10 +1,7 @@
 use crate::{Msg, View};
 use iced::{
     theme,
-    widget::{
-        button, column, container, horizontal_rule, horizontal_space, row, scrollable, text,
-        Column, Row,
-    },
+    widget::{button, container, horizontal_rule, horizontal_space, scrollable, text, Column, Row},
     Alignment, Element, Length,
 };
 
@@ -38,14 +35,12 @@ fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
         )))
         .into(),
         button(
-            container(
-                column![text(category.name())]
-                    .align_items(Alignment::Center)
-                    .width(Length::Fill),
-            )
-            .width(Length::Fill)
-            .style(style::CATEGORY_INNER)
-            .padding(1),
+            container(text(category.name()))
+                .width(Length::Fill)
+                .style(style::CATEGORY_INNER)
+                .center_x()
+                .center_y()
+                .padding(1),
         )
         .on_press(Msg::ApplyCategory(level.into()))
         .style(BUTTON_THEMES[level.len() % BUTTON_THEMES.len()]())
@@ -63,34 +58,37 @@ fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
 }
 
 pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
-    let header = row![
-        button("Reset")
-            .on_press(Msg::Reset)
-            .style(theme::Button::Destructive)
-            .padding(3),
-        text(format!("Categories ({}): ", app_view.category_tree.len())),
-    ]
-    .align_items(Alignment::Center)
-    .spacing(3);
+    let header = Row::new()
+        .push(
+            button("Reset")
+                .on_press(Msg::Reset)
+                .style(theme::Button::Destructive)
+                .padding(3),
+        )
+        .push(text(format!(
+            "Categories ({}): ",
+            app_view.category_tree.len()
+        )))
+        .align_items(Alignment::Center)
+        .spacing(3);
 
-    column![
-        header,
-        horizontal_rule(3),
-        scrollable(
+    Column::new()
+        .push(header)
+        .push(horizontal_rule(3))
+        .push(scrollable(
             app_view
                 .category_tree
                 .iter()
-                .fold(Column::new(), |r, l| { r.push(category_row(app_view, l)) })
+                .fold(Column::new(), |r, l| r.push(category_row(app_view, l)))
                 .align_items(Alignment::Fill)
                 .spacing(3)
-                .width(Length::Shrink)
-        ),
-    ]
-    .align_items(Alignment::Fill)
-    .spacing(3)
-    .padding(3)
-    .width(Length::Shrink)
-    .into()
+                .width(Length::Shrink),
+        ))
+        .align_items(Alignment::Fill)
+        .spacing(3)
+        .padding(3)
+        .width(Length::Shrink)
+        .into()
 }
 
 mod style {
