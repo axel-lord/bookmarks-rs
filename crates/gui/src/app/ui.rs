@@ -13,67 +13,72 @@ use edit_column::edit_column;
 use iced::{
     theme,
     widget::{
-        button, column, horizontal_rule, horizontal_space, pane_grid, row, text, text_input,
-        toggler, vertical_rule, vertical_space,
+        button, horizontal_rule, horizontal_space, pane_grid, text, text_input, toggler,
+        vertical_rule, vertical_space, Column, Row,
     },
     Alignment, Element, Length,
 };
 use log_column::log_column;
 
-fn tool_row<'a>(app_view: View) -> Element<'a, Msg> {
-    let filter = row![
-        text("Filter:"),
-        text_input("...", app_view.filter.1, Msg::FilterBookmarks)
-            .padding(3)
-            .width(300.into()),
-        button("Apply")
-            .on_press(Msg::ApplyFilter)
-            .padding(3)
-            .style(theme::Button::Positive),
-        button("Reset")
-            .on_press(Msg::Reset)
-            .padding(3)
-            .style(theme::Button::Destructive),
-    ]
-    .padding(0)
-    .spacing(3)
-    .align_items(Alignment::Center);
+fn tool_row<'a>(app_view: View) -> Row<'a, Msg> {
+    let filter = Row::new()
+        .push(text("Filter:"))
+        .push(
+            text_input("...", app_view.filter.1, Msg::FilterBookmarks)
+                .padding(3)
+                .width(300.into()),
+        )
+        .push(
+            button("Apply")
+                .on_press(Msg::ApplyFilter)
+                .padding(3)
+                .style(theme::Button::Positive),
+        )
+        .push(
+            button("Reset")
+                .on_press(Msg::Reset)
+                .padding(3)
+                .style(theme::Button::Destructive),
+        )
+        .padding(0)
+        .spacing(3)
+        .align_items(Alignment::Center);
 
-    let edit_option = row![
-        text("Edit"),
-        toggler(None, app_view.edit_mode_active, Msg::SetEditMode).width(Length::Shrink)
-    ]
-    .padding(0)
-    .spacing(3)
-    .align_items(Alignment::Center);
+    let edit_option = Row::new()
+        .push(text("Edit"))
+        .push(toggler(None, app_view.edit_mode_active, Msg::SetEditMode).width(Length::Shrink))
+        .padding(0)
+        .spacing(3)
+        .align_items(Alignment::Center);
 
-    row![
-        horizontal_space(Length::Fill),
-        filter.width(Length::Shrink),
-        horizontal_space(Length::Fill),
-        edit_option.width(Length::Shrink),
-    ]
-    .align_items(iced::Alignment::Center)
-    .spacing(3)
-    .padding(3)
-    .into()
+    Row::new()
+        .push(horizontal_space(Length::Fill))
+        .push(filter.width(Length::Shrink))
+        .push(horizontal_space(Length::Fill))
+        .push(edit_option.width(Length::Shrink))
+        .align_items(iced::Alignment::Center)
+        .spacing(3)
+        .padding(3)
 }
 
 fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
-    let header = row![
-        button("Leave")
-            .padding(3)
-            .style(theme::Button::Destructive)
-            .on_press(Msg::SwitchMainTo(MainContent::Bookmarks)),
-        text("Blank:"),
-        horizontal_space(Length::Fill),
-        app_view.main_content.choice_row(),
-    ]
-    .padding(0)
-    .spacing(3)
-    .align_items(Alignment::Center);
+    let header = Row::new()
+        .push(
+            button("Leave")
+                .padding(3)
+                .style(theme::Button::Destructive)
+                .on_press(Msg::SwitchMainTo(MainContent::Bookmarks)),
+        )
+        .push(text("Blank:"))
+        .push(horizontal_space(Length::Fill))
+        .push(app_view.main_content.choice_row())
+        .padding(0)
+        .spacing(3)
+        .align_items(Alignment::Center);
 
-    column![header, vertical_space(Length::Fill)]
+    Column::new()
+        .push(header)
+        .push(vertical_space(Length::Fill))
         .padding(3)
         .spacing(3)
         .into()
@@ -92,7 +97,10 @@ fn content_row<'a>(
         _ => blank_column(app_view),
     };
 
-    row![category_column(app_view), vertical_rule(3), main_content,]
+    Row::new()
+        .push(category_column(app_view))
+        .push(vertical_rule(3))
+        .push(main_content)
         .height(Length::Fill)
         .align_items(iced::Alignment::Start)
         .into()
@@ -103,16 +111,17 @@ pub fn view<'a>(
     log_panes: &'a pane_grid::State<LogPaneState>,
     edit_panes: &'a pane_grid::State<EditPaneState>,
 ) -> Element<'a, Msg> {
-    let status = row![horizontal_space(Length::Fill), text(app_view.status),]
+    let status = Row::new()
+        .push(horizontal_space(Length::Fill))
+        .push(text(app_view.status))
         .padding(3)
         .align_items(iced::Alignment::Center);
 
-    column![
-        tool_row(app_view),
-        horizontal_rule(3),
-        content_row(app_view, log_panes, edit_panes),
-        horizontal_rule(3),
-        status,
-    ]
-    .into()
+    Column::new()
+        .push(tool_row(app_view))
+        .push(horizontal_rule(3))
+        .push(content_row(app_view, log_panes, edit_panes))
+        .push(horizontal_rule(3))
+        .push(status)
+        .into()
 }
