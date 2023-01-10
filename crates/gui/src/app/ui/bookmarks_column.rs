@@ -3,11 +3,10 @@ use aho_corasick::AhoCorasick;
 use bookmark_library::Bookmark;
 use iced::{
     theme,
-    widget::{
-        button, column, container, horizontal_rule, horizontal_space, row, scrollable, text, Column,
-    },
+    widget::{button, container, horizontal_rule, horizontal_space, scrollable, text, Column, Row},
     Color, Element, Length,
 };
+use tap::Pipe;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug)]
@@ -61,37 +60,37 @@ fn truncated_text<'a>(content: &str, max_width: usize, theme: theme::Text) -> El
 
 fn bookmark_row<'a>(index: usize, app_view: View, bookmark: &Bookmark) -> Element<'a, Msg> {
     let btn = button(container(
-        row![
-            truncated_text(
+        Row::new()
+            .push(truncated_text(
                 bookmark.description(),
                 app_view.desc_width.0,
-                theme::Text::Default
-            ),
-            truncated_text(
+                theme::Text::Default,
+            ))
+            .push(truncated_text(
                 bookmark.url(),
                 app_view.url_width.0,
-                theme::Text::Color(Color::from_rgb8(64, 96, 255))
-            ),
-        ]
-        .spacing(3)
-        .align_items(iced::Alignment::Center),
+                theme::Text::Color(Color::from_rgb8(64, 96, 255)),
+            ))
+            .spacing(3)
+            .align_items(iced::Alignment::Center),
     ))
     .on_press(Msg::GotoBookmarkLocation(index))
     .style(theme::Button::Text)
     .padding(1);
 
-    if app_view.edit_mode_active {
-        row![
-            button("Edit").padding(1).on_press(Msg::EditBookmark(index)),
-            btn
-        ]
-    } else {
-        row![btn]
-    }
-    .padding(0)
-    .spacing(3)
-    .align_items(iced::Alignment::Center)
-    .into()
+    Row::new()
+        .pipe(|row| {
+            if app_view.edit_mode_active {
+                row.push(button("Edit").padding(1).on_press(Msg::EditBookmark(index)))
+            } else {
+                row
+            }
+        })
+        .push(btn)
+        .padding(0)
+        .spacing(3)
+        .align_items(iced::Alignment::Center)
+        .into()
 }
 
 pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
@@ -120,26 +119,32 @@ pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
     let bookmarks = scrollable(Column::with_children(bookmarks).spacing(3))
         .id(app_view.bookmark_scrollbar_id.clone());
 
-    let header = row![
-        button("Prev")
-            .on_press(Msg::UpdateShownFromSteps(-1))
-            .padding(3),
-        button("Next")
-            .on_press(Msg::UpdateShownFromSteps(1))
-            .padding(3),
-        text(format!(
+    let header = Row::new()
+        .push(
+            button("Prev")
+                .on_press(Msg::UpdateShownFromSteps(-1))
+                .padding(3),
+        )
+        .push(
+            button("Next")
+                .on_press(Msg::UpdateShownFromSteps(1))
+                .padding(3),
+        )
+        .push(text(format!(
             "Bookmarks ({}~{}/{}):",
             app_view.shown_from.0,
             bookmark_count.saturating_add(app_view.shown_from.0),
             app_view.bookmarks.storage.len(),
-        )),
-        horizontal_space(Length::Fill),
-        app_view.main_content.choice_row(),
-    ]
-    .spacing(3)
-    .align_items(iced::Alignment::Center);
+        )))
+        .push(horizontal_space(Length::Fill))
+        .push(app_view.main_content.choice_row())
+        .spacing(3)
+        .align_items(iced::Alignment::Center);
 
-    column![header, horizontal_rule(3), bookmarks,]
+    Column::new()
+        .push(header)
+        .push(horizontal_rule(3))
+        .push(bookmarks)
         .padding(3)
         .spacing(3)
         .width(Length::Fill)
