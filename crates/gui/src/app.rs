@@ -1,14 +1,5 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    fs,
-    io::{self, BufRead},
-    path::{Path, PathBuf},
-    rc::Rc,
-    sync::mpsc,
-};
-
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
+use crate::{MainContent, Msg};
+use aho_corasick::AhoCorasickBuilder;
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_storage::Listed;
 use iced::{
@@ -19,17 +10,26 @@ use iced::{
     },
     Application, Command, Theme,
 };
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    fs,
+    io::{self, BufRead},
+    path::{Path, PathBuf},
+    rc::Rc,
+    sync::mpsc,
+};
+use ui::bookmarks_column::BookmarkColumnState;
 
-use crate::{MainContent, Msg};
-
-pub mod pane;
-pub mod ui;
+mod view;
 
 pub use pane::{
     edit::State as EditPaneState, log::State as LogPaneState, Metric, MetricValue, Metrics,
 };
+pub use view::View;
 
-use ui::bookmarks_column::BookmarkColumnState;
+pub mod pane;
+pub mod ui;
 
 #[derive(Clone, Debug)]
 pub enum ChannelMessage {
@@ -55,43 +55,6 @@ pub struct App {
     theme: Theme,
     tick_watcher_count: usize,
     channel: (mpsc::Sender<ChannelMessage>, mpsc::Receiver<ChannelMessage>),
-}
-
-/// View of the application state, providing easy immutable read in building of view.
-#[derive(Clone, Copy, Debug)]
-pub struct View<'a> {
-    /// When bookmarks scrollbar is created will be set to it's id.
-    pub bookmark_scrollbar_id: &'a widget::scrollable::Id,
-    /// Bookmarks loaded by application.
-    pub bookmarks: &'a container::BufferStorage<Bookmark>,
-    /// Categories loaded by application.
-    pub categories: &'a container::BufferStorage<Category>,
-    /// Category indices arranged with parents at start.
-    pub category_tree: &'a [Vec<usize>],
-    /// Expected max character count of bookmark descriptions deisplayed as numeric and str.
-    pub desc_width: (usize, &'a str),
-    /// Is true if edit mode is enabled.
-    pub edit_mode_active: bool,
-    /// Filter used for bookmarks as filter object and str.
-    pub filter: (Option<&'a AhoCorasick>, &'a str),
-    /// Info loaded by application.
-    pub infos: &'a container::BufferStorage<Info>,
-    /// True if dark mode in use.
-    pub is_dark_mode: bool,
-    /// What is expected to fill the main area.
-    pub main_content: MainContent,
-    /// Stats that may have been gathered.
-    pub metrics: &'a Metrics,
-    /// How many bookmarks are shown as numeric and str.
-    pub shown_bookmarks: (usize, &'a str),
-    /// Where in the bookmark list to start showing bookmarks as numeric and str.
-    pub shown_from: (usize, &'a str),
-    /// Current status message.
-    pub status: &'a str,
-    /// All status messages.
-    pub status_log: &'a [String],
-    /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
-    pub url_width: (usize, &'a str),
 }
 
 impl App {
