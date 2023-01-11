@@ -9,7 +9,13 @@ use iced::{
     Theme,
 };
 
-use crate::{app::Metric, MainContent};
+use crate::{
+    app::{
+        pane::edit::{BookmarkPaneChange, CategoryPaneChange},
+        Metric,
+    },
+    MainContent,
+};
 
 /// Message type for gui.
 #[derive(Debug, Clone, Default)]
@@ -54,6 +60,10 @@ pub enum Msg {
     EditPaneResize(ResizeEvent),
     /// Signal that some stats are to be gathered.
     GatherMetric(Metric),
+    /// A Bookmark Pane field was changed.
+    EditBookmarkPaneChange(BookmarkPaneChange),
+    /// A Category Pane field was changed.
+    EditCategoryPaneChange(CategoryPaneChange),
     /// Set the theme in use.
     SetTheme(Theme),
     /// Don't use some generated value but log it.

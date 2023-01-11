@@ -18,21 +18,53 @@ use super::{style, title_bar};
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct BookmarkProxy {
-    pub info: String,
-    pub url: String,
-    pub tags: Vec<String>,
-    pub index: usize,
+    info: String,
+    url: String,
+    tags: Vec<String>,
+    index: usize,
 }
 
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct CategoryProxy {
-    pub id: String,
-    pub name: String,
-    pub info: String,
-    pub identifiers: Vec<String>,
-    pub subcategories: Vec<String>,
-    pub index: usize,
+    id: String,
+    name: String,
+    info: String,
+    identifiers: Vec<String>,
+    subcategories: Vec<String>,
+    index: usize,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+enum BookmarkChange {
+    Info(String),
+    Url(String),
+    Tags(Vec<String>),
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+enum CatgegoryChange {
+    Id(String),
+    Name(String),
+    Info(String),
+    Identifiers(String),
+    Subcategories(String),
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct BookmarkPaneChange {
+    pub pane: Pane,
+    change: BookmarkChange,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct CategoryPaneChange {
+    pub pane: Pane,
+    change: CatgegoryChange,
 }
 
 #[allow(dead_code)]
@@ -106,6 +138,14 @@ impl State {
 
     fn edit_category_content<'a>(_app_view: View, _category: &CategoryProxy) -> Content<'a, Msg> {
         todo!()
+    }
+
+    pub fn edit_bookmark(&mut self, BookmarkPaneChange { pane: _, change }: BookmarkPaneChange) {
+        assert!(matches!(self, State::Bookmark(_)));
+    }
+
+    pub fn edit_category(&mut self, CategoryPaneChange { pane: _, change }: CategoryPaneChange) {
+        assert!(matches!(self, State::Category(_)));
     }
 
     pub fn pane_content<'a>(&self, app_view: View, _pane: Pane) -> Content<'a, Msg> {
