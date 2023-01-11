@@ -622,6 +622,14 @@ impl Application for App {
                 self.edit_panes.resize(split, ratio);
                 Command::none()
             }
+            Msg::EditBookmarkPaneChange(pane_change) => {
+                self.log_panes
+                    .get_mut(&pane_change.pane)
+                    .expect("bookmark pane being changed should ecxist")
+                    .edit_bookmark(pane_change);
+                Command::none()
+            }
+            Msg::EditCategoryPaneChange(pane_change) => todo!(),
         }
     }
 
