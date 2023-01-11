@@ -15,56 +15,56 @@ use crate::{
 
 use super::{style, title_bar};
 
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-pub struct BookmarkProxy {
-    info: String,
-    url: String,
-    tags: Vec<String>,
-    index: usize,
+macro_rules! edit_pane_state {
+    ($($struct_name:ident: {$($field_name:ident: $field_type:ty),* $(,)?}),* $(,)?) => {
+        paste! {$(
+
+        #[allow(dead_code)]
+        #[derive(Clone, Debug)]
+        pub struct [<$struct_name:camel Proxy>] {
+            $([<$field_name:snake>]: $field_type,)*
+            index: usize,
+        }
+
+        #[allow(dead_code)]
+        #[derive(Clone, Debug)]
+        enum [<$struct_name:camel Change>] {
+            $([<$field_name:camel>]($field_type),)*
+        }
+
+        #[allow(dead_code)]
+        #[derive(Clone, Debug)]
+        pub struct [<$struct_name:camel PaneChange>] {
+            pub pane: Pane,
+            change: [<$struct_name:camel Change>]
+        }
+
+        impl [<$struct_name:camel Proxy>] {
+            fn apply_change(&mut self, change: [<$struct_name:camel Change>]) {
+                match change {
+                    $([<$struct_name:camel Change>] ::[<$field_name:camel>]([<$field_name:snake>]) => self. [<$field_name:snake>] = [<$field_name:snake>],)*
+                }
+            }
+        }
+
+        )*}
+    };
 }
 
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-pub struct CategoryProxy {
-    id: String,
-    name: String,
-    info: String,
-    identifiers: Vec<String>,
-    subcategories: Vec<String>,
-    index: usize,
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-enum BookmarkChange {
-    Info(String),
-    Url(String),
-    Tags(Vec<String>),
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-enum CatgegoryChange {
-    Id(String),
-    Name(String),
-    Info(String),
-    Identifiers(Vec<String>),
-    Subcategories(Vec<String>),
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-pub struct BookmarkPaneChange {
-    pub pane: Pane,
-    change: BookmarkChange,
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-pub struct CategoryPaneChange {
-    pub pane: Pane,
-    change: CatgegoryChange,
+use paste::paste;
+edit_pane_state! {
+    Bookmark: {
+        info: String,
+        url: String,
+        tags: Vec<String>,
+    },
+    Category: {
+        id: String,
+        name: String,
+        info: String,
+        identifiers: Vec<String>,
+        subcategories: Vec<String>,
+    },
 }
 
 #[allow(dead_code)]
@@ -144,24 +144,14 @@ impl State {
         let State::Bookmark(ref mut bookmark) = self else {
             panic!("bookmark change tried on panel not representing a bookmark");
         };
-        match change {
-            BookmarkChange::Info(info) => bookmark.info = info,
-            BookmarkChange::Url(url) => bookmark.url = url,
-            BookmarkChange::Tags(tags) => bookmark.tags = tags,
-        }
+        bookmark.apply_change(change);
     }
 
     pub fn edit_category(&mut self, CategoryPaneChange { pane: _, change }: CategoryPaneChange) {
         let State::Category(ref mut category) = self else {
             panic!("category change tried on panel not representing a category");
         };
-        match change {
-            CatgegoryChange::Id(id) => category.id = id,
-            CatgegoryChange::Name(name) => category.name = name,
-            CatgegoryChange::Info(info) => category.info = info,
-            CatgegoryChange::Identifiers(identifiers) => category.identifiers = identifiers,
-            CatgegoryChange::Subcategories(subcategories) => category.subcategories = subcategories,
-        }
+        category.apply_change(change);
     }
 
     pub fn pane_content<'a>(&self, app_view: View, _pane: Pane) -> Content<'a, Msg> {
