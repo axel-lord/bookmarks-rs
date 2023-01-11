@@ -49,8 +49,8 @@ enum CatgegoryChange {
     Id(String),
     Name(String),
     Info(String),
-    Identifiers(String),
-    Subcategories(String),
+    Identifiers(Vec<String>),
+    Subcategories(Vec<String>),
 }
 
 #[allow(dead_code)]
@@ -141,11 +141,27 @@ impl State {
     }
 
     pub fn edit_bookmark(&mut self, BookmarkPaneChange { pane: _, change }: BookmarkPaneChange) {
-        assert!(matches!(self, State::Bookmark(_)));
+        let State::Bookmark(ref mut bookmark) = self else {
+            panic!("bookmark change tried on panel not representing a bookmark");
+        };
+        match change {
+            BookmarkChange::Info(info) => bookmark.info = info,
+            BookmarkChange::Url(url) => bookmark.url = url,
+            BookmarkChange::Tags(tags) => bookmark.tags = tags,
+        }
     }
 
     pub fn edit_category(&mut self, CategoryPaneChange { pane: _, change }: CategoryPaneChange) {
-        assert!(matches!(self, State::Category(_)));
+        let State::Category(ref mut category) = self else {
+            panic!("category change tried on panel not representing a category");
+        };
+        match change {
+            CatgegoryChange::Id(id) => category.id = id,
+            CatgegoryChange::Name(name) => category.name = name,
+            CatgegoryChange::Info(info) => category.info = info,
+            CatgegoryChange::Identifiers(identifiers) => category.identifiers = identifiers,
+            CatgegoryChange::Subcategories(subcategories) => category.subcategories = subcategories,
+        }
     }
 
     pub fn pane_content<'a>(&self, app_view: View, _pane: Pane) -> Content<'a, Msg> {

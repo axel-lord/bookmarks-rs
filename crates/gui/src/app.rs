@@ -623,13 +623,19 @@ impl Application for App {
                 Command::none()
             }
             Msg::EditBookmarkPaneChange(pane_change) => {
-                self.log_panes
+                self.edit_panes
                     .get_mut(&pane_change.pane)
                     .expect("bookmark pane being changed should ecxist")
                     .edit_bookmark(pane_change);
                 Command::none()
             }
-            Msg::EditCategoryPaneChange(pane_change) => todo!(),
+            Msg::EditCategoryPaneChange(pane_change) => {
+                self.edit_panes
+                    .get_mut(&pane_change.pane)
+                    .expect("bookmark pane being changed should ecxist")
+                    .edit_category(pane_change);
+                Command::none()
+            }
         }
     }
 
