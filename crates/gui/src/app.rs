@@ -286,6 +286,8 @@ impl App {
             &self.settings_pane,
             EditPaneState::Bookmark(proxy),
         );
+
+        self.main_content = MainContent::Edit;
     }
 
     fn edit_category(&mut self, index: usize) {
@@ -311,6 +313,8 @@ impl App {
             &self.settings_pane,
             EditPaneState::Category(proxy),
         );
+
+        self.main_content = MainContent::Edit;
     }
 
     fn recieve_channel_message(&mut self) {

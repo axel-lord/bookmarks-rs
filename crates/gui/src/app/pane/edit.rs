@@ -161,10 +161,10 @@ impl State {
             }
 
             State::Bookmark(bookmark) => Self::edit_bookmark_content(app_view, bookmark)
-                .title_bar(title_bar("Edit Bookmark", Some(pane))),
+                .title_bar(title_bar("Edit Bookmark", Some(Msg::CloseEditPane(pane)))),
 
             State::Category(category) => Self::edit_category_content(app_view, category)
-                .title_bar(title_bar("Edit Category", Some(pane))),
+                .title_bar(title_bar("Edit Category", Some(Msg::CloseEditPane(pane)))),
         }
         .style(style::PANE_STYLE)
     }

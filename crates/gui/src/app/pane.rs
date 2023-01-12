@@ -8,7 +8,7 @@ use iced::{
     theme,
     widget::{
         button, container,
-        pane_grid::{Content, Pane, TitleBar},
+        pane_grid::{Content, TitleBar},
         scrollable, text, Column, Row,
     },
     Element, Length,
@@ -19,12 +19,12 @@ pub use url_map::{Tally, UrlMap};
 
 use crate::Msg;
 
-fn title_bar<'a>(title: impl ToString, close: Option<Pane>) -> TitleBar<'a, Msg> {
+fn title_bar<'a>(title: impl ToString, close: Option<Msg>) -> TitleBar<'a, Msg> {
     TitleBar::new(title.pipe(text).pipe(container).padding(3))
-        .controls(if let Some(pane) = close {
+        .controls(if let Some(msg) = close {
             Row::new().push(
                 button("Close")
-                    .on_press(Msg::CloseLogPane(pane))
+                    .on_press(msg)
                     .style(theme::Button::Destructive)
                     .padding(3),
             )
