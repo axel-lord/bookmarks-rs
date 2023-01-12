@@ -6,7 +6,7 @@ use iced::{
     executor,
     widget::{
         self,
-        pane_grid::{self, Axis, DragEvent, ResizeEvent},
+        pane_grid::{self, Axis, DragEvent, Pane, ResizeEvent},
     },
     Application, Command, Theme,
 };
@@ -28,6 +28,8 @@ pub use pane::{
 };
 pub use view::View;
 
+use self::pane::edit::{BookmarkProxy, CategoryProxy};
+
 pub mod pane;
 pub mod ui;
 
@@ -48,6 +50,7 @@ pub struct App {
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPaneState>,
     edit_panes: pane_grid::State<EditPaneState>,
+    settings_pane: Pane,
     main_content: MainContent,
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
@@ -262,14 +265,52 @@ impl App {
         });
     }
 
-    fn edit_bookmark(&mut self, _index: usize) {
-        dbg!(self);
-        todo!()
+    fn edit_bookmark(&mut self, index: usize) {
+        let bookmarks = self.bookmarks.read().expect("poisoned lock");
+        let bookmark = &bookmarks.storage[index];
+        let proxy = BookmarkProxy {
+            info: bookmark.description().into(),
+            url: bookmark.url().into(),
+            tags: bookmark.tags().map(String::from).collect(),
+            index,
+        };
+
+        let count = self.edit_panes.iter().count();
+
+        self.edit_panes.split(
+            if count % 2 == 0 {
+                Axis::Horizontal
+            } else {
+                Axis::Vertical
+            },
+            &self.settings_pane,
+            EditPaneState::Bookmark(proxy),
+        );
     }
 
-    fn edit_category(&mut self, _index: usize) {
-        dbg!(self);
-        todo!()
+    fn edit_category(&mut self, index: usize) {
+        let categories = self.categories.read().expect("posioned lock");
+        let category = &categories.storage[index];
+        let proxy = CategoryProxy {
+            id: category.id().into(),
+            name: category.name().into(),
+            info: category.description().into(),
+            identifiers: category.identifiers().map(String::from).collect(),
+            subcategories: category.subcategories().map(String::from).collect(),
+            index,
+        };
+
+        let count = self.edit_panes.iter().count();
+
+        self.edit_panes.split(
+            if count % 2 == 0 {
+                Axis::Horizontal
+            } else {
+                Axis::Vertical
+            },
+            &self.settings_pane,
+            EditPaneState::Category(proxy),
+        );
     }
 
     fn recieve_channel_message(&mut self) {
@@ -344,7 +385,7 @@ impl Default for App {
             .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
-        let (edit_panes, _) = pane_grid::State::new(EditPaneState::Settings);
+        let (edit_panes, settings_pane) = pane_grid::State::new(EditPaneState::Settings);
 
         Self {
             command_map: CommandMap::default_config(
@@ -371,6 +412,7 @@ impl Default for App {
             bookmark_column_state: BookmarkColumnState::default(),
             tick_watcher_count: 0usize,
             channel: mpsc::channel(),
+            settings_pane,
         }
     }
 }
