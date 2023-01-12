@@ -22,8 +22,8 @@ macro_rules! edit_pane_state {
         #[allow(dead_code)]
         #[derive(Clone, Debug)]
         pub struct [<$struct_name:camel Proxy>] {
-            $([<$field_name:snake>]: $field_type,)*
-            index: usize,
+            $(pub [<$field_name:snake>]: $field_type,)*
+            pub index: usize,
         }
 
         #[allow(dead_code)]
@@ -133,11 +133,11 @@ impl State {
     }
 
     fn edit_bookmark_content<'a>(_app_view: View, _bookmark: &BookmarkProxy) -> Content<'a, Msg> {
-        todo!()
+        text("edit bookmark").pipe(scrollable_content)
     }
 
     fn edit_category_content<'a>(_app_view: View, _category: &CategoryProxy) -> Content<'a, Msg> {
-        todo!()
+        text("edit category").pipe(scrollable_content)
     }
 
     pub fn edit_bookmark(&mut self, BookmarkPaneChange { pane: _, change }: BookmarkPaneChange) {
@@ -154,13 +154,17 @@ impl State {
         category.apply_change(change);
     }
 
-    pub fn pane_content<'a>(&self, app_view: View, _pane: Pane) -> Content<'a, Msg> {
+    pub fn pane_content<'a>(&self, app_view: View, pane: Pane) -> Content<'a, Msg> {
         match self {
             State::Settings => {
                 Self::settings_content(app_view).title_bar(title_bar("Settings", None))
             }
-            State::Bookmark(bookmark) => Self::edit_bookmark_content(app_view, bookmark),
-            State::Category(category) => Self::edit_category_content(app_view, category),
+
+            State::Bookmark(bookmark) => Self::edit_bookmark_content(app_view, bookmark)
+                .title_bar(title_bar("Edit Bookmark", Some(pane))),
+
+            State::Category(category) => Self::edit_category_content(app_view, category)
+                .title_bar(title_bar("Edit Category", Some(pane))),
         }
         .style(style::PANE_STYLE)
     }
