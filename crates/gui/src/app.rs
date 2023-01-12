@@ -6,7 +6,7 @@ use iced::{
     executor,
     widget::{
         self,
-        pane_grid::{self, Axis, DragEvent, Pane, ResizeEvent},
+        pane_grid::{self, Axis, DragEvent, ResizeEvent},
     },
     Application, Command, Theme,
 };
@@ -26,7 +26,7 @@ mod view;
 pub use pane::{log::State as LogPaneState, Metric, MetricValue, Metrics};
 pub use view::View;
 
-use self::ui::edit_column::{BookmarkProxy, CategoryProxy};
+use self::ui::edit_column::{self, BookmarkProxy, CategoryProxy};
 
 pub mod pane;
 pub mod ui;
@@ -47,8 +47,7 @@ pub struct App {
     edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPaneState>,
-    edit_panes: pane_grid::State<ui::edit_column::PaneState>,
-    settings_pane: Pane,
+    edit_column_state: ui::edit_column::State,
     main_content: MainContent,
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
@@ -273,15 +272,15 @@ impl App {
             index,
         };
 
-        let count = self.edit_panes.iter().count();
+        let count = self.edit_column_state.panes.iter().count();
 
-        self.edit_panes.split(
+        self.edit_column_state.panes.split(
             if count % 2 == 0 {
                 Axis::Horizontal
             } else {
                 Axis::Vertical
             },
-            &self.settings_pane,
+            &self.edit_column_state.settings_pane,
             ui::edit_column::PaneState::Bookmark(proxy),
         );
 
@@ -300,15 +299,15 @@ impl App {
             index,
         };
 
-        let count = self.edit_panes.iter().count();
+        let count = self.edit_column_state.panes.iter().count();
 
-        self.edit_panes.split(
+        self.edit_column_state.panes.split(
             if count % 2 == 0 {
                 Axis::Horizontal
             } else {
                 Axis::Vertical
             },
-            &self.settings_pane,
+            &self.edit_column_state.settings_pane,
             ui::edit_column::PaneState::Category(proxy),
         );
 
@@ -387,9 +386,6 @@ impl Default for App {
             .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
-        let (edit_panes, settings_pane) =
-            pane_grid::State::new(ui::edit_column::PaneState::Settings);
-
         Self {
             command_map: CommandMap::default_config(
                 bookmarks.clone(),
@@ -406,7 +402,6 @@ impl Default for App {
             category_tree: Vec::new(),
             edit_mode_active: false,
             log_panes,
-            edit_panes,
             theme: match dark_light::detect() {
                 dark_light::Mode::Dark => Theme::Dark,
                 dark_light::Mode::Light => Theme::Light,
@@ -415,7 +410,7 @@ impl Default for App {
             bookmark_column_state: BookmarkColumnState::default(),
             tick_watcher_count: 0usize,
             channel: mpsc::channel(),
-            settings_pane,
+            edit_column_state: edit_column::State::new(),
         }
     }
 }
@@ -653,32 +648,8 @@ impl Application for App {
                 self.set_status(format!("{value:?}"));
                 Command::none()
             }
-            Msg::CloseEditPane(pane) => {
-                self.edit_panes.close(&pane);
-                Command::none()
-            }
-            Msg::DragEditPane(drag_event) => {
-                if let DragEvent::Dropped { pane, target } = drag_event {
-                    self.edit_panes.swap(&pane, &target);
-                }
-                Command::none()
-            }
-            Msg::EditPaneResize(ResizeEvent { ref split, ratio }) => {
-                self.edit_panes.resize(split, ratio);
-                Command::none()
-            }
-            Msg::EditBookmarkPaneChange(pane_change) => {
-                self.edit_panes
-                    .get_mut(&pane_change.pane)
-                    .expect("bookmark pane being changed should ecxist")
-                    .edit_bookmark(pane_change);
-                Command::none()
-            }
-            Msg::EditCategoryPaneChange(pane_change) => {
-                self.edit_panes
-                    .get_mut(&pane_change.pane)
-                    .expect("bookmark pane being changed should ecxist")
-                    .edit_category(pane_change);
+            Msg::EditColumnMessage(message) => {
+                self.edit_column_state.update(message);
                 Command::none()
             }
         }
@@ -694,7 +665,7 @@ impl Application for App {
         ui::view(
             self.to_view(&bookmarks, &categories, &infos, &status, &status_log),
             &self.log_panes,
-            &self.edit_panes,
+            &self.edit_column_state,
         )
     }
 }

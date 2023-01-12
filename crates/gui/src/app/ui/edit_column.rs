@@ -6,7 +6,7 @@ use iced::{
     theme,
     widget::{
         button, container, horizontal_rule, horizontal_space,
-        pane_grid::{self, Content, Pane},
+        pane_grid::{self, Content, DragEvent, Pane, ResizeEvent},
         text, text_input, toggler, Column, PaneGrid, Row,
     },
     Alignment, Element, Length, Theme,
@@ -73,11 +73,92 @@ pub enum PaneState {
     Category(CategoryProxy),
 }
 
-// #[derive(Clone, Debug)]
-// pub enum Message {
-//     BookmarkPaneChange(BookmarkPaneChange),
-//     CategoryPaneChange(CategoryPaneChange),
-// }
+#[derive(Clone, Debug)]
+pub enum Message {
+    BookmarkPaneChange(BookmarkPaneChange),
+    CategoryPaneChange(CategoryPaneChange),
+    ClosePane(Pane),
+    DragPane(DragEvent),
+    ResizePane(ResizeEvent),
+}
+
+#[derive(Debug)]
+pub struct State {
+    pub panes: pane_grid::State<PaneState>,
+    pub settings_pane: Pane,
+}
+
+impl State {
+    pub fn new() -> Self {
+        let (panes, settings_pane) = pane_grid::State::new(PaneState::Settings);
+
+        Self {
+            panes,
+            settings_pane,
+        }
+    }
+
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn update(&mut self, message: Message) {
+        match message {
+            Message::BookmarkPaneChange(pane_change) => self
+                .panes
+                .get_mut(&pane_change.pane)
+                .expect("edited bookmark pane should exist")
+                .edit_bookmark(pane_change),
+            Message::CategoryPaneChange(pane_change) => self
+                .panes
+                .get_mut(&pane_change.pane)
+                .expect("edited category pane should exist")
+                .edit_category(pane_change),
+            Message::ClosePane(pane) => {
+                self.panes.close(&pane);
+            }
+            Message::DragPane(drag_event) => {
+                if let DragEvent::Dropped { pane, target } = dbg!(drag_event) {
+                    self.panes.swap(&pane, &target);
+                }
+            }
+            Message::ResizePane(ResizeEvent { split, ratio }) => self.panes.resize(&split, ratio),
+        };
+    }
+
+    pub fn view<'a>(&'a self, app_view: View) -> Element<'a, Msg> {
+        Column::new()
+            .push(
+                Row::new()
+                    .push(
+                        button("Close All")
+                            .padding(3)
+                            .style(theme::Button::Destructive),
+                    )
+                    .push(text("Edit"))
+                    .push(horizontal_space(Length::Fill))
+                    .push(app_view.main_content.choice_row())
+                    .padding(0)
+                    .spacing(3)
+                    .align_items(Alignment::Center),
+            )
+            .push(horizontal_rule(3))
+            .push(
+                PaneGrid::new(&self.panes, |pane, state, _| {
+                    state.pane_content(app_view, pane)
+                })
+                .on_resize(10, |resize_event| {
+                    Msg::EditColumnMessage(Message::ResizePane(resize_event))
+                })
+                .on_drag(|drag_event| Msg::EditColumnMessage(Message::DragPane(drag_event)))
+                .spacing(3)
+                .width(Length::Fill)
+                .height(Length::Fill),
+            )
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(3)
+            .spacing(3)
+            .into()
+    }
+}
 
 impl PaneState {
     fn settings_content<'a>(app_view: View) -> Content<'a, Msg> {
@@ -143,10 +224,12 @@ impl PaneState {
                     .push(text("Info"))
                     .push(
                         text_input("...", &bookmark.info, move |value| {
-                            Msg::EditBookmarkPaneChange(BookmarkPaneChange {
-                                pane,
-                                change: BookmarkChange::Info(value),
-                            })
+                            Msg::EditColumnMessage(Message::BookmarkPaneChange(
+                                BookmarkPaneChange {
+                                    pane,
+                                    change: BookmarkChange::Info(value),
+                                },
+                            ))
                         })
                         .padding(3),
                     )
@@ -180,48 +263,19 @@ impl PaneState {
                 Self::settings_content(app_view).title_bar(title_bar("Settings", None))
             }
 
-            PaneState::Bookmark(bookmark) => Self::edit_bookmark_content(pane, bookmark)
-                .title_bar(title_bar("Edit Bookmark", Some(Msg::CloseEditPane(pane)))),
+            PaneState::Bookmark(bookmark) => {
+                Self::edit_bookmark_content(pane, bookmark).title_bar(title_bar(
+                    "Edit Bookmark",
+                    Some(Msg::EditColumnMessage(Message::ClosePane(pane))),
+                ))
+            }
 
             PaneState::Category(category) => Self::edit_category_content(app_view, category)
-                .title_bar(title_bar("Edit Category", Some(Msg::CloseEditPane(pane)))),
+                .title_bar(title_bar(
+                    "Edit Category",
+                    Some(Msg::EditColumnMessage(Message::ClosePane(pane))),
+                )),
         }
         .style(style::PANE_STYLE)
     }
-}
-pub fn edit_column<'a>(
-    app_view: View,
-    edit_panes: &'a pane_grid::State<PaneState>,
-) -> Element<'a, Msg> {
-    Column::new()
-        .push(
-            Row::new()
-                .push(
-                    button("Close All")
-                        .padding(3)
-                        .style(theme::Button::Destructive),
-                )
-                .push(text("Edit"))
-                .push(horizontal_space(Length::Fill))
-                .push(app_view.main_content.choice_row())
-                .padding(0)
-                .spacing(3)
-                .align_items(Alignment::Center),
-        )
-        .push(horizontal_rule(3))
-        .push(
-            PaneGrid::new(edit_panes, |pane, state, _| {
-                state.pane_content(app_view, pane)
-            })
-            .on_resize(10, Msg::EditPaneResize)
-            .on_drag(Msg::DragEditPane)
-            .spacing(3)
-            .width(Length::Fill)
-            .height(Length::Fill),
-        )
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .padding(3)
-        .spacing(3)
-        .into()
 }

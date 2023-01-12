@@ -6,7 +6,6 @@ pub mod log_column;
 use crate::{app::pane::log::State as LogPaneState, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
-use edit_column::edit_column;
 use iced::{
     theme,
     widget::{
@@ -84,10 +83,10 @@ fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
 fn content_row<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
-    edit_panes: &'a pane_grid::State<edit_column::PaneState>,
+    edit_panes: &'a edit_column::State,
 ) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
-        MainContent::Edit => edit_column(app_view, edit_panes),
+        MainContent::Edit => edit_panes.view(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
         MainContent::Log => log_column(app_view, log_panes),
         #[allow(unreachable_patterns)]
@@ -106,7 +105,7 @@ fn content_row<'a>(
 pub fn view<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
-    edit_panes: &'a pane_grid::State<edit_column::PaneState>,
+    edit_panes: &'a edit_column::State,
 ) -> Element<'a, Msg> {
     let status = Row::new()
         .push(horizontal_space(Length::Fill))
