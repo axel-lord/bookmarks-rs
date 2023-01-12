@@ -10,10 +10,7 @@ use iced::{
 };
 
 use crate::{
-    app::{
-        ui::edit_column::{BookmarkPaneChange, CategoryPaneChange},
-        Metric,
-    },
+    app::{ui::edit_column, Metric},
     MainContent,
 };
 
@@ -46,24 +43,16 @@ pub enum Msg {
     EditBookmark(usize),
     /// Catgegory at passed index should be edited.
     EditCategory(usize),
-    /// Close a pane in the log section.
-    CloseEditPane(Pane),
-    /// A pane was dragged in the log section.
-    DragEditPane(DragEvent),
+    /// Message for edit column.
+    EditColumnMessage(edit_column::Message),
     /// Used for when resizing log panes.
     LogPaneResize(ResizeEvent),
     /// Close a pane in the log section.
     CloseLogPane(Pane),
     /// A pane was dragged in the log section.
     DragLogPane(DragEvent),
-    /// Used for when resizing edit panes.
-    EditPaneResize(ResizeEvent),
     /// Signal that some stats are to be gathered.
     GatherMetric(Metric),
-    /// A Bookmark Pane field was changed.
-    EditBookmarkPaneChange(BookmarkPaneChange),
-    /// A Category Pane field was changed.
-    EditCategoryPaneChange(CategoryPaneChange),
     /// Set the theme in use.
     SetTheme(Theme),
     /// Don't use some generated value but log it.
