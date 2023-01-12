@@ -2,7 +2,7 @@ use iced::{
     widget::{
         container,
         pane_grid::{Content, Pane},
-        text, text_input, toggler, Row,
+        text, text_input, toggler, Column, Row,
     },
     Alignment, Length, Theme,
 };
@@ -132,8 +132,24 @@ impl State {
             .pipe(scrollable_content)
     }
 
-    fn edit_bookmark_content<'a>(_app_view: View, _bookmark: &BookmarkProxy) -> Content<'a, Msg> {
-        text("edit bookmark").pipe(scrollable_content)
+    fn edit_bookmark_content<'a>(pane: Pane, bookmark: &BookmarkProxy) -> Content<'a, Msg> {
+        Column::new()
+            .push(
+                Row::new()
+                    .push(text("Info"))
+                    .push(
+                        text_input("...", &bookmark.info, move |value| {
+                            Msg::EditBookmarkPaneChange(BookmarkPaneChange {
+                                pane,
+                                change: BookmarkChange::Info(value),
+                            })
+                        })
+                        .padding(3),
+                    )
+                    .spacing(3)
+                    .align_items(Alignment::Center),
+            )
+            .pipe(scrollable_content)
     }
 
     fn edit_category_content<'a>(_app_view: View, _category: &CategoryProxy) -> Content<'a, Msg> {
@@ -160,7 +176,7 @@ impl State {
                 Self::settings_content(app_view).title_bar(title_bar("Settings", None))
             }
 
-            State::Bookmark(bookmark) => Self::edit_bookmark_content(app_view, bookmark)
+            State::Bookmark(bookmark) => Self::edit_bookmark_content(pane, bookmark)
                 .title_bar(title_bar("Edit Bookmark", Some(Msg::CloseEditPane(pane)))),
 
             State::Category(category) => Self::edit_category_content(app_view, category)
