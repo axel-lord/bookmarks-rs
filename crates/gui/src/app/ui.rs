@@ -3,10 +3,7 @@ pub mod category_column;
 pub mod edit_column;
 pub mod log_column;
 
-use crate::{
-    app::pane::{edit::State as EditPaneState, log::State as LogPaneState},
-    MainContent, Msg, View,
-};
+use crate::{app::pane::log::State as LogPaneState, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use edit_column::edit_column;
@@ -87,7 +84,7 @@ fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
 fn content_row<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
-    edit_panes: &'a pane_grid::State<EditPaneState>,
+    edit_panes: &'a pane_grid::State<edit_column::PaneState>,
 ) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Edit => edit_column(app_view, edit_panes),
@@ -109,7 +106,7 @@ fn content_row<'a>(
 pub fn view<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
-    edit_panes: &'a pane_grid::State<EditPaneState>,
+    edit_panes: &'a pane_grid::State<edit_column::PaneState>,
 ) -> Element<'a, Msg> {
     let status = Row::new()
         .push(horizontal_space(Length::Fill))

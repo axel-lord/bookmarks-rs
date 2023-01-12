@@ -23,12 +23,10 @@ use ui::bookmarks_column::BookmarkColumnState;
 
 mod view;
 
-pub use pane::{
-    edit::State as EditPaneState, log::State as LogPaneState, Metric, MetricValue, Metrics,
-};
+pub use pane::{log::State as LogPaneState, Metric, MetricValue, Metrics};
 pub use view::View;
 
-use self::pane::edit::{BookmarkProxy, CategoryProxy};
+use self::ui::edit_column::{BookmarkProxy, CategoryProxy};
 
 pub mod pane;
 pub mod ui;
@@ -49,7 +47,7 @@ pub struct App {
     edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPaneState>,
-    edit_panes: pane_grid::State<EditPaneState>,
+    edit_panes: pane_grid::State<ui::edit_column::PaneState>,
     settings_pane: Pane,
     main_content: MainContent,
     metrics: Metrics,
@@ -284,7 +282,7 @@ impl App {
                 Axis::Vertical
             },
             &self.settings_pane,
-            EditPaneState::Bookmark(proxy),
+            ui::edit_column::PaneState::Bookmark(proxy),
         );
 
         self.main_content = MainContent::Edit;
@@ -311,7 +309,7 @@ impl App {
                 Axis::Vertical
             },
             &self.settings_pane,
-            EditPaneState::Category(proxy),
+            ui::edit_column::PaneState::Category(proxy),
         );
 
         self.main_content = MainContent::Edit;
@@ -389,7 +387,8 @@ impl Default for App {
             .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
-        let (edit_panes, settings_pane) = pane_grid::State::new(EditPaneState::Settings);
+        let (edit_panes, settings_pane) =
+            pane_grid::State::new(ui::edit_column::PaneState::Settings);
 
         Self {
             command_map: CommandMap::default_config(
