@@ -11,7 +11,7 @@ use iced::{
 
 use crate::{
     app::{
-        pane::edit::{BookmarkPaneChange, CategoryPaneChange},
+        ui::edit_column::{BookmarkPaneChange, CategoryPaneChange},
         Metric,
     },
     MainContent,

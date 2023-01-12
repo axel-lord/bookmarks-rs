@@ -1,7 +1,6 @@
 mod metric;
 mod url_map;
 
-pub mod edit;
 pub mod log;
 
 use iced::{
@@ -19,7 +18,7 @@ pub use url_map::{Tally, UrlMap};
 
 use crate::Msg;
 
-fn title_bar<'a>(title: impl ToString, close: Option<Msg>) -> TitleBar<'a, Msg> {
+pub fn title_bar<'a>(title: impl ToString, close: Option<Msg>) -> TitleBar<'a, Msg> {
     TitleBar::new(title.pipe(text).pipe(container).padding(3))
         .controls(if let Some(msg) = close {
             Row::new().push(
@@ -35,7 +34,7 @@ fn title_bar<'a>(title: impl ToString, close: Option<Msg>) -> TitleBar<'a, Msg> 
         .style(theme::Container::Box)
 }
 
-fn scrollable_content<'a>(content: impl Into<Element<'a, Msg>>) -> Content<'a, Msg> {
+pub fn scrollable_content<'a>(content: impl Into<Element<'a, Msg>>) -> Content<'a, Msg> {
     content
         .pipe(scrollable)
         .pipe(container)
@@ -45,7 +44,7 @@ fn scrollable_content<'a>(content: impl Into<Element<'a, Msg>>) -> Content<'a, M
         .pipe(Content::new)
 }
 
-trait IterElements: Iterator {
+pub trait IterElements: Iterator {
     fn collect_coumn<'a, E, F>(self, f: F) -> Column<'a, Msg>
     where
         E: Into<Element<'a, Msg>>,
