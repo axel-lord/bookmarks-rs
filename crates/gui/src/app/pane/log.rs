@@ -76,9 +76,8 @@ impl State {
         match self {
             State::Log => Self::log_content(app_view).title_bar(title_bar("Status Log", None)),
             State::Stats => Self::stat_content(app_view).title_bar(title_bar("Statistics", None)),
-            State::UrlSummary(url_map) => {
-                Self::url_summary_content(url_map).title_bar(title_bar("URL Summary", Some(pane)))
-            }
+            State::UrlSummary(url_map) => Self::url_summary_content(url_map)
+                .title_bar(title_bar("URL Summary", Some(Msg::CloseLogPane(pane)))),
         }
         .style(style::PANE_STYLE)
     }
