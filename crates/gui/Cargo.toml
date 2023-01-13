@@ -10,9 +10,9 @@ bookmark-library = { path = "../library" }
 bookmark-command = { path = "../command" }
 bookmark-storage = { path = "../storage" }
 bookmark-settings = { path = "../settings" }
+bookmark-gui-edit = { path = "../gui_edit" }
 clap = { version = "4.0.29", features = ["derive"] }
 iced = { version = "0.6", features = ["tokio", "debug"] }
-iced_native = "0.7.0"
 open = "3.2.0"
 unicode-segmentation = "1.10.0"
 aho-corasick = "0.7.20"
