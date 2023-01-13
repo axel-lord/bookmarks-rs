@@ -1,4 +1,4 @@
-//! Crate for handling writing and reading of settings.
+//! Crate for handling writingfield1afield1d rfield1adifield1g of settings.
 
 #![warn(
     missing_copy_implementations,
@@ -11,14 +11,24 @@
 use std::{
     any::{self, Any},
     collections::HashMap,
+    fmt::{self, Debug},
 };
 use thiserror::Error;
 
-type DefaultConstructor = Box<dyn Fn() -> Box<dyn Any>>;
+type SettingValue = Box<dyn Any>;
+type DefaultConstructor = Box<dyn Fn() -> SettingValue>;
+type DebugFn = Box<dyn Fn(&SettingValue, &mut fmt::Formatter<'_>) -> fmt::Result>;
+
+struct SettingProperties {
+    value: SettingValue,
+    type_name: String,
+    default_constructor: DefaultConstructor,
+    debug_fn: DebugFn,
+}
 
 /// Type to store settings.
 pub struct Settings {
-    settings: HashMap<String, (Box<dyn Any>, String, DefaultConstructor)>,
+    settings: HashMap<String, SettingProperties>,
 }
 
 /// Used to build a [Settings] instance.
@@ -49,6 +59,18 @@ pub enum Error {
 
 type Result<T> = std::result::Result<T, Error>;
 
+fn get_debug_fn<T>() -> DebugFn
+where
+    T: 'static + Debug,
+{
+    Box::new(|boxed_value: &SettingValue, f| {
+        boxed_value
+            .downcast_ref::<T>()
+            .expect("debug function should always match type")
+            .fmt(f)
+    })
+}
+
 impl Default for SettingsBuilder {
     fn default() -> Self {
         Self::new()
@@ -75,15 +97,16 @@ impl SettingsBuilder {
     #[must_use]
     pub fn add<T>(mut self, setting: impl Into<String>, default_value: T) -> Self
     where
-        T: 'static + Clone,
+        T: 'static + Clone + Debug,
     {
         self.settings.settings.insert(
             setting.into(),
-            (
-                Box::new(default_value.clone()),
-                any::type_name::<T>().into(),
-                Box::new(move || Box::new(default_value.clone())),
-            ),
+            SettingProperties {
+                value: Box::new(default_value.clone()),
+                type_name: any::type_name::<T>().into(),
+                default_constructor: Box::new(move || Box::new(default_value.clone())),
+                debug_fn: get_debug_fn::<T>(),
+            },
         );
         self
     }
@@ -92,15 +115,16 @@ impl SettingsBuilder {
     #[must_use]
     pub fn add_default<T>(mut self, setting: impl Into<String>) -> Self
     where
-        T: 'static + Default,
+        T: 'static + Default + Debug,
     {
         self.settings.settings.insert(
             setting.into(),
-            (
-                Box::<T>::default(),
-                any::type_name::<T>().into(),
-                Box::new(|| Box::<T>::default()),
-            ),
+            SettingProperties {
+                value: Box::<T>::default(),
+                type_name: any::type_name::<T>().into(),
+                default_constructor: Box::new(|| Box::<T>::default()),
+                debug_fn: get_debug_fn::<T>(),
+            },
         );
         self
     }
@@ -113,15 +137,16 @@ impl SettingsBuilder {
         default_fn: impl 'static + Fn() -> T,
     ) -> Self
     where
-        T: 'static,
+        T: 'static + Debug,
     {
         self.settings.settings.insert(
             setting.into(),
-            (
-                Box::new(default_fn()),
-                any::type_name::<T>().into(),
-                Box::new(move || Box::new(default_fn())),
-            ),
+            SettingProperties {
+                value: Box::new(default_fn()),
+                type_name: any::type_name::<T>().into(),
+                default_constructor: Box::new(move || Box::new(default_fn())),
+                debug_fn: get_debug_fn::<T>(),
+            },
         );
         self
     }
@@ -132,7 +157,10 @@ impl Settings {
     ///
     /// # Errors
     /// If the setting does not exist or the wrong type is used to access it.
-    pub fn read<'a, T: 'static>(&'a self, setting: &str) -> Result<&'a T> {
+    pub fn read<'a, T>(&'a self, setting: &str) -> Result<&'a T>
+    where
+        T: 'static + Debug,
+    {
         let value = self
             .settings
             .get(setting)
@@ -140,11 +168,11 @@ impl Settings {
                 setting: setting.into(),
             })?;
         value
-            .0
+            .value
             .downcast_ref()
             .ok_or_else(|| Error::WrongSettingType {
                 setting: setting.into(),
-                setting_type: value.1.clone(),
+                setting_type: value.type_name.clone(),
                 tried_type: any::type_name::<T>().into(),
             })
     }
@@ -152,7 +180,10 @@ impl Settings {
     /// Check if a setting is the same as a value.
     /// # Errors
     /// If the setting and the value have differing types, or if the setting does not exist.
-    pub fn check<T: 'static + PartialEq<T>>(&self, setting: &str, other: &T) -> Result<bool> {
+    pub fn check<T>(&self, setting: &str, other: &T) -> Result<bool>
+    where
+        T: 'static + Debug + PartialEq<T>,
+    {
         let value = self
             .settings
             .get(setting)
@@ -160,11 +191,11 @@ impl Settings {
                 setting: setting.into(),
             })?;
         let value = value
-            .0
+            .value
             .downcast_ref::<T>()
             .ok_or_else(|| Error::WrongSettingType {
                 setting: setting.into(),
-                setting_type: value.1.clone(),
+                setting_type: value.type_name.clone(),
                 tried_type: any::type_name::<T>().into(),
             })?;
 
@@ -175,20 +206,24 @@ impl Settings {
     ///
     /// # Errors
     /// If the setting does not exist ore is not of the supplied type.
-    pub fn get_default<T: 'static>(&self, setting: &str) -> Result<T> {
+    pub fn get_default<T>(&self, setting: &str) -> Result<T>
+    where
+        T: 'static + Debug,
+    {
         let value = self
             .settings
             .get(setting)
             .ok_or_else(|| Error::SettingDoesNotExist {
                 setting: setting.into(),
             })?;
-        let value = value.2()
-            .downcast::<T>()
-            .map_err(|_| Error::WrongSettingType {
-                setting: setting.into(),
-                setting_type: value.1.clone(),
-                tried_type: any::type_name::<T>().into(),
-            })?;
+        let value =
+            (value.default_constructor)()
+                .downcast::<T>()
+                .map_err(|_| Error::WrongSettingType {
+                    setting: setting.into(),
+                    setting_type: value.type_name.clone(),
+                    tried_type: any::type_name::<T>().into(),
+                })?;
         Ok(*value)
     }
 
@@ -204,14 +239,14 @@ impl Settings {
                 setting: setting.into(),
             })?;
 
-        value.0 = value.2();
+        value.value = (value.default_constructor)();
         Ok(())
     }
 
     /// Set all settings to their default values.
     pub fn reset_all(&mut self) {
         for value in self.settings.values_mut() {
-            value.0 = value.2();
+            value.value = (value.default_constructor)();
         }
     }
 
@@ -219,7 +254,10 @@ impl Settings {
     ///
     /// # Errors
     /// If the setting does not exits or the wrong type is used to access it.
-    pub fn write<T: 'static>(&mut self, setting: &str, new_value: T) -> Result<()> {
+    pub fn write<T>(&mut self, setting: &str, new_value: T) -> Result<()>
+    where
+        T: 'static + Debug,
+    {
         let mut value =
             self.settings
                 .get_mut(setting)
@@ -227,16 +265,28 @@ impl Settings {
                     setting: setting.into(),
                 })?;
 
-        if !(value.0.is::<T>()) {
+        if !(value.value.is::<T>()) {
             return Err(Error::WrongSettingType {
                 setting: setting.into(),
-                setting_type: value.1.clone(),
+                setting_type: value.type_name.clone(),
                 tried_type: any::type_name::<T>().into(),
             });
         }
 
-        value.0 = Box::new(new_value);
+        value.value = Box::new(new_value);
         Ok(())
+    }
+}
+
+impl Debug for SettingProperties {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (self.debug_fn)(&self.value, f)
+    }
+}
+
+impl Debug for Settings {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map().entries(self.settings.iter()).finish()
     }
 }
 
@@ -257,27 +307,27 @@ mod tests {
             .build();
 
         assert!(*settings.settings["yes"]
-            .0
+            .value
             .downcast_ref::<bool>()
             .expect("yes should be a bool"));
         assert!(!*settings.settings["no"]
-            .0
+            .value
             .downcast_ref::<bool>()
             .expect("no should be a bool"));
         assert!(*settings.settings["maybe"]
-            .0
+            .value
             .downcast_ref::<bool>()
             .expect("maybe should be a bool"));
         assert_eq!(
             *settings.settings["hello"]
-                .0
+                .value
                 .downcast_ref::<String>()
                 .expect("hello should be a string"),
             String::from("world")
         );
         assert_eq!(
             *settings.settings["not_found"]
-                .0
+                .value
                 .downcast_ref::<u32>()
                 .expect("not_found should be a u32"),
             404u32

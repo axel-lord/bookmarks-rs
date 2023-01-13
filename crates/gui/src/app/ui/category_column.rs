@@ -5,7 +5,7 @@ use iced::{
     Alignment, Element, Length,
 };
 
-fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
+fn category_row<'a>(app_view: View, level: &[usize], edit_mode_active: bool) -> Element<'a, Msg> {
     const BUTTON_THEMES: &[&dyn Fn() -> theme::Button] = &[
         &|| theme::Button::Destructive,
         &|| theme::Button::Primary,
@@ -19,7 +19,7 @@ fn category_row<'a>(app_view: View, level: &[usize]) -> Element<'a, Msg> {
 
     let mut row_content = Vec::<Element<'a, Msg>>::with_capacity(4);
 
-    if app_view.edit_mode_active {
+    if edit_mode_active {
         row_content.extend([
             button("Edit")
                 .padding(3)
@@ -72,6 +72,11 @@ pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
         .align_items(Alignment::Center)
         .spacing(3);
 
+    let edit_mode_active = *app_view
+        .settings
+        .read("edit_mode_active")
+        .expect("edit_mode_active should exist");
+
     Column::new()
         .push(header)
         .push(horizontal_rule(3))
@@ -79,7 +84,9 @@ pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
             app_view
                 .category_tree
                 .iter()
-                .fold(Column::new(), |r, l| r.push(category_row(app_view, l)))
+                .fold(Column::new(), |r, l| {
+                    r.push(category_row(app_view, l, edit_mode_active))
+                })
                 .align_items(Alignment::Fill)
                 .spacing(3)
                 .width(Length::Shrink),

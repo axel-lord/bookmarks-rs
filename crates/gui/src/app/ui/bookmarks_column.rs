@@ -58,7 +58,12 @@ fn truncated_text<'a>(content: &str, max_width: usize, theme: theme::Text) -> El
     .into()
 }
 
-fn bookmark_row<'a>(index: usize, app_view: View, bookmark: &Bookmark) -> Element<'a, Msg> {
+fn bookmark_row<'a>(
+    index: usize,
+    app_view: View,
+    bookmark: &Bookmark,
+    edit_mode_active: bool,
+) -> Element<'a, Msg> {
     let btn = button(container(
         Row::new()
             .push(truncated_text(
@@ -80,7 +85,7 @@ fn bookmark_row<'a>(index: usize, app_view: View, bookmark: &Bookmark) -> Elemen
 
     Row::new()
         .pipe(|row| {
-            if app_view.edit_mode_active {
+            if edit_mode_active {
                 row.push(button("Edit").padding(1).on_press(Msg::EditBookmark(index)))
             } else {
                 row
@@ -94,6 +99,10 @@ fn bookmark_row<'a>(index: usize, app_view: View, bookmark: &Bookmark) -> Elemen
 }
 
 pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
+    let edit_mode_active = *app_view
+        .settings
+        .read("edit_mode_active")
+        .expect("edit_mode_active should exist");
     let mut bookmark_count = 0usize;
     let mut bookmarks = app_view
         .bookmarks
@@ -109,7 +118,7 @@ pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
             Vec::with_capacity(app_view.shown_bookmarks.0.saturating_mul(2)),
             |mut v, (i, b)| {
                 bookmark_count += 1;
-                v.push(bookmark_row(i, app_view, b));
+                v.push(bookmark_row(i, app_view, b, edit_mode_active));
                 v.push(horizontal_rule(3).into());
                 v
             },
