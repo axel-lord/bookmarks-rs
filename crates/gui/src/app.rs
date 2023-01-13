@@ -19,14 +19,15 @@ use std::{
     rc::Rc,
     sync::mpsc,
 };
-use ui::bookmarks_column::BookmarkColumnState;
+use ui::{
+    bookmarks_column::BookmarkColumnState,
+    edit_column::{self, BookmarkProxy, CategoryProxy},
+};
 
 mod view;
 
 pub use pane::{log::State as LogPaneState, Metric, MetricValue, Metrics};
 pub use view::View;
-
-use self::ui::edit_column::{self, BookmarkProxy, CategoryProxy};
 
 pub mod pane;
 pub mod ui;

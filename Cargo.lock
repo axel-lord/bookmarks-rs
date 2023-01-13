@@ -250,6 +250,7 @@ dependencies = [
  "aho-corasick",
  "bookmark-command",
  "bookmark-library",
+ "bookmark-settings",
  "bookmark-storage",
  "clap",
  "conv",
