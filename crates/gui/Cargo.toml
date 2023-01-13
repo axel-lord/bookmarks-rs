@@ -9,6 +9,7 @@ edition = "2021"
 bookmark-library = { path = "../library" }
 bookmark-command = { path = "../command" }
 bookmark-storage = { path = "../storage" }
+bookmark-settings = { path = "../settings" }
 clap = { version = "4.0.29", features = ["derive"] }
 iced = { version = "0.6", features = ["tokio", "debug"] }
 iced_native = "0.7.0"
