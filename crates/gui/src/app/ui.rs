@@ -9,7 +9,7 @@ use category_column::category_column;
 use iced::{
     theme,
     widget::{
-        button, horizontal_rule, horizontal_space, pane_grid, text, text_input, toggler,
+        button, container, horizontal_rule, horizontal_space, pane_grid, text, text_input, toggler,
         vertical_rule, vertical_space, Column, Row,
     },
     Alignment, Element, Length,
@@ -67,27 +67,11 @@ fn tool_row<'a>(app_view: View) -> Row<'a, Msg> {
         .padding(3)
 }
 
-fn blank_column<'a>(app_view: View) -> Element<'a, Msg> {
-    let header = Row::new()
-        .push(
-            button("Leave")
-                .padding(3)
-                .style(theme::Button::Destructive)
-                .on_press(Msg::SwitchMainTo(MainContent::Bookmarks)),
-        )
-        .push(text("Blank:"))
-        .push(horizontal_space(Length::Fill))
-        .push(app_view.main_content.choice_row())
-        .padding(0)
-        .spacing(3)
-        .align_items(Alignment::Center);
-
-    Column::new()
-        .push(header)
-        .push(vertical_space(Length::Fill))
-        .padding(3)
-        .spacing(3)
-        .into()
+// Needed for component
+impl From<bookmark_gui_edit::Message> for Msg {
+    fn from(_value: bookmark_gui_edit::Message) -> Self {
+        Msg::None
+    }
 }
 
 fn content_row<'a>(
@@ -99,8 +83,21 @@ fn content_row<'a>(
         MainContent::Edit => edit_panes.view(app_view),
         MainContent::Bookmarks => bookmark_column(app_view),
         MainContent::Log => log_column(app_view, log_panes),
-        #[allow(unreachable_patterns)]
-        _ => blank_column(app_view),
+        MainContent::Exp => Column::new()
+            .push(
+                Row::new()
+                    .push(container(text("Experimental")).padding(3))
+                    .push(horizontal_space(Length::Fill))
+                    .push(app_view.main_content.choice_row())
+                    .align_items(Alignment::Center),
+            )
+            .push(horizontal_rule(3))
+            .push(bookmark_gui_edit::EditComponent::new())
+            .push(vertical_space(Length::Fill))
+            .align_items(Alignment::Start)
+            .padding(3)
+            .spacing(3)
+            .into(),
     };
 
     Row::new()
