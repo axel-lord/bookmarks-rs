@@ -300,6 +300,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bookmark-settings"
+version = "0.1.0"
+dependencies = [
+ "tap",
+ "thiserror",
+]
+
+[[package]]
 name = "bookmark-storage"
 version = "0.1.0"
 dependencies = [
