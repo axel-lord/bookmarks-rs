@@ -34,6 +34,8 @@ pub enum MainContent {
     Edit,
     /// Main area holds log.
     Log,
+    /// Experimental widget.
+    Exp,
 }
 
 impl Display for MainContent {
@@ -43,29 +45,29 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    const RADIO_CHOCES: [MainContent; 3] =
-        [MainContent::Bookmarks, MainContent::Edit, MainContent::Log];
+    const RADIO_CHOCES: &[MainContent] = &[
+        MainContent::Bookmarks,
+        MainContent::Edit,
+        MainContent::Log,
+        MainContent::Exp,
+    ];
 
     /// Generate an area chooser for current area.
     #[must_use]
     pub fn choice_row<'a>(&self) -> Element<'a, Msg> {
-        match self {
-            MainContent::Bookmarks | MainContent::Edit | MainContent::Log => {
-                MainContent::RADIO_CHOCES
-                    .iter()
-                    .map(|mem| {
-                        <Element<Msg>>::from(
-                            radio(format!("{mem:?}"), *mem, Some(*self), Msg::SwitchMainTo)
-                                .spacing(3)
-                                .size(16),
-                        )
-                    })
-                    .fold(Row::new(), Row::push)
-                    .spacing(3)
-                    .align_items(Alignment::Center)
-                    .into()
-            }
-        }
+        MainContent::RADIO_CHOCES
+            .iter()
+            .map(|mem| {
+                <Element<Msg>>::from(
+                    radio(format!("{mem:?}"), *mem, Some(*self), Msg::SwitchMainTo)
+                        .spacing(3)
+                        .size(16),
+                )
+            })
+            .fold(Row::new(), Row::push)
+            .spacing(3)
+            .align_items(Alignment::Center)
+            .into()
     }
 }
 
