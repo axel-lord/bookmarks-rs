@@ -1,6 +1,7 @@
 use crate::{MainContent, Msg};
 use aho_corasick::AhoCorasickBuilder;
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
+use bookmark_settings::{Settings, SettingsBuilder};
 use bookmark_storage::Listed;
 use iced::{
     executor,
@@ -45,7 +46,6 @@ pub struct App {
     categories: shared::BufferStorage<Category>,
     category_tree: Vec<Vec<usize>>,
     command_map: CommandMap<'static>,
-    edit_mode_active: bool,
     infos: shared::BufferStorage<Info>,
     log_panes: pane_grid::State<LogPaneState>,
     edit_column_state: ui::edit_column::State,
@@ -53,9 +53,9 @@ pub struct App {
     metrics: Metrics,
     status_log: RefCell<Vec<String>>,
     status_msg: RefCell<String>,
-    theme: Theme,
     tick_watcher_count: usize,
     channel: (mpsc::Sender<ChannelMessage>, mpsc::Receiver<ChannelMessage>),
+    settings: Settings,
 }
 
 impl App {
@@ -84,10 +84,9 @@ impl App {
             url_width: self.bookmark_column_state.url_width.as_tuple(),
             main_content: self.main_content,
             category_tree: &self.category_tree,
-            edit_mode_active: self.edit_mode_active,
             bookmark_scrollbar_id: &self.bookmark_column_state.bookmark_scrollbar_id,
-            is_dark_mode: matches!(self.theme, Theme::Dark),
             metrics: &self.metrics,
+            settings: &self.settings,
         }
     }
 
@@ -387,6 +386,16 @@ impl Default for App {
             .split(Axis::Vertical, &log_pane, LogPaneState::Stats)
             .expect("splitting log pane should not fail");
 
+        let settings = SettingsBuilder::new()
+            .add_fn("theme", || match dark_light::detect() {
+                dark_light::Mode::Dark => Theme::Dark,
+                dark_light::Mode::Light => Theme::Light,
+            })
+            .add("edit_mode_active", false)
+            .build();
+
+        dbg!(&settings);
+
         Self {
             command_map: CommandMap::default_config(
                 bookmarks.clone(),
@@ -401,17 +410,13 @@ impl Default for App {
             status_log: RefCell::default(),
             main_content: MainContent::Bookmarks,
             category_tree: Vec::new(),
-            edit_mode_active: false,
             log_panes,
-            theme: match dark_light::detect() {
-                dark_light::Mode::Dark => Theme::Dark,
-                dark_light::Mode::Light => Theme::Light,
-            },
             metrics: Metrics::default(),
             bookmark_column_state: BookmarkColumnState::default(),
             tick_watcher_count: 0usize,
             channel: mpsc::channel(),
             edit_column_state: edit_column::State::new(),
+            settings,
         }
     }
 }
@@ -445,7 +450,10 @@ impl Application for App {
     }
 
     fn theme(&self) -> Self::Theme {
-        self.theme.clone()
+        self.settings
+            .read::<Self::Theme>("theme")
+            .expect("theme setting should exist and be a Self::Theme")
+            .clone()
     }
 
     fn title(&self) -> String {
@@ -593,7 +601,9 @@ impl Application for App {
             }
 
             Msg::SetEditMode(val) => {
-                self.edit_mode_active = val;
+                self.settings
+                    .write("edit_mode_active", val)
+                    .expect("edit_mode_active should be writable with bools");
 
                 Command::none()
             }
@@ -612,7 +622,9 @@ impl Application for App {
                 Command::none()
             }
             Msg::SetTheme(theme) => {
-                self.theme = theme;
+                self.settings
+                    .write("theme", theme)
+                    .expect("theme should be able to be set to a Theme");
                 Command::none()
             }
 

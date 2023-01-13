@@ -199,9 +199,14 @@ impl PaneState {
                 .align_items(Alignment::End),
             )
             .push(
-                [("Use Dark Theme", app_view.is_dark_mode, |b: bool| {
-                    Msg::SetTheme(if b { Theme::Dark } else { Theme::Light })
-                })]
+                [(
+                    "Use Dark Theme",
+                    app_view
+                        .settings
+                        .check("theme", &Theme::Dark)
+                        .expect("theme should exist"),
+                    |b: bool| Msg::SetTheme(if b { Theme::Dark } else { Theme::Light }),
+                )]
                 .into_iter()
                 .collect_coumn(|(title, value, msg)| {
                     Row::new()

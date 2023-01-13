@@ -1,5 +1,6 @@
 use aho_corasick::AhoCorasick;
 use bookmark_library::{container, Bookmark, Category, Info};
+use bookmark_settings::Settings;
 use iced::widget;
 
 use crate::MainContent;
@@ -19,14 +20,10 @@ pub struct View<'a> {
     pub category_tree: &'a [Vec<usize>],
     /// Expected max character count of bookmark descriptions deisplayed as numeric and str.
     pub desc_width: (usize, &'a str),
-    /// Is true if edit mode is enabled.
-    pub edit_mode_active: bool,
     /// Filter used for bookmarks as filter object and str.
     pub filter: (Option<&'a AhoCorasick>, &'a str),
     /// Info loaded by application.
     pub infos: &'a container::BufferStorage<Info>,
-    /// True if dark mode in use.
-    pub is_dark_mode: bool,
     /// What is expected to fill the main area.
     pub main_content: MainContent,
     /// Stats that may have been gathered.
@@ -39,6 +36,8 @@ pub struct View<'a> {
     pub status: &'a str,
     /// All status messages.
     pub status_log: &'a [String],
-    /// Expected max cahgracter count of bookmark urls displayed as numeric and str.
+    /// Expected max character count of bookmark urls displayed as numeric and str.
     pub url_width: (usize, &'a str),
+    /// Settings for reading,
+    pub settings: &'a Settings,
 }

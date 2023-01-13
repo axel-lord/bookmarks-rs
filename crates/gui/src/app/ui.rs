@@ -42,7 +42,17 @@ fn tool_row<'a>(app_view: View) -> Row<'a, Msg> {
 
     let edit_option = Row::new()
         .push(text("Edit"))
-        .push(toggler(None, app_view.edit_mode_active, Msg::SetEditMode).width(Length::Shrink))
+        .push(
+            toggler(
+                None,
+                *app_view
+                    .settings
+                    .read("edit_mode_active")
+                    .expect("edit_mode_active should exist"),
+                Msg::SetEditMode,
+            )
+            .width(Length::Shrink),
+        )
         .padding(0)
         .spacing(3)
         .align_items(Alignment::Center);
