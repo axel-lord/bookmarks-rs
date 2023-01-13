@@ -249,6 +249,7 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "bookmark-command",
+ "bookmark-gui-edit",
  "bookmark-library",
  "bookmark-settings",
  "bookmark-storage",
@@ -256,7 +257,6 @@ dependencies = [
  "conv",
  "dark-light",
  "iced",
- "iced_native",
  "open",
  "paste",
  "tap",
@@ -264,6 +264,10 @@ dependencies = [
  "unicode-segmentation",
  "url",
 ]
+
+[[package]]
+name = "bookmark-gui-edit"
+version = "0.1.0"
 
 [[package]]
 name = "bookmark-import"

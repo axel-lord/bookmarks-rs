@@ -60,7 +60,7 @@ impl MainContent {
                                 .size(16),
                         )
                     })
-                    .fold(Row::new(), iced_native::widget::row::Row::push)
+                    .fold(Row::new(), Row::push)
                     .spacing(3)
                     .align_items(Alignment::Center)
                     .into()
