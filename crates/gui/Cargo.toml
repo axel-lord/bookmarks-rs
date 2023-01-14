@@ -10,7 +10,6 @@ bookmark-library = { path = "../library" }
 bookmark-command = { path = "../command" }
 bookmark-storage = { path = "../storage" }
 bookmark-settings = { path = "../settings" }
-bookmark-gui-edit = { path = "../gui_edit" }
 clap = { version = "4.0.29", features = ["derive"] }
 iced = { version = "0.6", features = ["tokio", "debug"] }
 open = "3.2.0"
