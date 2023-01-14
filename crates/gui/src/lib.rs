@@ -25,6 +25,17 @@ pub use app::{App, View};
 pub use msg::Msg;
 pub use parsed_str::ParsedStr;
 
+/// Keys used to access application settings.
+pub mod setting_key {
+    use bookmark_settings::Key;
+    use iced::Theme;
+
+    /// Key for the theme setting.
+    pub const THEME: Key<Theme> = Key::new("theme");
+    /// Key for the edit mode active setting.
+    pub const EDIT_MODE_ACTIVE: Key<bool> = Key::new("edit_mode_active");
+}
+
 /// Enum representing what content the main area can hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MainContent {

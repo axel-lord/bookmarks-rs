@@ -1,4 +1,4 @@
-use crate::{MainContent, Msg};
+use crate::{setting_key, MainContent, Msg};
 use aho_corasick::AhoCorasickBuilder;
 use bookmark_library::{command_map::CommandMap, container, shared, Bookmark, Category, Info};
 use bookmark_settings::{Settings, SettingsBuilder};
@@ -387,11 +387,11 @@ impl Default for App {
             .expect("splitting log pane should not fail");
 
         let settings = SettingsBuilder::new()
-            .add_fn("theme", || match dark_light::detect() {
+            .add_fn(setting_key::THEME, || match dark_light::detect() {
                 dark_light::Mode::Dark => Theme::Dark,
                 dark_light::Mode::Light => Theme::Light,
             })
-            .add("edit_mode_active", false)
+            .add(setting_key::EDIT_MODE_ACTIVE, false)
             .build();
 
         dbg!(&settings);
@@ -450,10 +450,7 @@ impl Application for App {
     }
 
     fn theme(&self) -> Self::Theme {
-        self.settings
-            .read::<Self::Theme>("theme")
-            .expect("theme setting should exist and be a Self::Theme")
-            .clone()
+        self.settings[setting_key::THEME].clone()
     }
 
     fn title(&self) -> String {
@@ -601,9 +598,7 @@ impl Application for App {
             }
 
             Msg::SetEditMode(val) => {
-                self.settings
-                    .write("edit_mode_active", val)
-                    .expect("edit_mode_active should be writable with bools");
+                self.settings[setting_key::EDIT_MODE_ACTIVE] = val;
 
                 Command::none()
             }
@@ -622,9 +617,7 @@ impl Application for App {
                 Command::none()
             }
             Msg::SetTheme(theme) => {
-                self.settings
-                    .write("theme", theme)
-                    .expect("theme should be able to be set to a Theme");
+                self.settings[setting_key::THEME] = theme;
                 Command::none()
             }
 

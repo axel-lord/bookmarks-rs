@@ -1,4 +1,4 @@
-use crate::{Msg, ParsedStr, View};
+use crate::{setting_key, Msg, ParsedStr, View};
 use aho_corasick::AhoCorasick;
 use bookmark_library::Bookmark;
 use iced::{
@@ -99,10 +99,7 @@ fn bookmark_row<'a>(
 }
 
 pub fn bookmark_column<'a>(app_view: View) -> Element<'a, Msg> {
-    let edit_mode_active = *app_view
-        .settings
-        .read("edit_mode_active")
-        .expect("edit_mode_active should exist");
+    let edit_mode_active = app_view.settings[setting_key::EDIT_MODE_ACTIVE];
     let mut bookmark_count = 0usize;
     let mut bookmarks = app_view
         .bookmarks
