@@ -56,6 +56,7 @@ pub struct App {
     tick_watcher_count: usize,
     channel: (mpsc::Sender<ChannelMessage>, mpsc::Receiver<ChannelMessage>),
     settings: Settings,
+    exp_state: bookmark_gui_edit::State,
 }
 
 impl App {
@@ -417,6 +418,7 @@ impl Default for App {
             channel: mpsc::channel(),
             edit_column_state: edit_column::State::new(),
             settings,
+            exp_state: bookmark_gui_edit::State::new(),
         }
     }
 }
@@ -665,6 +667,10 @@ impl Application for App {
                 self.edit_column_state.update(message);
                 Command::none()
             }
+            Msg::ExpMsg(msg) => {
+                self.exp_state.update(msg);
+                Command::none()
+            }
         }
     }
 
@@ -679,6 +685,7 @@ impl Application for App {
             self.to_view(&bookmarks, &categories, &infos, &status, &status_log),
             &self.log_panes,
             &self.edit_column_state,
+            &self.exp_state,
         )
     }
 }

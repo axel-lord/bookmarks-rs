@@ -1,77 +1,78 @@
 use iced::{
     widget::{
-        pane_grid::{self, Pane, PaneGrid},
-        text,
+        button,
+        pane_grid::{self, Axis, Pane, ResizeEvent},
+        text, PaneGrid, Row,
     },
     Element,
 };
-use iced_lazy::Component;
+use tap::Pipe;
+
+#[derive(Debug, Clone, Copy)]
+enum PaneContent {
+    Controls,
+    Blank,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Message {
+    ResizeEvent(ResizeEvent),
+    SplitControl,
+}
 
 #[derive(Debug)]
-pub struct EditComponent {}
-
-#[derive(Debug, Clone)]
-pub enum Message {}
-
-#[derive(Clone, Debug)]
-pub enum Event {}
-
-pub enum PaneState {
-    Controls,
-}
-
 pub struct State {
+    panes: pane_grid::State<PaneContent>,
     control_pane: Pane,
-    panes: pane_grid::State<PaneState>,
 }
 
-impl Default for State {
-    fn default() -> Self {
-        let (panes, control_pane) = pane_grid::State::new(PaneState::Controls);
+impl State {
+    pub fn new() -> Self {
+        let (mut panes, control_pane) = pane_grid::State::new(PaneContent::Controls);
+        panes.split(Axis::Horizontal, &control_pane, PaneContent::Blank);
         Self {
             panes,
             control_pane,
         }
     }
-}
 
-fn edit_pane_grid<'a>(panes: &'a pane_grid::State<PaneState>) -> Element<'a, Event> {
-    PaneGrid::new(panes, |_, _, _| pane_grid::Content::new(text("todo!"))).into()
-}
-
-impl<'a, Message> Component<Message, iced::Renderer> for EditComponent
-where
-    Message: From<crate::Message>,
-{
-    type State = State;
-    type Event = Event;
-
-    fn update(&mut self, _state: &mut Self::State, _event: Self::Event) -> Option<Message> {
-        None
+    fn content(&self) -> Element<Message> {
+        PaneGrid::new(&self.panes, |_, state, _| {
+            match state {
+                PaneContent::Controls => Row::new()
+                    .push(text("controls"))
+                    .push(button("split").on_press(Message::SplitControl))
+                    .pipe(Element::from),
+                PaneContent::Blank => text("blank").pipe(Element::from),
+            }
+            .pipe(pane_grid::Content::new)
+        })
+        .on_resize(10, Message::ResizeEvent)
+        .into()
     }
 
-    fn view(&self, state: &Self::State) -> Element<'_, Self::Event> {
-        edit_pane_grid(&state.panes)
+    pub fn update(&mut self, message: Message) {
+        match message {
+            Message::ResizeEvent(ResizeEvent { ref split, ratio }) => {
+                self.panes.resize(split, ratio)
+            }
+            Message::SplitControl => {
+                self.panes
+                    .split(Axis::Vertical, &self.control_pane, PaneContent::Blank);
+            }
+        }
+    }
+
+    pub fn view<ExtMsg>(&self) -> Element<'_, ExtMsg>
+    where
+        ExtMsg: 'static + From<Message>,
+    {
+        self.content().map(ExtMsg::from)
     }
 }
 
-impl EditComponent {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for EditComponent {
+impl Default for State {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl<'a, Message> From<EditComponent> for Element<'a, Message>
-where
-    Message: 'a + From<crate::Message>,
-{
-    fn from(value: EditComponent) -> Self {
-        iced_lazy::component(value)
     }
 }
