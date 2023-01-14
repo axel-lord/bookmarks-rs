@@ -57,6 +57,8 @@ pub enum Msg {
     SetTheme(Theme),
     /// Don't use some generated value but log it.
     Debug(Arc<dyn Debug + Send + Sync>),
+    /// experimental
+    ExpMsg(bookmark_gui_edit::Message),
     /// The filter in the filter box should be filter the bookmarks until reset.
     ApplyFilter,
     /// Any and all bookmark filters should be removed.
@@ -66,4 +68,10 @@ pub enum Msg {
     /// When a message needs to be sent but nothing should be done.
     #[default]
     None,
+}
+
+impl From<bookmark_gui_edit::Message> for Msg {
+    fn from(v: bookmark_gui_edit::Message) -> Self {
+        Self::ExpMsg(v)
+    }
 }

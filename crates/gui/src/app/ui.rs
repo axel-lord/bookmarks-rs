@@ -67,17 +67,11 @@ fn tool_row<'a>(app_view: View) -> Row<'a, Msg> {
         .padding(3)
 }
 
-// Needed for component
-impl From<bookmark_gui_edit::Message> for Msg {
-    fn from(_value: bookmark_gui_edit::Message) -> Self {
-        Msg::None
-    }
-}
-
 fn content_row<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
     edit_panes: &'a edit_column::State,
+    exp_state: &'a bookmark_gui_edit::State,
 ) -> Element<'a, Msg> {
     let main_content = match app_view.main_content {
         MainContent::Edit => edit_panes.view(app_view),
@@ -92,7 +86,7 @@ fn content_row<'a>(
                     .align_items(Alignment::Center),
             )
             .push(horizontal_rule(3))
-            .push(bookmark_gui_edit::EditComponent::new())
+            .push(exp_state.view())
             .push(vertical_space(Length::Fill))
             .align_items(Alignment::Start)
             .padding(3)
@@ -113,6 +107,7 @@ pub fn view<'a>(
     app_view: View,
     log_panes: &'a pane_grid::State<LogPaneState>,
     edit_panes: &'a edit_column::State,
+    exp_state: &'a bookmark_gui_edit::State,
 ) -> Element<'a, Msg> {
     let status = Row::new()
         .push(horizontal_space(Length::Fill))
@@ -123,7 +118,7 @@ pub fn view<'a>(
     Column::new()
         .push(tool_row(app_view))
         .push(horizontal_rule(3))
-        .push(content_row(app_view, log_panes, edit_panes))
+        .push(content_row(app_view, log_panes, edit_panes, exp_state))
         .push(horizontal_rule(3))
         .push(status)
         .into()
