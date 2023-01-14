@@ -10,14 +10,35 @@
 
 use std::{
     any::{self, Any},
+    borrow::Borrow,
     collections::HashMap,
-    fmt::{self, Debug},
+    fmt::{self, Debug, Display},
+    marker::PhantomData,
+    ops::{Deref, Index, IndexMut},
 };
+use tap::Tap;
 use thiserror::Error;
 
 type SettingValue = Box<dyn Any>;
-type DefaultConstructor = Box<dyn Fn() -> SettingValue>;
 type DebugFn = Box<dyn Fn(&SettingValue, &mut fmt::Formatter<'_>) -> fmt::Result>;
+
+/// Result type used by settings.
+pub type Result<T> = std::result::Result<T, Error>;
+
+struct DefaultConstructor(Box<dyn Fn() -> SettingValue>);
+
+impl DefaultConstructor {
+    fn from_fn<T>(f: impl 'static + Fn() -> T) -> Self
+    where
+        T: 'static,
+    {
+        Self(Box::new(move || Box::new(f())))
+    }
+
+    fn construct(&self) -> SettingValue {
+        (self.0)()
+    }
+}
 
 struct SettingProperties {
     value: SettingValue,
@@ -32,8 +53,52 @@ pub struct Settings {
 }
 
 /// Used to build a [Settings] instance.
+#[derive(Debug, Default)]
 pub struct SettingsBuilder {
-    settings: Settings,
+    settings: Vec<(String, SettingProperties)>,
+}
+
+/// A key into a settings.
+#[derive(Clone, Copy)]
+pub struct Key<T>(&'static str, PhantomData<*const T>);
+
+impl<T> Key<T> {
+    /// Aquire a key from a static string slice.
+    #[must_use]
+    pub const fn new(key: &'static str) -> Self {
+        Self(key, PhantomData)
+    }
+
+    /// Get key as a string slice.
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        self.0
+    }
+}
+
+impl<T> Debug for Key<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}: {}", self.0, any::type_name::<T>())
+    }
+}
+
+impl<T> Display for Key<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl<T> AsRef<str> for Key<T> {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl<T> Deref for Key<T> {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
 }
 
 /// Error type used by crate.
@@ -57,8 +122,6 @@ pub enum Error {
     },
 }
 
-type Result<T> = std::result::Result<T, Error>;
-
 fn get_debug_fn<T>() -> DebugFn
 where
     T: 'static + Debug,
@@ -71,84 +134,109 @@ where
     })
 }
 
-impl Default for SettingsBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl SettingsBuilder {
     /// Get a new settings builder.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            settings: Settings {
-                settings: HashMap::new(),
-            },
-        }
+        Self::default()
     }
     /// Build the [Settings].
     #[must_use]
     pub fn build(self) -> Settings {
-        self.settings
+        Settings {
+            settings: self.settings.into_iter().collect(),
+        }
+    }
+
+    #[must_use]
+    fn add_setting_properties(
+        self,
+        setting: String,
+        setting_properties: SettingProperties,
+    ) -> Self {
+        self.tap_mut(move |s| s.settings.push((setting, setting_properties)))
     }
 
     /// Add a setting and set it's default value.
     #[must_use]
-    pub fn add<T>(mut self, setting: impl Into<String>, default_value: T) -> Self
+    pub fn add<T>(self, key: impl Borrow<Key<T>>, default_value: T) -> Self
     where
         T: 'static + Clone + Debug,
     {
-        self.settings.settings.insert(
-            setting.into(),
+        self.str_add(key.borrow().as_str().into(), default_value)
+    }
+
+    #[must_use]
+    fn str_add<T>(self, setting: String, default_value: T) -> Self
+    where
+        T: 'static + Clone + Debug,
+    {
+        self.add_setting_properties(
+            setting,
             SettingProperties {
                 value: Box::new(default_value.clone()),
                 type_name: any::type_name::<T>().into(),
-                default_constructor: Box::new(move || Box::new(default_value.clone())),
+                default_constructor: DefaultConstructor::from_fn(move || {
+                    Box::new(default_value.clone())
+                }),
                 debug_fn: get_debug_fn::<T>(),
             },
-        );
-        self
+        )
     }
 
     /// Add a setting and use it's [Default] implementation for default.
     #[must_use]
-    pub fn add_default<T>(mut self, setting: impl Into<String>) -> Self
+    pub fn add_default<T>(self, key: impl Borrow<Key<T>>) -> Self
     where
         T: 'static + Default + Debug,
     {
-        self.settings.settings.insert(
-            setting.into(),
+        self.str_add_default::<T>(key.borrow().as_str().into())
+    }
+
+    #[must_use]
+    fn str_add_default<T>(self, setting: String) -> Self
+    where
+        T: 'static + Default + Debug,
+    {
+        self.add_setting_properties(
+            setting,
             SettingProperties {
                 value: Box::<T>::default(),
                 type_name: any::type_name::<T>().into(),
-                default_constructor: Box::new(|| Box::<T>::default()),
+                default_constructor: DefaultConstructor::from_fn(T::default),
                 debug_fn: get_debug_fn::<T>(),
             },
-        );
-        self
+        )
     }
 
     /// Add a setting with a function for setting default value.
     #[must_use]
-    pub fn add_fn<T>(
-        mut self,
-        setting: impl Into<String>,
-        default_fn: impl 'static + Fn() -> T,
-    ) -> Self
+    pub fn add_fn<T, F>(self, key: impl Borrow<Key<T>>, default_constructor: F) -> Self
+    where
+        F: 'static + Fn() -> T,
+        T: 'static + Debug,
+    {
+        // Box::new(move || Box::new(f()))
+        self.str_add_fn::<T>(
+            key.borrow().as_str().into(),
+            DefaultConstructor::from_fn(default_constructor),
+        )
+    }
+
+    #[must_use]
+    fn str_add_fn<T>(self, setting: String, default_fn: DefaultConstructor) -> Self
     where
         T: 'static + Debug,
     {
-        self.settings.settings.insert(
-            setting.into(),
+        self.add_setting_properties(
+            setting,
             SettingProperties {
-                value: Box::new(default_fn()),
+                value: Box::new(default_fn.0()),
                 type_name: any::type_name::<T>().into(),
-                default_constructor: Box::new(move || Box::new(default_fn())),
+                default_constructor: default_fn,
                 debug_fn: get_debug_fn::<T>(),
             },
-        );
-        self
+        )
     }
 }
 
@@ -157,9 +245,9 @@ impl Settings {
     ///
     /// # Errors
     /// If the setting does not exist or the wrong type is used to access it.
-    pub fn read<'a, T>(&'a self, setting: &str) -> Result<&'a T>
+    fn read<'a, T>(&'a self, setting: &str) -> Result<&'a T>
     where
-        T: 'static + Debug,
+        T: 'static,
     {
         let value = self
             .settings
@@ -175,6 +263,28 @@ impl Settings {
                 setting_type: value.type_name.clone(),
                 tried_type: any::type_name::<T>().into(),
             })
+    }
+
+    /// Get a setting with a key.
+    ///
+    /// # Errors
+    /// If the key is not the key to a setting.
+    pub fn get<T>(&self, key: impl Borrow<Key<T>>) -> Result<&T>
+    where
+        T: 'static,
+    {
+        self.read::<T>(key.borrow())
+    }
+
+    /// Get a mutable setting with a key.
+    ///
+    /// # Errors
+    /// If the key is not the key to a setting.
+    pub fn get_mut<T>(&mut self, key: impl Borrow<Key<T>>) -> Result<&mut T>
+    where
+        T: 'static,
+    {
+        self.write::<T>(key.borrow())
     }
 
     /// Check if a setting is the same as a value.
@@ -216,14 +326,15 @@ impl Settings {
             .ok_or_else(|| Error::SettingDoesNotExist {
                 setting: setting.into(),
             })?;
-        let value =
-            (value.default_constructor)()
-                .downcast::<T>()
-                .map_err(|_| Error::WrongSettingType {
-                    setting: setting.into(),
-                    setting_type: value.type_name.clone(),
-                    tried_type: any::type_name::<T>().into(),
-                })?;
+        let value = value
+            .default_constructor
+            .construct()
+            .downcast::<T>()
+            .map_err(|_| Error::WrongSettingType {
+                setting: setting.into(),
+                setting_type: value.type_name.clone(),
+                tried_type: any::type_name::<T>().into(),
+            })?;
         Ok(*value)
     }
 
@@ -239,14 +350,14 @@ impl Settings {
                 setting: setting.into(),
             })?;
 
-        value.value = (value.default_constructor)();
+        value.value = value.default_constructor.construct();
         Ok(())
     }
 
     /// Set all settings to their default values.
     pub fn reset_all(&mut self) {
         for value in self.settings.values_mut() {
-            value.value = (value.default_constructor)();
+            value.value = value.default_constructor.construct();
         }
     }
 
@@ -254,27 +365,24 @@ impl Settings {
     ///
     /// # Errors
     /// If the setting does not exits or the wrong type is used to access it.
-    pub fn write<T>(&mut self, setting: &str, new_value: T) -> Result<()>
+    fn write<'a, T>(&'a mut self, setting: &str) -> Result<&'a mut T>
     where
-        T: 'static + Debug,
+        T: 'static,
     {
-        let mut value =
-            self.settings
-                .get_mut(setting)
-                .ok_or_else(|| Error::SettingDoesNotExist {
-                    setting: setting.into(),
-                })?;
-
-        if !(value.value.is::<T>()) {
-            return Err(Error::WrongSettingType {
+        let value = self
+            .settings
+            .get_mut(setting)
+            .ok_or_else(|| Error::SettingDoesNotExist {
+                setting: setting.into(),
+            })?;
+        value
+            .value
+            .downcast_mut()
+            .ok_or_else(|| Error::WrongSettingType {
                 setting: setting.into(),
                 setting_type: value.type_name.clone(),
                 tried_type: any::type_name::<T>().into(),
-            });
-        }
-
-        value.value = Box::new(new_value);
-        Ok(())
+            })
     }
 }
 
@@ -290,6 +398,25 @@ impl Debug for Settings {
     }
 }
 
+impl<T> Index<Key<T>> for Settings
+where
+    T: 'static,
+{
+    type Output = T;
+    fn index(&self, index: Key<T>) -> &Self::Output {
+        self.get(index).expect("key should exist in settings")
+    }
+}
+
+impl<T> IndexMut<Key<T>> for Settings
+where
+    T: 'static,
+{
+    fn index_mut(&mut self, index: Key<T>) -> &mut Self::Output {
+        self.get_mut(index).expect("key should exist in settings")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Range;
@@ -299,11 +426,11 @@ mod tests {
     #[test]
     pub fn build_settings_add() {
         let settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
         assert!(*settings.settings["yes"]
@@ -337,11 +464,11 @@ mod tests {
     #[test]
     pub fn settings_read() {
         let settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
         assert!(*settings
@@ -370,11 +497,11 @@ mod tests {
     #[test]
     pub fn settings_check() {
         let settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
         assert_eq!(settings.check("yes", &true), Ok(true));
@@ -394,9 +521,9 @@ mod tests {
     #[test]
     pub fn build_settings_default() {
         let settings = SettingsBuilder::new()
-            .add_default::<bool>("bool")
-            .add_default::<i32>("i32")
-            .add_default::<HashMap<String, Range<usize>>>("HashMap")
+            .str_add_default::<bool>("bool".to_string())
+            .str_add_default::<i32>("i32".to_string())
+            .str_add_default::<HashMap<String, Range<usize>>>("HashMap".to_string())
             .build();
 
         assert_eq!(settings.check("bool", &bool::default()), Ok(true));
@@ -410,11 +537,14 @@ mod tests {
     #[test]
     pub fn build_settings_fn() {
         let settings = SettingsBuilder::new()
-            .add_fn("yes", || true)
-            .add_fn("no", || false)
-            .add_fn("maybe", || true)
-            .add_fn("hello", || String::from("world"))
-            .add_fn("not_found", || 404u32)
+            .str_add_fn::<bool>("yes".into(), DefaultConstructor::from_fn(|| true))
+            .str_add_fn::<bool>("no".into(), DefaultConstructor::from_fn(|| false))
+            .str_add_fn::<bool>("maybe".into(), DefaultConstructor::from_fn(|| true))
+            .str_add_fn::<String>(
+                "hello".into(),
+                DefaultConstructor::from_fn(|| String::from("world")),
+            )
+            .str_add_fn::<u32>("not_found".into(), DefaultConstructor::from_fn(|| 404u32))
             .build();
 
         assert_eq!(settings.check("yes", &true), Ok(true));
@@ -430,23 +560,21 @@ mod tests {
     #[test]
     pub fn settings_write() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
-        settings.write("yes", false)?;
-        settings.write("no", true)?;
-        settings.write("maybe", false)?;
-        settings.write("hello", String::from("rust"))?;
-        settings.write("not_found", 101u32)?;
+        *settings.write("yes")? = false;
+        *settings.write("no")? = true;
+        *settings.write("maybe")? = false;
+        *settings.write("hello")? = String::from("rust");
+        *settings.write("not_found")? = 101u32;
 
-        assert!(settings.write("maybe", 50).is_err());
-        assert!(settings
-            .write("no", HashMap::<String, String>::new())
-            .is_err());
+        assert!(settings.write::<i32>("maybe").is_err());
+        assert!(settings.write::<HashMap::<String, String>>("no").is_err());
 
         assert_eq!(settings.check("yes", &false), Ok(true));
         assert_eq!(settings.check("no", &true), Ok(true));
@@ -460,18 +588,21 @@ mod tests {
     #[test]
     pub fn settings_get_default() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add_default::<bool>("no")
-            .add_fn("maybe", || true)
-            .add_fn("hello", || String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add_default::<bool>("no".to_string())
+            .str_add_fn::<bool>("maybe".into(), DefaultConstructor::from_fn(|| true))
+            .str_add_fn::<bool>(
+                "hello".into(),
+                DefaultConstructor::from_fn(|| String::from("world")),
+            )
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
-        settings.write("yes", false)?;
-        settings.write("no", true)?;
-        settings.write("maybe", false)?;
-        settings.write("hello", String::from("rust"))?;
-        settings.write("not_found", 101u32)?;
+        *settings.write("yes")? = false;
+        *settings.write("no")? = true;
+        *settings.write("maybe")? = false;
+        *settings.write("hello")? = String::from("rust");
+        *settings.write("not_found")? = 101u32;
 
         assert!(settings.get_default::<bool>("yes")?);
         assert!(!settings.get_default::<bool>("no")?);
@@ -487,18 +618,18 @@ mod tests {
     #[test]
     pub fn settings_reset_setting() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
-        settings.write("yes", false)?;
-        settings.write("no", true)?;
-        settings.write("maybe", false)?;
-        settings.write("hello", String::from("rust"))?;
-        settings.write("not_found", 101u32)?;
+        *settings.write("yes")? = false;
+        *settings.write("no")? = true;
+        *settings.write("maybe")? = false;
+        *settings.write("hello")? = String::from("rust");
+        *settings.write("not_found")? = 101u32;
 
         // make sure writes worked
         assert_eq!(settings.check("yes", &false), Ok(true));
@@ -529,18 +660,18 @@ mod tests {
     #[test]
     pub fn settings_reset_all() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .add("yes", true)
-            .add("no", false)
-            .add("maybe", true)
-            .add("hello", String::from("world"))
-            .add("not_found", 404u32)
+            .str_add("yes".to_string(), true)
+            .str_add("no".to_string(), false)
+            .str_add("maybe".to_string(), true)
+            .str_add("hello".to_string(), String::from("world"))
+            .str_add("not_found".to_string(), 404u32)
             .build();
 
-        settings.write("yes", false)?;
-        settings.write("no", true)?;
-        settings.write("maybe", false)?;
-        settings.write("hello", String::from("rust"))?;
-        settings.write("not_found", 101u32)?;
+        *settings.write("yes")? = false;
+        *settings.write("no")? = true;
+        *settings.write("maybe")? = false;
+        *settings.write("hello")? = String::from("rust");
+        *settings.write("not_found")? = 101u32;
 
         // make sure writes worked
         assert!(settings.check("yes", &false)?);

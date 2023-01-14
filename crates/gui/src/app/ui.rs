@@ -3,7 +3,7 @@ pub mod category_column;
 pub mod edit_column;
 pub mod log_column;
 
-use crate::{app::pane::log::State as LogPaneState, MainContent, Msg, View};
+use crate::{app::pane::log::State as LogPaneState, setting_key, MainContent, Msg, View};
 use bookmarks_column::bookmark_column;
 use category_column::category_column;
 use iced::{
@@ -45,10 +45,7 @@ fn tool_row<'a>(app_view: View) -> Row<'a, Msg> {
         .push(
             toggler(
                 None,
-                *app_view
-                    .settings
-                    .read("edit_mode_active")
-                    .expect("edit_mode_active should exist"),
+                app_view.settings[setting_key::EDIT_MODE_ACTIVE],
                 Msg::SetEditMode,
             )
             .width(Length::Shrink),

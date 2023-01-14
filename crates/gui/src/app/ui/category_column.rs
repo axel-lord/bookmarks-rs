@@ -1,4 +1,4 @@
-use crate::{Msg, View};
+use crate::{setting_key, Msg, View};
 use iced::{
     theme,
     widget::{button, container, horizontal_rule, horizontal_space, scrollable, text, Column, Row},
@@ -72,10 +72,7 @@ pub fn category_column<'a>(app_view: View) -> Element<'a, Msg> {
         .align_items(Alignment::Center)
         .spacing(3);
 
-    let edit_mode_active = *app_view
-        .settings
-        .read("edit_mode_active")
-        .expect("edit_mode_active should exist");
+    let edit_mode_active = app_view.settings[setting_key::EDIT_MODE_ACTIVE];
 
     Column::new()
         .push(header)
