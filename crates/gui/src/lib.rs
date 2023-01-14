@@ -34,8 +34,6 @@ pub enum MainContent {
     Edit,
     /// Main area holds log.
     Log,
-    /// Experimental widget.
-    Exp,
 }
 
 impl Display for MainContent {
@@ -45,12 +43,8 @@ impl Display for MainContent {
 }
 
 impl MainContent {
-    const RADIO_CHOCES: &[MainContent] = &[
-        MainContent::Bookmarks,
-        MainContent::Edit,
-        MainContent::Log,
-        MainContent::Exp,
-    ];
+    const RADIO_CHOCES: &[MainContent] =
+        &[MainContent::Bookmarks, MainContent::Edit, MainContent::Log];
 
     /// Generate an area chooser for current area.
     #[must_use]
