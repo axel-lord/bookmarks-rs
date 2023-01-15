@@ -16,7 +16,7 @@ use std::{
     marker::PhantomData,
     ops::{Deref, Index, IndexMut},
 };
-use tap::Tap;
+
 use thiserror::Error;
 
 type SettingValue = Box<dyn Any>;
@@ -150,11 +150,12 @@ impl SettingsBuilder {
 
     #[must_use]
     fn add_setting_properties(
-        self,
+        mut self,
         setting: String,
         setting_properties: SettingProperties,
     ) -> Self {
-        self.tap_mut(move |s| s.settings.push((setting, setting_properties)))
+        self.settings.push((setting, setting_properties));
+        self
     }
 
     /// Add a setting and set it's default value.
@@ -163,25 +164,7 @@ impl SettingsBuilder {
     where
         T: 'static + Clone + Debug,
     {
-        self.str_add(key.borrow().as_str().into(), default_value)
-    }
-
-    #[must_use]
-    fn str_add<T>(self, setting: String, default_value: T) -> Self
-    where
-        T: 'static + Clone + Debug,
-    {
-        self.add_setting_properties(
-            setting,
-            SettingProperties {
-                value: Box::new(default_value.clone()),
-                type_name: any::type_name::<T>().into(),
-                default_constructor: DefaultConstructor::from_fn(move || {
-                    Box::new(default_value.clone())
-                }),
-                debug_fn: get_debug_fn::<T>(),
-            },
-        )
+        self.add_fn(key, move || default_value.clone())
     }
 
     /// Add a setting and use it's [Default] implementation for default.
@@ -190,23 +173,7 @@ impl SettingsBuilder {
     where
         T: 'static + Default + Debug,
     {
-        self.str_add_default::<T>(key.borrow().as_str().into())
-    }
-
-    #[must_use]
-    fn str_add_default<T>(self, setting: String) -> Self
-    where
-        T: 'static + Default + Debug,
-    {
-        self.add_setting_properties(
-            setting,
-            SettingProperties {
-                value: Box::<T>::default(),
-                type_name: any::type_name::<T>().into(),
-                default_constructor: DefaultConstructor::from_fn(T::default),
-                debug_fn: get_debug_fn::<T>(),
-            },
-        )
+        self.add_fn(key, T::default)
     }
 
     /// Add a setting with a function for setting default value.
@@ -231,7 +198,7 @@ impl SettingsBuilder {
         self.add_setting_properties(
             setting,
             SettingProperties {
-                value: Box::new(default_fn.0()),
+                value: default_fn.construct(),
                 type_name: any::type_name::<T>().into(),
                 default_constructor: default_fn,
                 debug_fn: get_debug_fn::<T>(),
@@ -417,20 +384,56 @@ where
     }
 }
 
+/// Macro used to easily define keys.
+#[macro_export]
+macro_rules! define_keys {
+    ($mod:ident: {$($key:ident: $ty:ty),* $(,)?} $(,)?) => {
+        paste::paste! {
+        mod $mod {
+            $(
+            pub const [<$key:upper>]: $crate::Key<$ty> = $crate::Key::new(stringify!([<$key:lower>]));
+            )*
+        }
+        }
+    };
+    (pub $mod:ident: {$($key:ident: $ty:ty),* $(,)?} $(,)?) => {
+        paste::paste! {
+        pub mod $mod {
+            $(
+            pub const [<$key:upper>]: $crate::Key<$ty> = $crate::Key::new(stringify!([<$key:lower>]));
+            )*
+        }
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Range;
 
     use super::*;
 
+    define_keys! {
+        keys: {
+            yes: bool,
+            no: bool,
+            maybe: bool,
+            hello: String,
+            not_found: u32,
+            bool: bool,
+            i32: i32,
+            hash_map: std::collections::HashMap<String, std::ops::Range<usize>>,
+        }
+    }
+
     #[test]
     pub fn build_settings_add() {
         let settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         assert!(*settings.settings["yes"]
@@ -464,11 +467,11 @@ mod tests {
     #[test]
     pub fn settings_read() {
         let settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         assert!(*settings
@@ -497,11 +500,11 @@ mod tests {
     #[test]
     pub fn settings_check() {
         let settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         assert_eq!(settings.check("yes", &true), Ok(true));
@@ -521,15 +524,15 @@ mod tests {
     #[test]
     pub fn build_settings_default() {
         let settings = SettingsBuilder::new()
-            .str_add_default::<bool>("bool".to_string())
-            .str_add_default::<i32>("i32".to_string())
-            .str_add_default::<HashMap<String, Range<usize>>>("HashMap".to_string())
+            .add_default(keys::BOOL)
+            .add_default(keys::I32)
+            .add_default(keys::HASH_MAP)
             .build();
 
         assert_eq!(settings.check("bool", &bool::default()), Ok(true));
         assert_eq!(settings.check("i32", &i32::default()), Ok(true));
         assert_eq!(
-            settings.check("HashMap", &<HashMap<String, Range<usize>>>::default()),
+            settings.check("hash_map", &<HashMap<String, Range<usize>>>::default()),
             Ok(true)
         );
     }
@@ -560,11 +563,11 @@ mod tests {
     #[test]
     pub fn settings_write() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         *settings.write("yes")? = false;
@@ -588,14 +591,11 @@ mod tests {
     #[test]
     pub fn settings_get_default() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add_default::<bool>("no".to_string())
-            .str_add_fn::<bool>("maybe".into(), DefaultConstructor::from_fn(|| true))
-            .str_add_fn::<bool>(
-                "hello".into(),
-                DefaultConstructor::from_fn(|| String::from("world")),
-            )
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add_default(keys::NO)
+            .add_fn(keys::MAYBE, || true)
+            .add_fn(keys::HELLO, || String::from("world"))
+            .add(keys::NOT_FOUND, 404u32)
             .build();
 
         *settings.write("yes")? = false;
@@ -618,11 +618,11 @@ mod tests {
     #[test]
     pub fn settings_reset_setting() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         *settings.write("yes")? = false;
@@ -660,11 +660,11 @@ mod tests {
     #[test]
     pub fn settings_reset_all() -> Result<()> {
         let mut settings = SettingsBuilder::new()
-            .str_add("yes".to_string(), true)
-            .str_add("no".to_string(), false)
-            .str_add("maybe".to_string(), true)
-            .str_add("hello".to_string(), String::from("world"))
-            .str_add("not_found".to_string(), 404u32)
+            .add(keys::YES, true)
+            .add(keys::NO, false)
+            .add(keys::MAYBE, true)
+            .add(keys::HELLO, "world".into())
+            .add(keys::NOT_FOUND, 404)
             .build();
 
         *settings.write("yes")? = false;
