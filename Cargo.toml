@@ -6,7 +6,7 @@ opt-level = 1
 resolver = "2"
 
 members = [
-	"crates/*"
+	"crates/*",
 ]
 
 default-members = [

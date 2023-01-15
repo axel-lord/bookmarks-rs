@@ -1,0 +1,16 @@
+[package]
+name = "bookmark-gui-2"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.68"
+bookmark-library = { version = "0.1.0", path = "../library" }
+bookmark-settings = { version = "0.1.0", path = "../settings" }
+bookmark-storage = { version = "0.1.0", path = "../storage" }
+clap = "4.1.1"
+iced = { version = "0.7.0", features = ["tokio"] }
+tap = "1.0.1"
+thiserror = "1.0.38"
