@@ -303,6 +303,7 @@ dependencies = [
 name = "bookmark-settings"
 version = "0.1.0"
 dependencies = [
+ "paste",
  "tap",
  "thiserror",
 ]
