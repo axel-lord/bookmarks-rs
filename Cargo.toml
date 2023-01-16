@@ -12,3 +12,5 @@ members = [
 default-members = [
 	"crates/gui"
 ]
+
+license = "MIT"
