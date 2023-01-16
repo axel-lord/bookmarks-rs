@@ -38,7 +38,7 @@ where
             break;
         }
 
-        out.push(T::with_string(line, Some(i))?);
+        out.push(T::from_string(line, Some(i))?);
     }
 
     Ok(out)

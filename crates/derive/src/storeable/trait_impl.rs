@@ -68,7 +68,7 @@ fn gen_with_string(line: &syn::Ident, store_fields: &[Box<dyn AnyField>]) -> Tok
     let tokens = store_fields.iter().map(|f| f.get_key());
 
     quote! {
-        fn with_content_string(
+        fn from_content_string(
             #line: bookmark_storage::ContentString,
             line_num: Option<usize>,
         ) -> Result<Self, bookmark_storage::ParseErr> {

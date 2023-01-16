@@ -31,13 +31,13 @@ pub trait Storeable: Sized {
     ///
     /// # Errors
     /// If the [`ContentString`] cannot be parsed to the [Storeable].
-    fn with_content_string(line: ContentString, line_num: Option<usize>) -> Result<Self, ParseErr>;
+    fn from_content_string(line: ContentString, line_num: Option<usize>) -> Result<Self, ParseErr>;
 
     /// Construct an instance from a string.
     ///
     /// # Errors
     /// If the string cannot be parsed to the [Storeable].
-    fn with_string(line: impl Into<String>, line_num: Option<usize>) -> Result<Self, ParseErr> {
-        Self::with_content_string(line.into().into(), line_num)
+    fn from_string(line: impl Into<String>, line_num: Option<usize>) -> Result<Self, ParseErr> {
+        Self::from_content_string(line.into().into(), line_num)
     }
 }

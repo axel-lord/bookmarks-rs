@@ -16,7 +16,7 @@ pub struct Reference {
 impl Reference {}
 
 impl bookmark_storage::Storeable for Reference {
-    fn with_content_string(
+    fn from_content_string(
         line: ContentString,
         line_num: Option<usize>,
     ) -> Result<Self, bookmark_storage::ParseErr> {
@@ -264,7 +264,7 @@ impl std::convert::TryFrom<String> for Reference {
     type Error = bookmark_storage::ParseErr;
     fn try_from(value: String) -> Result<Self, Self::Error> {
         use bookmark_storage::Storeable;
-        Self::with_string(value, None)
+        Self::from_string(value, None)
     }
 }
 
@@ -272,7 +272,7 @@ impl std::convert::TryFrom<&str> for Reference {
     type Error = bookmark_storage::ParseErr;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         use bookmark_storage::Storeable;
-        Self::with_string(value, None)
+        Self::from_string(value, None)
     }
 }
 
@@ -312,7 +312,7 @@ impl std::fmt::Display for Reference {
 
 fn main() {
     use bookmark_storage::Storeable;
-    let item = Reference::with_string(
+    let item = Reference::from_string(
         "<name> hello there <children> general <,> kenobi <info> blast them <tags> wow <,> nice",
         None,
     )
