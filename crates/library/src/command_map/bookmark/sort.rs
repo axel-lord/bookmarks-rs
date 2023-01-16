@@ -9,9 +9,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
             ));
         }
 
-        let mut bookmarks = bookmarks
-            .write()
-            .expect("failed to aquire write lock for bookmarks");
+        let mut bookmarks = bookmarks.write();
 
         bookmarks.storage.sort_by(|a, b| {
             a.url()

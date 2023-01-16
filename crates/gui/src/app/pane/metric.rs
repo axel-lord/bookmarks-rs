@@ -50,7 +50,7 @@ impl Metrics {
         bookmarks: shared::BufferStorage<Bookmark>,
     ) {
         thread::spawn(move || {
-            let bookmarks = bookmarks.read().expect("posioned lock");
+            let bookmarks = bookmarks.read();
             tx.send(ChannelMessage::GatheredMetric(
                 Metric::AverageContentStringLength,
                 (|| {
@@ -77,7 +77,7 @@ impl Metrics {
         bookmarks: shared::BufferStorage<Bookmark>,
     ) {
         thread::spawn(move || {
-            let bookmarks = bookmarks.read().expect("posioned lock");
+            let bookmarks = bookmarks.read();
             tx.send(ChannelMessage::GatheredMetric(Metric::UrlOccurances, {
                 let mut map = UrlMap::new();
 

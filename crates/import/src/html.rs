@@ -23,9 +23,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
         let a_selector = Selector::parse("a")
             .expect("could not create a selector for links (should never happen)");
 
-        let mut bookmarks = bookmarks
-            .write()
-            .expect("failed to aquire write lock on bookmarks");
+        let mut bookmarks = bookmarks.write();
         let mut added_count = 0usize;
         for element in document.select(&a_selector) {
             let Some(url) = element.value().attr("href") else {continue;};

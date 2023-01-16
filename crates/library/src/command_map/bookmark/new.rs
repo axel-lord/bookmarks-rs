@@ -15,10 +15,7 @@ impl Command for New {
             ));
         }
 
-        let mut bookmarks = self
-            .bookmarks
-            .write()
-            .expect("failed to aquire write lock for bookmarks");
+        let mut bookmarks = self.bookmarks.write();
 
         let index = bookmarks.storage.len();
 
