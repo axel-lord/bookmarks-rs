@@ -9,10 +9,8 @@ pub struct ContentString {
     content: Option<Content>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 enum Content {
-    #[default]
-    Empty,
     String(String),
     RcRange(Arc<str>, Range<usize>),
 }
@@ -24,10 +22,15 @@ impl Content {
 
     fn into_string(self) -> String {
         match self {
-            Content::Empty => String::new(),
             Content::String(s) => s,
             Content::RcRange(rc, range) => String::from(&rc[range]),
         }
+    }
+}
+
+impl Default for Content {
+    fn default() -> Self {
+        Self::String(String::new())
     }
 }
 
@@ -40,7 +43,7 @@ impl ContentString {
 
     /// Create a [`ContentString`] from a regular string, it is marked as not appended to.
     #[must_use]
-    pub fn with_string(value: String) -> Self {
+    pub fn from_string(value: String) -> Self {
         ContentString {
             is_appended_to: false,
             content: Some(Content::from_string(value)),
@@ -52,7 +55,7 @@ impl ContentString {
     /// # Panics
     /// If the range is out of bound of the string.
     #[must_use]
-    pub fn with_rc_range(rc: Arc<str>, range: Range<usize>) -> Self {
+    pub fn from_rc_range(rc: Arc<str>, range: Range<usize>) -> Self {
         assert!(rc.get(range.clone()).is_some());
         Self {
             is_appended_to: false,
@@ -94,7 +97,6 @@ impl ContentString {
             .as_ref()
             .expect("content should never be taken from outside push")
         {
-            Content::Empty => "",
             Content::String(s) => s,
             Content::RcRange(rc, range) => &rc[range.clone()],
         }
@@ -127,7 +129,7 @@ impl From<&str> for ContentString {
 
 impl From<String> for ContentString {
     fn from(content: String) -> Self {
-        Self::with_string(content)
+        Self::from_string(content)
     }
 }
 
