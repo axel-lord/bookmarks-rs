@@ -131,7 +131,7 @@ impl App {
         macro_rules! load_sections {
             ($($sect:expr),* $(,)?) => {
                 $(
-                self.load_section(reader.by_ref(), &mut $sect.write().expect("posioned lock"));
+                self.load_section(reader.by_ref(), &mut $sect.write());
                 )*
             };
         }
@@ -166,8 +166,8 @@ impl App {
     }
 
     fn update_category_tree(&mut self) {
-        let categories = self.categories.read().expect("poisoned lock");
-        let infos = self.infos.read().expect("posoned lock");
+        let categories = self.categories.read();
+        let infos = self.infos.read();
 
         let cat_map = categories
             .storage
@@ -221,8 +221,8 @@ impl App {
 
     fn apply_category(&mut self, indices: impl IntoIterator<Item = usize>) {
         let messages = {
-            let categories = self.categories.read().expect("posoned lock");
-            let mut bookmarks = self.bookmarks.write().expect("posoned lock");
+            let categories = self.categories.read();
+            let mut bookmarks = self.bookmarks.write();
 
             indices
                 .into_iter()
@@ -246,7 +246,7 @@ impl App {
 
     fn goto_bookmark_location(&self, index: usize) {
         self.set_status({
-            let bookmarks = self.bookmarks.read().expect("posioned lock");
+            let bookmarks = self.bookmarks.read();
             match open::that(bookmarks.storage[index].url()) {
                 Ok(()) => {
                     format!("opened bookmark [{}]", bookmarks.storage[index].url())
@@ -263,7 +263,7 @@ impl App {
     }
 
     fn edit_bookmark(&mut self, index: usize) {
-        let bookmarks = self.bookmarks.read().expect("poisoned lock");
+        let bookmarks = self.bookmarks.read();
         let bookmark = &bookmarks.storage[index];
         let proxy = BookmarkProxy {
             info: bookmark.description().into(),
@@ -288,7 +288,7 @@ impl App {
     }
 
     fn edit_category(&mut self, index: usize) {
-        let categories = self.categories.read().expect("posioned lock");
+        let categories = self.categories.read();
         let category = &categories.storage[index];
         let proxy = CategoryProxy {
             id: category.id().into(),
@@ -567,12 +567,9 @@ impl Application for App {
 
             Msg::ApplyFilter => {
                 if let Some(ref filter) = self.bookmark_column_state.filter {
-                    self.bookmarks
-                        .write()
-                        .expect("poisoned lock")
-                        .filter_in_place(|b| {
-                            filter.is_match(b.url()) || filter.is_match(b.description())
-                        });
+                    self.bookmarks.write().filter_in_place(|b| {
+                        filter.is_match(b.url()) || filter.is_match(b.description())
+                    });
                 }
 
                 Command::none()
@@ -586,11 +583,7 @@ impl Application for App {
             Msg::AddBookmarks(bookmarks) => {
                 if let Ok(mut bookmarks) = bookmarks.lock() {
                     if let Some(bookmarks) = bookmarks.take() {
-                        self.bookmarks
-                            .write()
-                            .expect("posioned lock")
-                            .storage
-                            .extend(bookmarks);
+                        self.bookmarks.write().storage.extend(bookmarks);
                     }
                 }
 
@@ -662,9 +655,9 @@ impl Application for App {
     }
 
     fn view(&self) -> iced::Element<Msg> {
-        let bookmarks = self.bookmarks.read().expect("poisoned lock");
-        let categories = self.categories.read().expect("poisoned lock");
-        let infos = self.infos.read().expect("poisoned lock");
+        let bookmarks = self.bookmarks.read();
+        let categories = self.categories.read();
+        let infos = self.infos.read();
         let status = self.status_msg.borrow();
         let status_log = self.status_log.borrow();
 

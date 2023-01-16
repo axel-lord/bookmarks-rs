@@ -285,6 +285,7 @@ dependencies = [
  "bookmark-storage",
  "either",
  "once_cell",
+ "parking_lot 0.12.1",
  "paste",
  "regex",
  "thiserror",

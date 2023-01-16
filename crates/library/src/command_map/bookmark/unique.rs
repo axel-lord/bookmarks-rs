@@ -10,9 +10,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn Command> {
         }
 
         let mut removed_count = 0usize;
-        let mut bookmarks = bookmarks
-            .write()
-            .expect("failed to aquire write lock for bookmarks");
+        let mut bookmarks = bookmarks.write();
 
         bookmarks.storage.sort_by(|a, b| a.url().cmp(b.url()));
         bookmarks.storage.dedup_by(|a, b| {

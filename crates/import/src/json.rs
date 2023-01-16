@@ -18,9 +18,7 @@ pub fn build(bookmarks: shared::BufferStorage<Bookmark>) -> Box<dyn bookmark_com
             .as_object()
             .ok_or_else(|| CommandErr::Execution("root of json file was not an object".into()))?;
 
-        let mut bookmarks = bookmarks
-            .write()
-            .expect("failed to aquire write lock on bookmarks");
+        let mut bookmarks = bookmarks.write();
         let mut element_stack = vec![root];
         let mut added_count = 0usize;
         while !element_stack.is_empty() {

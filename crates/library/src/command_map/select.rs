@@ -25,7 +25,7 @@ where
             ))
         })?;
 
-        let mut buffer_storage = self.buffer_storage.write().expect("posoned lock");
+        let mut buffer_storage = self.buffer_storage.write();
 
         let selected_item = buffer_storage
             .storage
