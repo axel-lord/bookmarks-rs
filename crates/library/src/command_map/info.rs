@@ -63,12 +63,7 @@ pub fn build(
                     args_are_empty(args)?;
 
                     let mut map = CatMap::new();
-                    for cat in categories
-                        .read()
-                        .expect("failed to aquire read lock for categories")
-                        .storage
-                        .iter()
-                    {
+                    for cat in categories.read().storage.iter() {
                         let cat_entry = map.get_or_create(cat.id());
 
                         for child in cat.subcategories() {
@@ -86,12 +81,7 @@ pub fn build(
                     }
 
                     let mut cat_stack = Vec::new();
-                    for info in infos
-                        .read()
-                        .expect("failed to aquire read lock for infos")
-                        .storage
-                        .iter()
-                    {
+                    for info in infos.read().storage.iter() {
                         for cat in info.categories().collect::<Vec<_>>().into_iter().rev() {
                             cat_stack.push((0usize, map.get_or_create(cat)));
                         }
@@ -127,13 +117,7 @@ pub fn build(
                         ));
                     }
 
-                    for (i, info) in infos
-                        .read()
-                        .expect("failed to aquire read lock")
-                        .storage
-                        .iter()
-                        .enumerate()
-                    {
+                    for (i, info) in infos.read().storage.iter().enumerate() {
                         println!("{i}. Categroies: ");
                         for category in info.categories() {
                             println!("\t{category}");

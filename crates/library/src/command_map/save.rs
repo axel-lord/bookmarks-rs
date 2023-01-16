@@ -19,7 +19,7 @@ where
             ));
         }
 
-        let buffer_storage = self.buffer_storage.write().expect("poisoned lock");
+        let buffer_storage = self.buffer_storage.write();
 
         bookmark_storage::save(
             &mut BufWriter::new(File::create(&args[0])?),
@@ -57,7 +57,7 @@ impl Command for All {
         macro_rules! save_buffer_storage {
             ($($storage:expr),* $(,)?) => {
                 $(
-                    save(&mut writer, $storage.read().expect("posioned lock").storage.iter())?;
+                    save(&mut writer, $storage.read().storage.iter())?;
                 )*
             };
         }

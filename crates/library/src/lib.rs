@@ -17,10 +17,12 @@ pub mod token;
 
 /// More easily use shared [`container::BufferStorage`].
 pub mod shared {
+    use parking_lot::RwLock;
+    use std::sync::Arc;
+
     /// Since a lot of commands need access to reference counted storag, this type is used as a
     /// conveniance to simplify their signatures.
-    pub type BufferStorage<T> =
-        std::sync::Arc<std::sync::RwLock<super::container::BufferStorage<T>>>;
+    pub type BufferStorage<T> = Arc<RwLock<super::container::BufferStorage<T>>>;
 }
 
 use std::collections::HashMap;

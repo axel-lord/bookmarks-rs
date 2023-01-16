@@ -13,7 +13,7 @@ where
             ));
         }
 
-        let buffer_storage = buffer_storage.read().expect("poisoned lock");
+        let buffer_storage = buffer_storage.read();
 
         let index = buffer_storage
             .selected

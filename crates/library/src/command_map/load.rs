@@ -31,7 +31,7 @@ where
             )));
         }
 
-        let mut buffer_storage = self.buffer_storage.write().expect("poisoned write lock");
+        let mut buffer_storage = self.buffer_storage.write();
 
         buffer_storage.storage.extend(loaded.into_iter());
         buffer_storage.buffer.reset();
@@ -49,7 +49,7 @@ pub struct All {
 
 macro_rules! load_section {
     ($fmt:expr, $dest:expr, $source:expr) => {{
-        let mut dest = $dest.write().unwrap();
+        let mut dest = $dest.write();
         let loaded = bookmark_storage::load_from($source.by_ref())?;
 
         println!($fmt, loaded.len());
