@@ -22,7 +22,7 @@ where
             )));
         }
 
-        let mut buffer_storage = self.buffer_storage.write().expect("posioned lock");
+        let mut buffer_storage = self.buffer_storage.write();
 
         let index = buffer_storage
             .selected

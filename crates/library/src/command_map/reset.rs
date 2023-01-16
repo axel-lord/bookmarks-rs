@@ -19,7 +19,7 @@ impl Command for Reset {
         macro_rules! reset_buffer_storage {
             ($($storage:expr),* $(,)?) => {
                 $(
-                    $storage.write().expect("posoned lock").reset();
+                    $storage.write().reset();
                 )*
             };
         }

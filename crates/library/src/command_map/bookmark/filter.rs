@@ -25,14 +25,11 @@ impl Command for Filter {
             })
             .collect::<Vec<_>>();
 
-        self.bookmarks
-            .write()
-            .expect("failed to aquire write lock for bookmarks")
-            .filter_in_place(|bookmark| {
-                filters
-                    .iter()
-                    .all(|f| f.is_match(bookmark.url()) || f.is_match(bookmark.description()))
-            });
+        self.bookmarks.write().filter_in_place(|bookmark| {
+            filters
+                .iter()
+                .all(|f| f.is_match(bookmark.url()) || f.is_match(bookmark.description()))
+        });
 
         Ok(())
     }
@@ -53,7 +50,6 @@ impl Command for Inverse {
 
         self.bookmarks
             .write()
-            .expect("failed to aquire write lock for bookmarks")
             .filter_in_place(|bookmark| !args.iter().any(|arg| bookmark.url().contains(arg)));
 
         Ok(())

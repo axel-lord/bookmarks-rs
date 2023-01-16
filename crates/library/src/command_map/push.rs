@@ -13,7 +13,7 @@ where
             ));
         }
 
-        let mut buffer_storage = buffer_storage.write().expect("poisoned lock");
+        let mut buffer_storage = buffer_storage.write();
 
         let (index, item) = buffer_storage
             .get_index_and_selected_mut()

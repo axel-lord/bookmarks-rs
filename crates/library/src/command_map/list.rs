@@ -30,11 +30,7 @@ where
     T: Listed + std::fmt::Display,
 {
     fn call(&mut self, args: &[String]) -> Result<(), CommandErr> {
-        let buffer_storage = self
-            .buffer_storage
-            .read()
-            .expect("failed to aquire read lock");
-
+        let buffer_storage = self.buffer_storage.read();
         let count = args
             .get(0)
             .map_or_else(
