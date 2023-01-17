@@ -45,6 +45,9 @@ fn main() {
 
     std::process::exit(bookmark_library::run(
         (!lines.is_empty()).then_some(lines.join("\n")),
-        vec![Box::new(bookmark_import::Import)],
+        vec![
+            Box::new(bookmark_import::Import),
+            bookmark_export::Export::as_box(),
+        ],
     ));
 }

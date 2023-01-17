@@ -1,0 +1,14 @@
+[package]
+name = "bookmark-export"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bookmark-command = { path = "../command" }
+bookmark-library = { path = "../library" }
+bookmark-storage = { path = "../storage" }
+quick-xml = { version = "0.27.1", features = ["serialize"] }
+serde = { version = "1.0.152", features = ["derive"] }
+tap = "1.0.1"
+toml = "0.5.10"
+uuid = { version = "1.2.2", features = ["v4", "serde", "fast-rng"] }
