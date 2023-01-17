@@ -11,7 +11,7 @@ use thiserror::Error;
 /// The conditions can be both required, meaning all bookmarks in the category must fullfill them,
 /// inclusive, meaning the bookmark may include it or another inclusive requirement, or meaning the
 /// requirement is a perfect match with the bookmark.
-#[derive(Debug, Storeable, Default)]
+#[derive(Debug, Storeable, Default, Clone)]
 pub struct Category {
     #[line]
     line: ContentString,

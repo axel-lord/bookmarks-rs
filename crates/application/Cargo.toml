@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 bookmark-library = {path = "../library"}
 bookmark-import = { path = "../import" }
+bookmark-export = {  path = "../export" }
 clap = { version = "4.0.26", features = ["derive"] }
