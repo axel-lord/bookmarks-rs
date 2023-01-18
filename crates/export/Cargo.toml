@@ -8,6 +8,7 @@ bookmark-command = { path = "../command" }
 bookmark-library = { path = "../library" }
 bookmark-storage = { path = "../storage" }
 quick-xml = { version = "0.27.1", features = ["serialize"] }
+rmp = "0.8.11"
 serde = { version = "1.0.152", features = ["derive"] }
 tap = "1.0.1"
 toml = "0.5.10"
