@@ -1,5 +1,11 @@
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+};
+
 use bookmark_command::{Command, CommandErr};
 use bookmark_library::{shared, Bookmark, Category, Info};
+use tap::Pipe;
 
 use crate::FileData;
 
@@ -22,7 +28,10 @@ pub fn build(
         let file_data =
             FileData::from_slices(&infos.storage, &categories.storage, &bookmarks.storage);
 
-        dbg!(&file_data);
+        File::create(&args[0])?.pipe(BufWriter::new).write_all(
+            &rmp_serde::to_vec(&file_data)
+                .map_err(|err| err.to_string().pipe(CommandErr::Execution))?,
+        )?;
 
         Ok(())
     })

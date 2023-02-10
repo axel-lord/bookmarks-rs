@@ -257,7 +257,7 @@ dependencies = [
  "bookmark-library",
  "bookmark-storage",
  "quick-xml",
- "rmp",
+ "rmp-serde",
  "serde",
  "tap",
  "toml",
@@ -2860,6 +2860,17 @@ dependencies = [
  "byteorder",
  "num-traits",
  "paste",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5b13be192e0220b8afb7222aa5813cb62cc269ebb5cac346ca6487681d2913e"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
 ]
 
 [[package]]
